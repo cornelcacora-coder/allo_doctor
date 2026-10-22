@@ -1,0 +1,670 @@
+import '/components/patient_card_widget.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
+import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '/index.dart';
+import '/auth/role_guard.dart';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'visite_model.dart';
+export 'visite_model.dart';
+
+class VisiteWidget extends StatefulWidget {
+  const VisiteWidget({super.key});
+
+  static String routeName = 'Visite';
+  static String routePath = '/visite';
+
+  @override
+  State<VisiteWidget> createState() => _VisiteWidgetState();
+}
+
+class _VisiteWidgetState extends State<VisiteWidget> {
+  late VisiteModel _model;
+
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _model = createModel(context, () => VisiteModel());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      safeSetState(() {});
+      // Garde-fou : cet espace est reserve aux comptes médecins.
+      await guardRole(context, 'medecin');
+    });
+  }
+
+  @override
+  void dispose() {
+    _model.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        appBar: AppBar(
+          backgroundColor: FlutterFlowTheme.of(context).tertiary,
+          automaticallyImplyLeading: false,
+          title: Column(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async {
+                      context.safePop();
+                    },
+                    child: Icon(
+                      Icons.settings_outlined,
+                      color: FlutterFlowTheme.of(context).alternate,
+                      size: 24.0,
+                    ),
+                  ),
+                  Text(
+                    'Mes Visites à Domicile ',
+                    style: FlutterFlowTheme.of(context).titleLarge.override(
+                          font: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w500,
+                            fontStyle: FlutterFlowTheme.of(context)
+                                .titleLarge
+                                .fontStyle,
+                          ),
+                          color: FlutterFlowTheme.of(context).alternate,
+                          fontSize: 14.0,
+                          letterSpacing: 0.0,
+                          fontWeight: FontWeight.w500,
+                          fontStyle:
+                              FlutterFlowTheme.of(context).titleLarge.fontStyle,
+                          lineHeight: 1.4,
+                        ),
+                  ),
+                  InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async {
+                      context.pushNamed(
+                        ProfileEditWidget.routeName,
+                        queryParameters: {
+                          'role': serializeParam(
+                            'Doctor',
+                            ParamType.String,
+                          ),
+                        }.withoutNulls,
+                      );
+                    },
+                    child: Icon(
+                      Icons.more_vert_sharp,
+                      color: FlutterFlowTheme.of(context).alternate,
+                      size: 24.0,
+                    ),
+                  ),
+                ],
+              ),
+            ].divide(SizedBox(height: 10.0)),
+          ),
+          actions: [],
+          centerTitle: false,
+          elevation: 4.0,
+        ),
+        body: Container(
+          height: double.infinity,
+          child: Stack(
+            alignment: AlignmentDirectional(0.0, -1.0),
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding:
+                        EdgeInsetsDirectional.fromSTEB(20.0, 14.0, 20.0, 12.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 4.0,
+                          height: 24.0,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF165C40),
+                            borderRadius: BorderRadius.circular(2.0),
+                            shape: BoxShape.rectangle,
+                          ),
+                        ),
+                        Text(
+                          'Mes Visites',
+                          style: FlutterFlowTheme.of(context)
+                              .titleLarge
+                              .override(
+                                font: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .titleLarge
+                                      .fontStyle,
+                                ),
+                                color: FlutterFlowTheme.of(context).primaryText,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FlutterFlowTheme.of(context)
+                                    .titleLarge
+                                    .fontStyle,
+                                lineHeight: 1.4,
+                              ),
+                        ),
+                      ].divide(SizedBox(width: 8.0)),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: FirebaseFirestore.instance.collection('appointments').where('consult_mode', isEqualTo: 'domicile').snapshots(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        final docs = snapshot.data!.docs;
+                        if (docs.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.home_work_outlined, size: 56.0, color: FlutterFlowTheme.of(context).secondaryText),
+                                  SizedBox(height: 12.0),
+                                  Text(
+                                    'Aucune visite à domicile en attente',
+                                    textAlign: TextAlign.center,
+                                    style: FlutterFlowTheme.of(context).titleMedium.override(
+                                      font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  SizedBox(height: 6.0),
+                                  Text(
+                                    'Vos visites à domicile programmées s\'afficheront ici.',
+                                    textAlign: TextAlign.center,
+                                    style: FlutterFlowTheme.of(context).labelMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return ListView(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          scrollDirection: Axis.vertical,
+                          children: docs.map((doc) {
+                            final data = doc.data();
+                            final patientName = (data['patient_name'] as String?)?.trim().isNotEmpty == true
+                                ? data['patient_name'] as String
+                                : 'Patient';
+                            final day = (data['day'] as String?) ?? '';
+                            final timeSlot = (data['time_slot'] as String?) ?? '';
+                            final sympto = day + (timeSlot.isNotEmpty ? ' • ' + timeSlot : '');
+
+                            return InkWell(
+                              splashColor: Colors.transparent,
+                              focusColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () async {
+                                context.pushNamed(DmpWidget.routeName);
+                              },
+                              child: PatientCardWidget(
+                                photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
+                                name: patientName,
+                                sympto: sympto,
+                                type: 'Domicile',
+                              ),
+                            );
+                          }).toList().divide(SizedBox(height: 14.0)),
+                        );
+                      },
+                    )
+                  ),
+                ],
+              ),
+              Align(
+                alignment: AlignmentDirectional(0.0, 1.0),
+                child: Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Container(
+                    decoration: BoxDecoration(),
+                    child: Container(
+                      height: 72.0,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                        borderRadius: BorderRadius.circular(9999.0),
+                        shape: BoxShape.rectangle,
+                        border: Border.all(
+                          color: FlutterFlowTheme.of(context).alternate,
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(
+                            16.0, 0.0, 16.0, 0.0),
+                        child: Container(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    context
+                                        .pushNamed(HomeDoctorWidget.routeName);
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.home_rounded,
+                                        size: 24.0,
+                                      ),
+                                      Text(
+                                        'Accueil',
+                                        style: FlutterFlowTheme.of(context)
+                                            .labelSmall
+                                            .override(
+                                              font: GoogleFonts.outfit(
+                                                fontWeight:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontWeight,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontStyle,
+                                              lineHeight: 1.4,
+                                            ),
+                                      ),
+                                    ].divide(SizedBox(height: 4.0)),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    context.pushNamed(
+                                        ConsultationWidget.routeName);
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.personal_video,
+                                        size: 24.0,
+                                      ),
+                                      Text(
+                                        'Consultation',
+                                        style: FlutterFlowTheme.of(context)
+                                            .labelSmall
+                                            .override(
+                                              font: GoogleFonts.outfit(
+                                                fontWeight:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontWeight,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontStyle,
+                                              lineHeight: 1.4,
+                                            ),
+                                      ),
+                                    ].divide(SizedBox(height: 4.0)),
+                                  ),
+                                ),
+                              ),
+                              Transform.rotate(
+                                angle: 0.0 * (math.pi / 180),
+                                alignment: AlignmentDirectional(0.0, 0.0),
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    context.pushNamed(
+                                      ProfileEditWidget.routeName,
+                                      queryParameters: {
+                                        'role': serializeParam(
+                                          'Doctor',
+                                          ParamType.String,
+                                        ),
+                                      }.withoutNulls,
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 56.0,
+                                    height: 56.0,
+                                    decoration: BoxDecoration(
+                                      boxShadow: [
+                                        FlutterFlowTheme.of(context)
+                                            .designToken
+                                            .shadow
+                                            .lg
+                                      ],
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          FlutterFlowTheme.of(context).primary,
+                                          Color(0xFF0EE796)
+                                        ],
+                                        stops: [0.0, 1.0],
+                                        begin: AlignmentDirectional(1.0, -1.0),
+                                        end: AlignmentDirectional(-1.0, 1.0),
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.circular(9999.0),
+                                      shape: BoxShape.rectangle,
+                                    ),
+                                    alignment: AlignmentDirectional(0.0, 0.0),
+                                    child: Icon(
+                                      Icons.edit_calendar_rounded,
+                                      color: FlutterFlowTheme.of(context)
+                                          .onPrimary,
+                                      size: 28.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    context.pushNamed(VisiteWidget.routeName);
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.store_rounded,
+                                        size: 24.0,
+                                      ),
+                                      Text(
+                                        'Visite',
+                                        style: FlutterFlowTheme.of(context)
+                                            .labelSmall
+                                            .override(
+                                              font: GoogleFonts.outfit(
+                                                fontWeight:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontWeight,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontStyle,
+                                              lineHeight: 1.4,
+                                            ),
+                                      ),
+                                    ].divide(SizedBox(height: 4.0)),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    context.pushNamed(AgendaWidget.routeName);
+                                  },
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.bookmarks_outlined,
+                                        size: 24.0,
+                                      ),
+                                      Text(
+                                        'Agenda',
+                                        style: FlutterFlowTheme.of(context)
+                                            .labelSmall
+                                            .override(
+                                              font: GoogleFonts.outfit(
+                                                fontWeight:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontWeight,
+                                                fontStyle:
+                                                    FlutterFlowTheme.of(context)
+                                                        .labelSmall
+                                                        .fontStyle,
+                                              ),
+                                              letterSpacing: 0.0,
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .labelSmall
+                                                      .fontStyle,
+                                              lineHeight: 1.4,
+                                            ),
+                                      ),
+                                    ].divide(SizedBox(height: 4.0)),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding:
+                        EdgeInsetsDirectional.fromSTEB(20.0, 14.0, 20.0, 12.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 4.0,
+                          height: 24.0,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF165C40),
+                            borderRadius: BorderRadius.circular(2.0),
+                            shape: BoxShape.rectangle,
+                          ),
+                        ),
+                        Text(
+                          'Mes Visites',
+                          style: FlutterFlowTheme.of(context)
+                              .titleLarge
+                              .override(
+                                font: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .titleLarge
+                                      .fontStyle,
+                                ),
+                                color: FlutterFlowTheme.of(context).primaryText,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FlutterFlowTheme.of(context)
+                                    .titleLarge
+                                    .fontStyle,
+                                lineHeight: 1.4,
+                              ),
+                        ),
+                      ].divide(SizedBox(width: 8.0)),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      scrollDirection: Axis.vertical,
+                      children: [
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            context.pushNamed(DmpWidget.routeName);
+                          },
+                          child: wrapWithModel(
+                            model: _model.patientCardModel2,
+                            updateCallback: () => safeSetState(() {}),
+                            child: PatientCardWidget(
+                              photo:
+                                  'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
+                              name: '',
+                              sympto: '',
+                              type: 'Domicile',
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            context.pushNamed(DmpWidget.routeName);
+                          },
+                          child: wrapWithModel(
+                            model: _model.patientCardModel3,
+                            updateCallback: () => safeSetState(() {}),
+                            child: PatientCardWidget(
+                              photo:
+                                  'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
+                              name: '',
+                              sympto: '',
+                              type: 'Domicile',
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            context.pushNamed(DmpWidget.routeName);
+                          },
+                          child: wrapWithModel(
+                            model: _model.patientCardModel4,
+                            updateCallback: () => safeSetState(() {}),
+                            child: PatientCardWidget(
+                              photo:
+                                  'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
+                              name: '',
+                              sympto: '',
+                              type: 'Domicile',
+                            ),
+                          ),
+                        ),
+                      ].divide(SizedBox(height: 14.0)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

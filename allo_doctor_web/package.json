@@ -1,0 +1,36 @@
+{
+  "name": "allo_doctor_web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "seed": "node scripts/seedFirestore.js",
+    "db:clean": "node scripts/cleanDatabase.mjs",
+    "migrate:schema": "node scripts/migrateSchema.mjs",
+    "test:flow": "node scripts/testPractitionerFlow.mjs",
+    "test:security": "node scripts/testSecurityRules.mjs",
+    "emails:apply": "node scripts/applyEmailTemplates.mjs",
+    "emails:check": "node scripts/checkEmailTemplates.mjs",
+    "emails:diagnose": "node scripts/diagnoseEmails.mjs",
+    "deploy": "vite build && firebase deploy --only hosting",
+    "deploy:all": "vite build && firebase deploy"
+  },
+  "dependencies": {
+    "firebase": "^13.0.0",
+    "lucide-react": "^1.55.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "vite": "^8.3.0"
+  }
+}

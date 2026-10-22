@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Vérifie si l'utilisateur est connecté
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 2. Vérifie si l'utilisateur est le Super-Administrateur Allo Doctor.
+    //    Attention : le langage des règles ne dispose QUE d'expressions
+    //    (pas de `if`). On enchaîne donc les tests avec des ||.
+    //    Plusieurs signaux sont acceptés : email de référence, claim custom
+    //    "admin", ou rôle porté par le document users/{uid}.
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'testnetdeveloper61@gmail.com' ||
+        request.auth.token.email == 'admin@allodoctor.ma' ||
+        request.auth.token.admin == true ||
+        request.auth.token.role == 'admin' ||
+        request.auth.token.userCategory == 'admin' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userCategory == 'admin'
+        ))
+      );
+    }
+
+    // 3. Profils utilisateurs.
+    //    - Un utilisateur ne lit/ecrit que son propre profil.
+    //    - Il ne peut modifier QUE les champs de profil (jamais 'role' ni
+    //      'userCategory' : sinon auto-promotion en administrateur).
+    //    - A la creation, seuls les roles applicatifs sont acceptes
+    //      (le role 'admin' est reserve a l'administration).
+    //    - L'admin gere tous les comptes (activation / suspension).
+    match /users/{userId} {
+      function isAppRole() {
+        return request.resource.data.role == 'patient' ||
+               request.resource.data.role == 'medecin' ||
+               request.resource.data.role == 'pharmacie' ||
+               request.resource.data.role == 'clinique';
+      }
+      
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && (isAdmin() || isAppRole());
+      allow update: if isAdmin() || (
+        request.auth.uid == userId && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'nom', 'displayName', 'email', 'phone', 'telephone', 
+          'city', 'ville', 'gender', 'sexe', 'emailVerified', 'emailVerifie', 
+          'status', 'createdAt', 'updatedAt', 'photoUrl', 'specialty', 'docNumber'
+        ])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Compatibilité avec collection User (FlutterFlow) : mêmes protections.
+    match /User/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && (isAdmin() || (
+        request.resource.data.role == 'patient' ||
+        request.resource.data.role == 'medecin' ||
+        request.resource.data.role == 'pharmacie' ||
+        request.resource.data.role == 'clinique'
+      ));
+      allow update: if isAdmin() || (
+        request.auth.uid == userId && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'nom', 'displayName', 'email', 'phone', 'telephone', 
+          'city', 'ville', 'gender', 'sexe', 'emailVerified', 'emailVerifie', 
+          'status', 'createdAt', 'updatedAt', 'photoUrl', 'specialty', 'docNumber'
+        ])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 4. Professionnels de santé (Médecins, Pharmacies, Cliniques)
+    // - Consultable pour la recherche de soins sur mobile
+    // - Inscription par le praticien (dossier d'agrément)
+    // - Le praticien peut compléter son dossier tant qu'il n'est pas validé,
+    //   mais ne peut PAS changer lui-même le statut (sinon auto-validation)
+    // - Seul l'ADMIN peut valider (status: 'validé') ou rejeter (5.5.2)
+    match /practitioners/{practitionerId} {
+      allow read: if true; 
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        request.auth.uid == practitionerId && 
+        resource.data.status == 'en_attente' && 
+        request.resource.data.status == resource.data.status && 
+        request.resource.data.uid == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 5. Rendez-vous médicaux : réservé strictement au patient et au médecin concerné
+    match /appointments/{appointmentId} {
+      allow read, write: if isAuthenticated() && (
+        resource.data.patientId == request.auth.uid || 
+        resource.data.doctorId == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated();
+    }
+
+    // 6. Ordonnances & prescriptions : réservé au patient, au médecin et à la pharmacie
+    match /prescriptions/{prescriptionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.patientId == request.auth.uid || 
+        resource.data.doctorId == request.auth.uid || 
+        resource.data.pharmacyId == request.auth.uid || 
+        isAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        resource.data.doctorId == request.auth.uid || 
+        isAdmin()
+      );
+    }
+
+    // 7. Tickets de support et litiges (5.5.3)
+    match /tickets/{ticketId} {
+      allow read: if isAuthenticated() && (
+        resource.data.requesterId == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.requesterId == request.auth.uid || 
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 8. Statistiques et commissions (5.5.4) : STRICTEMENT ADMIN
+    match /statistics/{statId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Sécurité par défaut : rejet de tout accès non autorisé
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

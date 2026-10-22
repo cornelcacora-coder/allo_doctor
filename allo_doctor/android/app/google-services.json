@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "766343053778",
+    "project_id": "allo-doctor-app",
+    "storage_bucket": "allo-doctor-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:766343053778:android:a33ee4648025bdae24880b",
+        "android_client_info": {
+          "package_name": "com.mycompany.allodoctor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "766343053778-a71mpfouqt0rhpbc8664lv6nmo0mc8cj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYAWECvsWT4YfPcGYY60_9OAYs6afS498"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "766343053778-a71mpfouqt0rhpbc8664lv6nmo0mc8cj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

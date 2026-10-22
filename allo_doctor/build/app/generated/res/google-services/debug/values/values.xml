@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">189265941803</string>
+    <string name="google_api_key" translatable="false">AIzaSyAJDaOJKnFfc0FPINF0Vt2gNmTxb5rjId4</string>
+    <string name="google_app_id" translatable="false">1:189265941803:android:579d654ec52d2d8e63a16e</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAJDaOJKnFfc0FPINF0Vt2gNmTxb5rjId4</string>
+    <string name="google_storage_bucket" translatable="false">allo-docteur-y5cftq.firebasestorage.app</string>
+    <string name="project_id" translatable="false">allo-docteur-y5cftq</string>
+</resources>
