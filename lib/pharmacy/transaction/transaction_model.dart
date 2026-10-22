@@ -1,0 +1,43 @@
+import '/components/nav_bar_pharma_widget.dart';
+import '/components/transaction_card_widget.dart';
+import '/flutter_flow/flutter_flow_choice_chips.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
+import '/flutter_flow/form_field_controller.dart';
+import 'dart:ui';
+import 'transaction_widget.dart' show TransactionWidget;
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+class TransactionModel extends FlutterFlowModel<TransactionWidget> {
+  ///  State fields for stateful widgets in this page.
+
+  // State field(s) for ChoiceChips widget.
+  FormFieldController<List<String>>? choiceChipsValueController;
+  String? get choiceChipsValue =>
+      choiceChipsValueController?.value?.firstOrNull;
+  set choiceChipsValue(String? val) =>
+      choiceChipsValueController?.value = val != null ? [val] : [];
+  // Model for TransactionCard component.
+  late TransactionCardModel transactionCardModel1;
+  // Model for TransactionCard component.
+  late TransactionCardModel transactionCardModel2;
+  // Model for NavBarPharma component.
+  late NavBarPharmaModel navBarPharmaModel;
+
+  @override
+  void initState(BuildContext context) {
+    transactionCardModel1 = createModel(context, () => TransactionCardModel());
+    transactionCardModel2 = createModel(context, () => TransactionCardModel());
+    navBarPharmaModel = createModel(context, () => NavBarPharmaModel());
+  }
+
+  @override
+  void dispose() {
+    transactionCardModel1.dispose();
+    transactionCardModel2.dispose();
+    navBarPharmaModel.dispose();
+  }
+}

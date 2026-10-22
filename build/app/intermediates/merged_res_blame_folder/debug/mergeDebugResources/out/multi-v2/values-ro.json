@@ -1,0 +1,145 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.mycompany.allodoctor.app-mergeDebugResources-54:/values-ro/values-ro.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\47c084621f10c3d04e43d2817aac64e8\\transformed\\jetified-play-services-base-18.7.2\\res\\values-ro\\values.xml",
+                    "from": {
+                        "startLines": "4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
+                        "startColumns": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                        "startOffsets": "216,320,476,602,708,855,981,1100,1205,1363,1470,1625,1754,1896,2058,2123,2187",
+                        "endColumns": "103,155,125,105,146,125,118,104,157,106,154,128,141,161,64,63,78",
+                        "endOffsets": "319,475,601,707,854,980,1099,1204,1362,1469,1624,1753,1895,2057,2122,2186,2265"
+                    },
+                    "to": {
+                        "startLines": "38,39,40,41,42,43,44,45,47,48,49,50,51,52,53,54,55",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "3798,3906,4066,4196,4306,4457,4587,4710,4963,5125,5236,5395,5528,5674,5840,5909,5977",
+                        "endColumns": "107,159,129,109,150,129,122,108,161,110,158,132,145,165,68,67,82",
+                        "endOffsets": "3901,4061,4191,4301,4452,4582,4705,4814,5120,5231,5390,5523,5669,5835,5904,5972,6055"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\ed136913ca13f480c0087351623a9780\\transformed\\browser-1.8.0\\res\\values-ro\\values-ro.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,162,264,377",
+                        "endColumns": "106,101,112,102",
+                        "endOffsets": "157,259,372,475"
+                    },
+                    "to": {
+                        "startLines": "57,68,69,70",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "6131,7019,7121,7234",
+                        "endColumns": "106,101,112,102",
+                        "endOffsets": "6233,7116,7229,7332"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\00001d4141d02919c9d2d1d972ac14e8\\transformed\\preference-1.2.1\\res\\values-ro\\values-ro.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "105,176,262,337,476,645,732",
+                        "endColumns": "70,85,74,138,168,86,80",
+                        "endOffsets": "171,257,332,471,640,727,808"
+                    },
+                    "to": {
+                        "startLines": "56,67,71,72,75,76,77",
+                        "startColumns": "4,4,4,4,4,4,4",
+                        "startOffsets": "6060,6933,7337,7412,7734,7903,7990",
+                        "endColumns": "70,85,74,138,168,86,80",
+                        "endOffsets": "6126,7014,7407,7546,7898,7985,8066"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\524484d9c9165348619a1ce6726bb999\\transformed\\core-1.18.0\\res\\values-ro\\values-ro.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,355,454,556,665,782",
+                        "endColumns": "97,101,99,98,101,108,116,100",
+                        "endOffsets": "148,250,350,449,551,660,777,878"
+                    },
+                    "to": {
+                        "startLines": "31,32,33,34,35,36,37,74",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "3071,3169,3271,3371,3470,3572,3681,7633",
+                        "endColumns": "97,101,99,98,101,108,116,100",
+                        "endOffsets": "3164,3266,3366,3465,3567,3676,3793,7729"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\c93ae1275d205441359eda512b5aa6d9\\transformed\\appcompat-1.7.0\\res\\values-ro\\values-ro.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "105,228,334,447,531,636,755,840,920,1011,1104,1199,1293,1393,1486,1581,1675,1766,1858,1939,2049,2157,2255,2367,2473,2577,2739,2840",
+                        "endColumns": "122,105,112,83,104,118,84,79,90,92,94,93,99,92,94,93,90,91,80,109,107,97,111,105,103,161,100,81",
+                        "endOffsets": "223,329,442,526,631,750,835,915,1006,1099,1194,1288,1388,1481,1576,1670,1761,1853,1934,2044,2152,2250,2362,2468,2572,2734,2835,2917"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,73",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "105,228,334,447,531,636,755,840,920,1011,1104,1199,1293,1393,1486,1581,1675,1766,1858,1939,2049,2157,2255,2367,2473,2577,2739,7551",
+                        "endColumns": "122,105,112,83,104,118,84,79,90,92,94,93,99,92,94,93,90,91,80,109,107,97,111,105,103,161,100,81",
+                        "endOffsets": "223,329,442,526,631,750,835,915,1006,1099,1194,1288,1388,1481,1576,1670,1761,1853,1934,2044,2152,2250,2362,2468,2572,2734,2835,7628"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\63b39d3446766f944c7459951ab708ed\\transformed\\jetified-media3-exoplayer-1.9.2\\res\\values-ro\\values-ro.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10",
+                        "startColumns": "4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,136,198,263,335,413,493,583,676",
+                        "endColumns": "80,61,64,71,77,79,89,92,73",
+                        "endOffsets": "131,193,258,330,408,488,578,671,745"
+                    },
+                    "to": {
+                        "startLines": "58,59,60,61,62,63,64,65,66",
+                        "startColumns": "4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "6238,6319,6381,6446,6518,6596,6676,6766,6859",
+                        "endColumns": "80,61,64,71,77,79,89,92,73",
+                        "endOffsets": "6314,6376,6441,6513,6591,6671,6761,6854,6928"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\9562a4f9c51dc9462ab5d327f05e3a4d\\transformed\\jetified-credentials-1.2.0-rc01\\res\\values-ro\\values-ro.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,165",
+                        "endColumns": "109,120",
+                        "endOffsets": "160,281"
+                    },
+                    "to": {
+                        "startLines": "29,30",
+                        "startColumns": "4,4",
+                        "startOffsets": "2840,2950",
+                        "endColumns": "109,120",
+                        "endOffsets": "2945,3066"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\corac\\.gradle\\caches\\8.12\\transforms\\13b3be96b673ff49358642177b9ec8b6\\transformed\\jetified-play-services-basement-18.7.1\\res\\values-ro\\values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "218",
+                        "endColumns": "139",
+                        "endOffsets": "357"
+                    },
+                    "to": {
+                        "startLines": "46",
+                        "startColumns": "4",
+                        "startOffsets": "4819",
+                        "endColumns": "143",
+                        "endOffsets": "4958"
+                    }
+                }
+            ]
+        }
+    ]
+}
