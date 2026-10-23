@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'get_medical_appointment_model.dart';
+import 'mobile_payment_modal.dart';
 export 'get_medical_appointment_model.dart';
 
 /// Book a medical appointement with a clinic
@@ -3420,7 +3421,21 @@ class _GetMedicalAppointmentWidgetState
                           consultMode = 'teleconsultation';
                         }
 
-                        // ── Save to Firestore ─────────────────────────────
+                        // ── Paiement obligatoire de l'acompte de 30% (Airtel Money / Mobile Money) ──
+                        final paymentResult = await MobilePaymentModal.show(
+                          context,
+                          doctorName: widget.doctorName ?? 'Médecin',
+                          appointmentDate: selectedDay,
+                          appointmentTime: selectedSlot,
+                          totalPrice: 20000.0,
+                        );
+
+                        if (paymentResult == null || paymentResult['success'] != true) {
+                          // L'utilisateur a annulé ou le paiement n'a pas abouti
+                          return;
+                        }
+
+                        // ── Save to Firestore avec informations d'acompte ──
                         try {
                           await AppointmentsRecord.collection.add({
                             'patient_ref': currentUserReference,
@@ -3433,8 +3448,15 @@ class _GetMedicalAppointmentWidgetState
                             'consult_mode': consultMode,
                             'day': selectedDay,
                             'time_slot': selectedSlot,
-                            'status': 'pending',
+                            'status': 'confirmed',
                             'is_doctor_view': widget.isDoctorView ?? false,
+                            'total_price': paymentResult['totalPrice'],
+                            'deposit_amount': paymentResult['depositAmount'],
+                            'remaining_amount': paymentResult['remainingAmount'],
+                            'payment_operator': paymentResult['operator'],
+                            'payment_phone': paymentResult['phone'],
+                            'payment_reference': paymentResult['reference'],
+                            'payment_status': 'deposit_paid_30',
                             'created_at': FieldValue.serverTimestamp(),
                             'updated_at': FieldValue.serverTimestamp(),
                           });

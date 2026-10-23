@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dmp_model.dart';
+import 'prescription_creation_dialog.dart';
 export 'dmp_model.dart';
 
 class DmpWidget extends StatefulWidget {
@@ -3172,66 +3173,53 @@ class _DmpWidgetState extends State<DmpWidget> with TickerProviderStateMixin {
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
                                                     0.0, 16.0, 0.0, 0.0),
-                                            child: Container(
-                                              width: double.infinity,
-                                              height: 35.0,
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF6D2F19),
-                                                    Color(0xFFC34213)
-                                                  ],
-                                                  stops: [0.0, 1.0],
-                                                  begin: AlignmentDirectional(
-                                                      1.0, -1.0),
-                                                  end: AlignmentDirectional(
-                                                      -1.0, 1.0),
+                                            child: InkWell(
+                                              onTap: () async {
+                                                await PrescriptionCreationDialog.show(
+                                                  context,
+                                                  patientUid: 'patient_bitodi_cora',
+                                                  patientName: 'BITODI Cornelca Cora',
+                                                );
+                                              },
+                                              borderRadius: BorderRadius.circular(5.0),
+                                              child: Container(
+                                                width: double.infinity,
+                                                height: 38.0,
+                                                decoration: BoxDecoration(
+                                                  gradient: const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFF16C583),
+                                                      Color(0xFF0F9D58),
+                                                    ],
+                                                    stops: [0.0, 1.0],
+                                                    begin: AlignmentDirectional(1.0, -1.0),
+                                                    end: AlignmentDirectional(-1.0, 1.0),
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(5.0),
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(5.0),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.max,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    'Conifrmer la Prescription',
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .labelSmall
-                                                        .override(
-                                                          font: GoogleFonts
-                                                              .outfit(
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            fontStyle:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontStyle,
-                                                          ),
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .secondaryBackground,
-                                                          fontSize: 12.0,
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontStyle,
-                                                          lineHeight: 1.3,
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.max,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      'Émettre & Signer l\'Ordonnance',
+                                                      style: FlutterFlowTheme.of(context).labelSmall.override(
+                                                        font: GoogleFonts.outfit(
+                                                          fontWeight: FontWeight.w600,
                                                         ),
-                                                  ),
-                                                  Icon(
-                                                    Icons.sell_outlined,
-                                                    color: Colors.white,
-                                                    size: 14.0,
-                                                  ),
-                                                ].divide(SizedBox(width: 10.0)),
+                                                        color: Colors.white,
+                                                        fontSize: 12.0,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                    const Icon(
+                                                      Icons.verified_outlined,
+                                                      color: Colors.white,
+                                                      size: 16.0,
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),

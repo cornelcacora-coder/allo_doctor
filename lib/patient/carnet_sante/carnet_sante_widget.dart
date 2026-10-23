@@ -1,4 +1,5 @@
 import '/components/patient_appointments_widget.dart';
+import '/components/patient_prescriptions_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -419,7 +420,9 @@ class _CarnetSanteWidgetState extends State<CarnetSanteWidget> {
                     ),
                   ),
                 ),
-                SizedBox(height: 14.0),
+                const SizedBox(height: 14.0),
+                const PatientPrescriptionsWidget(),
+                const SizedBox(height: 14.0),
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
