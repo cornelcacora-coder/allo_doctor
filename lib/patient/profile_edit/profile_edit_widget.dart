@@ -74,7 +74,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
             final bio = (data['bio'] as String?) ?? '';
             final phone = (data['phone'] as String?) ??
                 (data['telephone'] as String?) ??
-                currentUserPhoneNumber;
+                '';
             final address = (data['address'] as String?) ??
                 (data['adresse'] as String?) ??
                 '';
