@@ -42,7 +42,7 @@ class MobilePaymentModal extends StatefulWidget {
 }
 
 class _MobilePaymentModalState extends State<MobilePaymentModal> {
-  String _selectedOperator = 'airtel'; // 'airtel', 'mtn', 'orange'
+  String _selectedOperator = 'airtel'; // 'airtel', 'mtn'
   final _phoneController = TextEditingController();
   bool _isProcessing = false;
 
@@ -71,7 +71,7 @@ class _MobilePaymentModalState extends State<MobilePaymentModal> {
     if (mounted) {
       Navigator.pop(context, {
         'success': true,
-        'operator': _selectedOperator == 'airtel' ? 'Airtel Money' : (_selectedOperator == 'orange' ? 'Orange Money' : 'MTN Mobile Money'),
+        'operator': _selectedOperator == 'airtel' ? 'Airtel Money' : 'MTN Mobile Money',
         'phone': phone,
         'totalPrice': widget.totalPrice,
         'depositAmount': _depositAmount,
@@ -229,29 +229,19 @@ class _MobilePaymentModalState extends State<MobilePaymentModal> {
                   child: _buildOperatorCard(
                     operatorId: 'airtel',
                     title: 'Airtel Money',
-                    subtitle: 'Airtel',
+                    subtitle: 'Airtel Congo',
                     color: const Color(0xFFE53935),
                     icon: Icons.phone_android,
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _buildOperatorCard(
                     operatorId: 'mtn',
                     title: 'MTN MoMo',
-                    subtitle: 'MTN',
+                    subtitle: 'MTN Congo',
                     color: const Color(0xFFFFB300),
                     icon: Icons.wallet_rounded,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildOperatorCard(
-                    operatorId: 'orange',
-                    title: 'Orange Money',
-                    subtitle: 'Orange',
-                    color: const Color(0xFFFF6F00),
-                    icon: Icons.currency_exchange,
                   ),
                 ),
               ],
