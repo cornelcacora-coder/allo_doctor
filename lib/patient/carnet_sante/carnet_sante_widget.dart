@@ -1,5 +1,7 @@
 import '/components/patient_appointments_widget.dart';
 import '/components/patient_prescriptions_widget.dart';
+import '/components/notification_bell_widget.dart';
+import '/components/offline_banner_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -214,6 +216,8 @@ class _CarnetSanteWidgetState extends State<CarnetSanteWidget> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
+                    // ── Carte accès hors-ligne ────────────────────────────
+                    const OfflineAccessCard(),
                     Row(
                   mainAxisSize: MainAxisSize.max,
                   children: [
