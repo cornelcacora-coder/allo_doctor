@@ -64,7 +64,10 @@
     <string>We need permission to send you reminders.</string>
 	<key>NSUserNotificationUsageDescription</key>
     <string>We use notifications to remind you about scheduled events.</string>
-
+	<key>NSCameraUsageDescription</key>
+	<string>Allo Doctor a besoin d'accéder à votre caméra pour la téléconsultation médicale.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allo Doctor a besoin d'accéder à votre micro pour communiquer avec votre médecin lors de la téléconsultation.</string>
 
 
 	<key>UILaunchStoryboardName</key>

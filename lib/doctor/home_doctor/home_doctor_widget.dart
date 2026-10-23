@@ -15,8 +15,9 @@ import 'package:provider/provider.dart';
 import 'home_doctor_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:convert';
 import '/auth/firebase_auth/auth_util.dart';
+import '/components/avatar_image_widget.dart';
 export 'home_doctor_model.dart';
 
 class HomeDoctorWidget extends StatefulWidget {
@@ -116,26 +117,15 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
       );
 
       final bytes = await pickedFile.readAsBytes();
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('users/$currentUserUid/profile_${DateTime.now().millisecondsSinceEpoch}.jpg');
-      final uploadTask = await storageRef.putData(
-        bytes,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      final base64String = base64Encode(bytes);
+      final photoDataUri = 'data:image/jpeg;base64,$base64String';
 
       // Use set+merge so it works even if the doc doesn't exist yet
       await FirebaseFirestore.instance.collection('users').doc(currentUserUid).set({
-        'photo_url': downloadUrl,
+        'photo_url': photoDataUri,
+        'photoUrl': photoDataUri,
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      try {
-        await currentUser?.updatePhotoURL(downloadUrl);
-      } catch (_) {}
-
-      // Invalidate the old cached image so the new one shows immediately
-      CachedNetworkImage.evictFromCache(downloadUrl);
 
       // Force the user stream to re-init so the StreamBuilder picks up the new photo
       _lastLoadedUid = null;
@@ -725,32 +715,29 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
                                       child: Padding(
                                         padding: EdgeInsets.all(4.0),
                                         child: ClipOval(
-                                          child: photoUrl.isNotEmpty
-                                              ? CachedNetworkImage(
-                                                  fadeInDuration: Duration(milliseconds: 0),
-                                                  fadeOutDuration: Duration(milliseconds: 0),
-                                                  imageUrl: photoUrl,
-                                                  width: 96.0,
-                                                  height: 96.0,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : Container(
-                                                  width: 96.0,
-                                                  height: 96.0,
-                                                  decoration: BoxDecoration(
-                                                    color: FlutterFlowTheme.of(context).primary,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: Text(
-                                                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'D',
-                                                    style: GoogleFonts.outfit(
-                                                      color: Colors.white,
-                                                      fontSize: 38.0,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
+                                          child: AvatarImageWidget(
+                                            imageUrl: photoUrl,
+                                            width: 96.0,
+                                            height: 96.0,
+                                            fit: BoxFit.cover,
+                                            placeholder: Container(
+                                              width: 96.0,
+                                              height: 96.0,
+                                              decoration: BoxDecoration(
+                                                color: FlutterFlowTheme.of(context).primary,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                displayName.isNotEmpty ? displayName[0].toUpperCase() : 'D',
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.white,
+                                                  fontSize: 38.0,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),

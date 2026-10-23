@@ -4,6 +4,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import 'dart:ui';
+import '/components/avatar_image_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -232,26 +233,24 @@ class _CarnetSanteWidgetState extends State<CarnetSanteWidget> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                               ),
-                              child: photoUrl.isNotEmpty
-                                  ? CachedNetworkImage(
-                                      fadeInDuration: Duration(milliseconds: 0),
-                                      fadeOutDuration: Duration(milliseconds: 0),
-                                      imageUrl: photoUrl,
-                                      fit: BoxFit.cover,
-                                      alignment: Alignment(0.0, 0.0),
-                                    )
-                                  : Container(
-                                      color: FlutterFlowTheme.of(context).primary,
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        displayName.isNotEmpty ? displayName[0].toUpperCase() : 'B',
-                                        style: GoogleFonts.outfit(
-                                          color: Colors.white,
-                                          fontSize: 22.0,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                              child: AvatarImageWidget(
+                                imageUrl: photoUrl,
+                                width: 55.0,
+                                height: 55.0,
+                                fit: BoxFit.cover,
+                                placeholder: Container(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    displayName.isNotEmpty ? displayName[0].toUpperCase() : 'B',
+                                    style: GoogleFonts.outfit(
+                                      color: Colors.white,
+                                      fontSize: 22.0,
+                                      fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                ),
+                              ),
                             ),
                             Align(
                               alignment: AlignmentDirectional(1.0, 1.0),

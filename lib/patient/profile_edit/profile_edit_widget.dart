@@ -5,10 +5,11 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/components/avatar_image_widget.dart';
 import '/index.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -55,11 +56,159 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
     _model.textController4 ??= TextEditingController();
     _model.textFieldFocusNode4 ??= FocusNode();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       safeSetState(() {
         _photoUrl = currentUserPhoto;
       });
+      if (currentUserUid.isNotEmpty) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUserUid)
+              .get();
+          final data = doc.data();
+          if (data != null) {
+            final name = (data['name'] as String?) ??
+                (data['displayName'] as String?) ??
+                currentUserDisplayName;
+            final bio = (data['bio'] as String?) ?? '';
+            final phone = (data['phone'] as String?) ??
+                (data['telephone'] as String?) ??
+                currentUserPhoneNumber;
+            final address = (data['address'] as String?) ??
+                (data['adresse'] as String?) ??
+                '';
+            final photo = (data['photoUrl'] as String?) ??
+                (data['photo_url'] as String?) ??
+                currentUserPhoto;
+
+            if (name.isNotEmpty) {
+              _model.textFieldModel1.inputTextController?.text = name;
+              _model.textController1?.text = name;
+            }
+            if (bio.isNotEmpty) {
+              _model.textFieldModel2.inputTextController?.text = bio;
+              _model.textController2?.text = bio;
+            }
+            if (phone.isNotEmpty) {
+              _model.textFieldModel3.inputTextController?.text = phone;
+              _model.textController3?.text = phone;
+            }
+            if (address.isNotEmpty) {
+              _model.textFieldModel4.inputTextController?.text = address;
+              _model.textController4?.text = address;
+            }
+            if (photo.isNotEmpty) {
+              _photoUrl = photo;
+            }
+            safeSetState(() {});
+          }
+        } catch (_) {}
+      }
     });
+  }
+
+  Future<void> _saveProfileInfo() async {
+    if (currentUserUid.isEmpty) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: Container(
+          padding: EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  FlutterFlowTheme.of(context).primary,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text('Enregistrement en cours...', style: GoogleFonts.outfit(fontSize: 14)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final name = (_model.textFieldModel1.inputTextController?.text.trim().isNotEmpty == true
+          ? _model.textFieldModel1.inputTextController!.text.trim()
+          : _model.textController1?.text.trim()) ?? '';
+
+      final bio = (_model.textFieldModel2.inputTextController?.text.trim().isNotEmpty == true
+          ? _model.textFieldModel2.inputTextController!.text.trim()
+          : _model.textController2?.text.trim()) ?? '';
+
+      final phone = (_model.textFieldModel3.inputTextController?.text.trim().isNotEmpty == true
+          ? _model.textFieldModel3.inputTextController!.text.trim()
+          : _model.textController3?.text.trim()) ?? '';
+
+      final address = (_model.textFieldModel4.inputTextController?.text.trim().isNotEmpty == true
+          ? _model.textFieldModel4.inputTextController!.text.trim()
+          : _model.textController4?.text.trim()) ?? '';
+
+      final updateData = <String, dynamic>{
+        'updated_at': FieldValue.serverTimestamp(),
+      };
+      if (name.isNotEmpty) {
+        updateData['name'] = name;
+        updateData['displayName'] = name;
+        updateData['nom'] = name;
+      }
+      if (bio.isNotEmpty) updateData['bio'] = bio;
+      if (phone.isNotEmpty) {
+        updateData['phone'] = phone;
+        updateData['telephone'] = phone;
+      }
+      if (address.isNotEmpty) {
+        updateData['address'] = address;
+        updateData['adresse'] = address;
+      }
+      if (_photoUrl.isNotEmpty) {
+        updateData['photoUrl'] = _photoUrl;
+        updateData['photo_url'] = _photoUrl;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserUid)
+          .set(updateData, SetOptions(merge: true));
+
+      if (name.isNotEmpty) {
+        try {
+          await currentUser?.updateDisplayName(name);
+        } catch (_) {}
+      }
+
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Informations enregistrées avec succès !'),
+            backgroundColor: Color(0xFF1B5E20),
+          ),
+        );
+        context.safePop();
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'enregistrement : $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -71,16 +220,15 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
 
   
   Future<void> _changePhotoDialog(BuildContext context) async {
-    // Afficher un indicateur de chargement pendant l'upload
     final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 75,
-      maxWidth: 800,
+      imageQuality: 60,
+      maxWidth: 400,
+      maxHeight: 400,
     );
-    if (pickedFile == null) return; // L'utilisateur a annulé
+    if (pickedFile == null) return;
 
-    // Afficher un loader pendant l'upload
     if (!context.mounted) return;
     showDialog(
       context: context,
@@ -101,7 +249,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
                 ),
               ),
               SizedBox(height: 16),
-              Text('Envoi en cours...', style: GoogleFonts.outfit(fontSize: 14)),
+              Text('Enregistrement de la photo...', style: GoogleFonts.outfit(fontSize: 14)),
             ],
           ),
         ),
@@ -110,36 +258,36 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
 
     try {
       final bytes = await pickedFile.readAsBytes();
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('users/$currentUserUid/profile.jpg');
-      final uploadTask = await storageRef.putData(
-        bytes,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      final base64String = base64Encode(bytes);
+      final photoDataUri = 'data:image/jpeg;base64,$base64String';
 
       await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUserUid)
-          .update({
-        'photoUrl': downloadUrl,
-        'photo_url': downloadUrl,
-      });
-      try {
-        await currentUser?.updatePhotoURL(downloadUrl);
-      } catch (_) {}
+          .set({
+        'photoUrl': photoDataUri,
+        'photo_url': photoDataUri,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
       safeSetState(() {
-        _photoUrl = downloadUrl;
+        _photoUrl = photoDataUri;
       });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Photo mise à jour avec succès !'),
+            backgroundColor: Color(0xFF1B5E20),
+          ),
+        );
+      }
     } catch (e) {
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de l\'upload : $e'),
+            content: Text('Erreur lors de l\'enregistrement : $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -234,23 +382,19 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(50.0),
-                                child: _photoUrl.isNotEmpty
-                                    ? CachedNetworkImage(
-                                        fadeInDuration: Duration(milliseconds: 0),
-                                        fadeOutDuration: Duration(milliseconds: 0),
-                                        imageUrl: _photoUrl,
-                                        width: 96.0,
-                                        height: 96.0,
-                                        fit: BoxFit.cover,
-                                        alignment: Alignment(0.0, 0.0),
-                                      )
-                                    : Container(
-                                        width: 96.0,
-                                        height: 96.0,
-                                        color: FlutterFlowTheme.of(context).primary,
-                                        alignment: Alignment.center,
-                                        child: Icon(Icons.person, size: 48.0, color: Colors.white),
-                                      ),
+                                child: AvatarImageWidget(
+                                  imageUrl: _photoUrl,
+                                  width: 96.0,
+                                  height: 96.0,
+                                  fit: BoxFit.cover,
+                                  placeholder: Container(
+                                    width: 96.0,
+                                    height: 96.0,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    alignment: Alignment.center,
+                                    child: Icon(Icons.person, size: 48.0, color: Colors.white),
+                                  ),
+                                ),
                               ),
                               Align(
                                 alignment: AlignmentDirectional(1.0, 1.0),
@@ -513,8 +657,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
                           hoverColor: Colors.transparent,
                           highlightColor: Colors.transparent,
                           onTap: () async {
-                            context.pushNamed(
-                                OTPVerificationPatientWidget.routeName);
+                            await _saveProfileInfo();
                           },
                           child: Container(
                             width: double.infinity,
@@ -594,23 +737,19 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(50.0),
-                                    child: _photoUrl.isNotEmpty
-                                        ? CachedNetworkImage(
-                                            fadeInDuration: Duration(milliseconds: 0),
-                                            fadeOutDuration: Duration(milliseconds: 0),
-                                            imageUrl: _photoUrl,
-                                            width: 96.0,
-                                            height: 96.0,
-                                            fit: BoxFit.cover,
-                                            alignment: Alignment(0.0, 0.0),
-                                          )
-                                        : Container(
-                                            width: 96.0,
-                                            height: 96.0,
-                                            color: FlutterFlowTheme.of(context).primary,
-                                            alignment: Alignment.center,
-                                            child: Icon(Icons.person, size: 48.0, color: Colors.white),
-                                          ),
+                                    child: AvatarImageWidget(
+                                      imageUrl: _photoUrl,
+                                      width: 96.0,
+                                      height: 96.0,
+                                      fit: BoxFit.cover,
+                                      placeholder: Container(
+                                        width: 96.0,
+                                        height: 96.0,
+                                        color: FlutterFlowTheme.of(context).primary,
+                                        alignment: Alignment.center,
+                                        child: Icon(Icons.person, size: 48.0, color: Colors.white),
+                                      ),
+                                    ),
                                   ),
                                   Align(
                                     alignment: AlignmentDirectional(1.0, 1.0),
@@ -2890,8 +3029,7 @@ class _ProfileEditWidgetState extends State<ProfileEditWidget> {
                             hoverColor: Colors.transparent,
                             highlightColor: Colors.transparent,
                             onTap: () async {
-                              context.pushNamed(
-                                  OTPVerificationPatientWidget.routeName);
+                              await _saveProfileInfo();
                             },
                             child: Container(
                               width: double.infinity,

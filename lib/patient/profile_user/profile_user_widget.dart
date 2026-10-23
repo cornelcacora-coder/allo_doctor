@@ -6,6 +6,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
 import '/index.dart';
+import '/components/avatar_image_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -180,33 +181,29 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                             child: Padding(
                               padding: EdgeInsets.all(4.0),
                               child: ClipOval(
-                                child: photoUrl.isNotEmpty
-                                    ? CachedNetworkImage(
-                                        fadeInDuration: Duration(milliseconds: 0),
-                                        fadeOutDuration: Duration(milliseconds: 0),
-                                        imageUrl: photoUrl,
-                                        width: 96.0,
-                                        height: 96.0,
-                                        fit: BoxFit.cover,
-                                        alignment: Alignment(0.0, 0.0),
-                                      )
-                                    : Container(
-                                        width: 96.0,
-                                        height: 96.0,
-                                        decoration: BoxDecoration(
-                                          color: FlutterFlowTheme.of(context).primary,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
-                                          style: GoogleFonts.outfit(
-                                            fontSize: 36.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
+                                child: AvatarImageWidget(
+                                  imageUrl: photoUrl,
+                                  width: 96.0,
+                                  height: 96.0,
+                                  fit: BoxFit.cover,
+                                  placeholder: Container(
+                                    width: 96.0,
+                                    height: 96.0,
+                                    decoration: BoxDecoration(
+                                      color: FlutterFlowTheme.of(context).primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 36.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
                                       ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
