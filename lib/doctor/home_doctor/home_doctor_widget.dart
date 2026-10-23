@@ -14,8 +14,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'home_doctor_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:convert';
 import '/auth/firebase_auth/auth_util.dart';
 import '/components/avatar_image_widget.dart';
 export 'home_doctor_model.dart';
@@ -84,12 +84,14 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 75,
-        maxWidth: 800,
+        imageQuality: 80,
+        maxWidth: 1024,
       );
       if (pickedFile == null) return;
 
       if (!context.mounted) return;
+
+      // Afficher le loader
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -116,18 +118,40 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
         ),
       );
 
+      // Lire les bytes de l'image
       final bytes = await pickedFile.readAsBytes();
-      final base64String = base64Encode(bytes);
-      final photoDataUri = 'data:image/jpeg;base64,$base64String';
+      final uid = currentUserUid;
 
-      // Use set+merge so it works even if the doc doesn't exist yet
-      await FirebaseFirestore.instance.collection('users').doc(currentUserUid).set({
-        'photo_url': photoDataUri,
-        'photoUrl': photoDataUri,
+      // Upload dans Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('doctor_photos')
+          .child('$uid.jpg');
+
+      final uploadTask = storageRef.putData(
+        bytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Sauvegarder uniquement l'URL dans Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .set({
+        'photo_url': downloadUrl,
+        'photoUrl': downloadUrl,
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // Force the user stream to re-init so the StreamBuilder picks up the new photo
+      // Mise à jour Auth photo
+      try {
+        await currentUser?.updatePhotoURL(downloadUrl);
+      } catch (_) {}
+
+      // Rafraîchir les streams
       _lastLoadedUid = null;
       _initStreams();
 
@@ -143,10 +167,7 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
       safeSetState(() {});
     } catch (e) {
       if (context.mounted) {
-        // Dismiss the loading dialog if it's showing
-        try {
-          Navigator.of(context, rootNavigator: true).pop();
-        } catch (_) {}
+        try { Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
       }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
