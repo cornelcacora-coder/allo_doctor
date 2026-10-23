@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'teleconsultation_model.dart';
 export 'teleconsultation_model.dart';
@@ -10,8 +9,8 @@ export 'teleconsultation_model.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // ⚠️  Remplacez ces valeurs par vos vraies clés Agora
 // ─────────────────────────────────────────────────────────────────────────────
-const String _agoraAppId = 'VOTRE_AGORA_APP_ID';
-const String _agoraToken = ''; // laisser vide si Agora en mode test (sans token)
+const String _agoraAppId = '1b57338080574e3ba72e5cb091a8cb45';
+const String _agoraToken = '007eJxTYFiRtvPgEWWDtKs3Ul/Mcj9dyMUqxS/kMYFL5cTsq5f3z1mhwGCYZGpubGxhYGFgam6SapyUaG6UapqcZGBpmGiRnGRi6jT7dlaDFSdDwsSnjIwMjAwsDIwMh64+yWICk8xgkgVMCjMk5uTkx6fkJ5fkF8UnZyTm5aXmMDAAAMzQMFE=';
 const String _agoraChannel = 'allo_doctor_channel';
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -65,7 +64,7 @@ class _TeleconsultationWidgetState extends State<TeleconsultationWidget> {
     final engine = createAgoraRtcEngine();
     _engine = engine;
 
-    await engine.initialize(RtcEngineContext(
+    await engine.initialize(const RtcEngineContext(
       appId: _agoraAppId,
       channelProfile: ChannelProfileType.channelProfileCommunication,
     ));
