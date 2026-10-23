@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -58,72 +59,84 @@ class _TeleconsultationWidgetState extends State<TeleconsultationWidget> {
   }
 
   Future<void> _initAgora() async {
-    // Demande des permissions microphone + caméra
-    await [Permission.microphone, Permission.camera].request();
+    try {
+      // Demande des permissions uniquement sur mobile (Android / iOS)
+      // Sur le Web, le navigateur gère automatiquement la demande de permission
+      if (!kIsWeb) {
+        await [Permission.microphone, Permission.camera].request();
+      }
 
-    final engine = createAgoraRtcEngine();
-    _engine = engine;
+      final engine = createAgoraRtcEngine();
+      _engine = engine;
 
-    await engine.initialize(const RtcEngineContext(
-      appId: _agoraAppId,
-      channelProfile: ChannelProfileType.channelProfileCommunication,
-    ));
+      await engine.initialize(const RtcEngineContext(
+        appId: _agoraAppId,
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+      ));
 
-    engine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (connection, elapsed) {
-          if (mounted) {
-            setState(() {
-              _localUserJoined = true;
-              _isInitializing = false;
-            });
-            _stopwatch.start();
-            _startTimer();
-          }
-        },
-        onUserJoined: (connection, remoteUid, elapsed) {
-          if (mounted) {
-            setState(() {
-              _remoteUid = remoteUid;
-              _remoteUserJoined = true;
-            });
-          }
-        },
-        onUserOffline: (connection, remoteUid, reason) {
-          if (mounted) {
-            setState(() {
-              _remoteUid = null;
-              _remoteUserJoined = false;
-            });
-          }
-        },
-        onError: (err, msg) {
-          if (mounted) {
-            setState(() {
-              _isInitializing = false;
-              _errorMessage = 'Erreur Agora: $err — $msg';
-            });
-          }
-        },
-      ),
-    );
+      engine.registerEventHandler(
+        RtcEngineEventHandler(
+          onJoinChannelSuccess: (connection, elapsed) {
+            if (mounted) {
+              setState(() {
+                _localUserJoined = true;
+                _isInitializing = false;
+              });
+              _stopwatch.start();
+              _startTimer();
+            }
+          },
+          onUserJoined: (connection, remoteUid, elapsed) {
+            if (mounted) {
+              setState(() {
+                _remoteUid = remoteUid;
+                _remoteUserJoined = true;
+              });
+            }
+          },
+          onUserOffline: (connection, remoteUid, reason) {
+            if (mounted) {
+              setState(() {
+                _remoteUid = null;
+                _remoteUserJoined = false;
+              });
+            }
+          },
+          onError: (err, msg) {
+            if (mounted) {
+              setState(() {
+                _isInitializing = false;
+                _errorMessage = 'Erreur Agora: $err — $msg';
+              });
+            }
+          },
+        ),
+      );
 
-    await engine.enableVideo();
-    await engine.enableAudio();
-    await engine.startPreview();
+      await engine.enableVideo();
+      await engine.enableAudio();
+      await engine.startPreview();
 
-    await engine.joinChannel(
-      token: widget.token ?? _agoraToken,
-      channelId: widget.channelName ?? _agoraChannel,
-      uid: 0,
-      options: const ChannelMediaOptions(
-        autoSubscribeAudio: true,
-        autoSubscribeVideo: true,
-        publishCameraTrack: true,
-        publishMicrophoneTrack: true,
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-      ),
-    );
+      await engine.joinChannel(
+        token: widget.token ?? _agoraToken,
+        channelId: widget.channelName ?? _agoraChannel,
+        uid: 0,
+        options: const ChannelMediaOptions(
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+          _errorMessage = 'Erreur initialisation: $e';
+        });
+      }
+    }
   }
 
   void _startTimer() {
@@ -139,31 +152,41 @@ class _TeleconsultationWidgetState extends State<TeleconsultationWidget> {
 
   Future<void> _toggleMute() async {
     setState(() => _muted = !_muted);
-    await _engine?.muteLocalAudioStream(_muted);
+    try {
+      await _engine?.muteLocalAudioStream(_muted);
+    } catch (_) {}
   }
 
   Future<void> _toggleCamera() async {
     setState(() => _cameraOff = !_cameraOff);
-    if (_cameraOff) {
-      await _engine?.disableVideo();
-    } else {
-      await _engine?.enableVideo();
-    }
+    try {
+      if (_cameraOff) {
+        await _engine?.disableVideo();
+      } else {
+        await _engine?.enableVideo();
+      }
+    } catch (_) {}
   }
 
   Future<void> _switchCamera() async {
-    await _engine?.switchCamera();
+    try {
+      await _engine?.switchCamera();
+    } catch (_) {}
   }
 
   Future<void> _toggleSpeaker() async {
     setState(() => _speakerOn = !_speakerOn);
-    await _engine?.setEnableSpeakerphone(_speakerOn);
+    try {
+      await _engine?.setEnableSpeakerphone(_speakerOn);
+    } catch (_) {}
   }
 
   Future<void> _endCall() async {
     _stopwatch.stop();
-    await _engine?.leaveChannel();
-    await _engine?.release();
+    try {
+      await _engine?.leaveChannel();
+      await _engine?.release();
+    } catch (_) {}
     if (mounted) context.safePop();
   }
 
