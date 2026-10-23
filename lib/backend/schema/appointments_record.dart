@@ -36,6 +36,16 @@ class AppointmentsRecord extends FirestoreRecord {
   DocumentReference? get doctorRef => _doctorRef;
   bool hasDoctorRef() => _doctorRef != null;
 
+  // "doctor_name" field.
+  String? _doctorName;
+  String get doctorName => _doctorName ?? (snapshotData['doctor_name'] as String? ?? '');
+  bool hasDoctorName() => _doctorName != null || snapshotData['doctor_name'] != null;
+
+  // "doctor_id" field.
+  String? _doctorId;
+  String get doctorId => _doctorId ?? (snapshotData['doctor_id'] as String? ?? '');
+  bool hasDoctorId() => _doctorId != null || snapshotData['doctor_id'] != null;
+
   // "clinic_ref" field.
   DocumentReference? _clinicRef;
   DocumentReference? get clinicRef => _clinicRef;
@@ -101,6 +111,8 @@ class AppointmentsRecord extends FirestoreRecord {
     _patientName = snapshotData['patient_name'] as String?;
     _patientEmail = snapshotData['patient_email'] as String?;
     _doctorRef = snapshotData['doctor_ref'] as DocumentReference?;
+    _doctorName = snapshotData['doctor_name'] as String?;
+    _doctorId = snapshotData['doctor_id'] as String?;
     _clinicRef = snapshotData['clinic_ref'] as DocumentReference?;
     _dateTime = snapshotData['date_time'] as DateTime?;
     _appointmentType = snapshotData['appointment_type'] as String?;

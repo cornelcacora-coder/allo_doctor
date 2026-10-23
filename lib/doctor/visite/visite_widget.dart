@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'visite_model.dart';
+import '/auth/firebase_auth/auth_util.dart';
 export 'visite_model.dart';
 
 class VisiteWidget extends StatefulWidget {
@@ -28,13 +29,30 @@ class _VisiteWidgetState extends State<VisiteWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _visiteStream;
+  String? _lastLoadedUid;
+
+  void _initStreams() {
+    final uid = currentUserUid;
+    if (uid.isNotEmpty && uid != _lastLoadedUid) {
+      _lastLoadedUid = uid;
+      _visiteStream = FirebaseFirestore.instance
+          .collection('appointments')
+          .where('consult_mode', isEqualTo: 'domicile')
+          .snapshots();
+    } else if (uid.isEmpty) {
+      _lastLoadedUid = null;
+      _visiteStream = null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => VisiteModel());
+    _initStreams();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      safeSetState(() {});
       // Garde-fou : cet espace est reserve aux comptes médecins.
       await guardRole(context, 'medecin');
     });
@@ -49,6 +67,21 @@ class _VisiteWidgetState extends State<VisiteWidget> {
 
   @override
   Widget build(BuildContext context) {
+    _initStreams();
+
+    if (currentUserUid.isEmpty) {
+      return Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              FlutterFlowTheme.of(context).primary,
+            ),
+          ),
+        ),
+      );
+    }
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -181,17 +214,39 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                   Padding(
                     padding: EdgeInsets.all(24.0),
                     child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: FirebaseFirestore.instance.collection('appointments').where('consult_mode', isEqualTo: 'domicile').snapshots(),
+                      stream: _visiteStream,
                       builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
                           return Center(
                             child: Padding(
                               padding: EdgeInsets.all(24.0),
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(
+                                color: FlutterFlowTheme.of(context).primary,
+                              ),
                             ),
                           );
                         }
-                        final docs = snapshot.data!.docs;
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Text(
+                                'Erreur de chargement des visites',
+                                style: FlutterFlowTheme.of(context).labelMedium,
+                              ),
+                            ),
+                          );
+                        }
+                        final allDocs = snapshot.data?.docs ?? [];
+                        final docs = allDocs.where((doc) {
+                          final a = doc.data();
+                          final docId = (a['doctor_id'] as String?) ?? '';
+                          final docName = (a['doctor_name'] as String?) ?? '';
+                          if (docId.isNotEmpty && currentUserUid.isNotEmpty && docId == currentUserUid) return true;
+                          if (docName.isNotEmpty && currentUserDisplayName.isNotEmpty && docName.toLowerCase() == currentUserDisplayName.toLowerCase()) return true;
+                          return docId.isEmpty && docName.isEmpty;
+                        }).toList();
+
                         if (docs.isEmpty) {
                           return Center(
                             child: Padding(
@@ -228,6 +283,7 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                             final patientName = (data['patient_name'] as String?)?.trim().isNotEmpty == true
                                 ? data['patient_name'] as String
                                 : 'Patient';
+                            final patientPhoto = (data['patient_photo'] as String?) ?? '';
                             final day = (data['day'] as String?) ?? '';
                             final timeSlot = (data['time_slot'] as String?) ?? '';
                             final sympto = day + (timeSlot.isNotEmpty ? ' • ' + timeSlot : '');
@@ -241,7 +297,7 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                                 context.pushNamed(DmpWidget.routeName);
                               },
                               child: PatientCardWidget(
-                                photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
+                                photo: patientPhoto,
                                 name: patientName,
                                 sympto: sympto,
                                 type: 'Domicile',
@@ -545,121 +601,6 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                     ),
                   ),
                 ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(20.0, 14.0, 20.0, 12.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 4.0,
-                          height: 24.0,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF165C40),
-                            borderRadius: BorderRadius.circular(2.0),
-                            shape: BoxShape.rectangle,
-                          ),
-                        ),
-                        Text(
-                          'Mes Visites',
-                          style: FlutterFlowTheme.of(context)
-                              .titleLarge
-                              .override(
-                                font: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .titleLarge
-                                      .fontStyle,
-                                ),
-                                color: FlutterFlowTheme.of(context).primaryText,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .titleLarge
-                                    .fontStyle,
-                                lineHeight: 1.4,
-                              ),
-                        ),
-                      ].divide(SizedBox(width: 8.0)),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      scrollDirection: Axis.vertical,
-                      children: [
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(DmpWidget.routeName);
-                          },
-                          child: wrapWithModel(
-                            model: _model.patientCardModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: PatientCardWidget(
-                              photo:
-                                  'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                              name: '',
-                              sympto: '',
-                              type: 'Domicile',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(DmpWidget.routeName);
-                          },
-                          child: wrapWithModel(
-                            model: _model.patientCardModel3,
-                            updateCallback: () => safeSetState(() {}),
-                            child: PatientCardWidget(
-                              photo:
-                                  'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                              name: '',
-                              sympto: '',
-                              type: 'Domicile',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(DmpWidget.routeName);
-                          },
-                          child: wrapWithModel(
-                            model: _model.patientCardModel4,
-                            updateCallback: () => safeSetState(() {}),
-                            child: PatientCardWidget(
-                              photo:
-                                  'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                              name: '',
-                              sympto: '',
-                              type: 'Domicile',
-                            ),
-                          ),
-                        ),
-                      ].divide(SizedBox(height: 14.0)),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

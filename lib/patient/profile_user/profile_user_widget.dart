@@ -1,3 +1,4 @@
+import '/components/patient_appointments_widget.dart';
 import '/components/nav_bar_user_widget.dart';
 import '/components/stateitem_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -156,6 +157,12 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                       ? userData['role'] as String
                       : 'patient';
                   final photoUrl = (userData['photoUrl'] as String?) ?? '';
+                  // Dynamic counts from Firestore
+                  final bloodGroup = (userData['bloodGroup'] as String?)?.isNotEmpty == true
+                      ? userData['bloodGroup'] as String
+                      : ((userData['blood_group'] as String?)?.isNotEmpty == true
+                          ? userData['blood_group'] as String
+                          : (userData['groupe_sanguin'] as String?) ?? '--');
 
                   return SingleChildScrollView(
                     child: Column(
@@ -223,46 +230,78 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                               ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 40.0,
-                          child: wrapWithModel(
-                            model: _model.stateitemModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'Examen',
-                              count: '0',
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.0,
-                          decoration: BoxDecoration(),
-                          child: wrapWithModel(
-                            model: _model.stateitemModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'Consultations',
-                              count: '10',
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.0,
-                          decoration: BoxDecoration(),
-                          child: wrapWithModel(
-                            model: _model.stateitemModel3,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'Groupe',
-                              count: 'O+',
-                            ),
-                          ),
-                        ),
-                      ].divide(SizedBox(width: 32.0)),
+                    StreamBuilder<List<QueryDocumentSnapshot>>(
+                      stream: currentUserUid.isNotEmpty
+                          ? FirebaseFirestore.instance
+                              .collection('appointments')
+                              .snapshots()
+                              .map((s) => s.docs.where((d) {
+                                    final pId = d.data()['patient_id'] as String?;
+                                    final pEmail = d.data()['patient_email'] as String?;
+                                    return (pId != null && pId == currentUserUid) ||
+                                        (pEmail != null &&
+                                            pEmail.toLowerCase() ==
+                                                currentUserEmail.toLowerCase());
+                                  }).toList())
+                          : Stream.value([]),
+                      builder: (context, apptSnap) {
+                        final apptCount = apptSnap.data?.length ?? 0;
+                        return StreamBuilder<List<QueryDocumentSnapshot>>(
+                          stream: currentUserUid.isNotEmpty
+                              ? FirebaseFirestore.instance
+                                  .collection('lab_results')
+                                  .snapshots()
+                                  .map((s) => s.docs.where((d) {
+                                        final ref = d.data()['patient_ref'] as DocumentReference?;
+                                        return ref?.id == currentUserUid;
+                                      }).toList())
+                              : Stream.value([]),
+                          builder: (context, labSnap) {
+                            final labCount = labSnap.data?.length ?? 0;
+                            return Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 40.0,
+                                  child: wrapWithModel(
+                                    model: _model.stateitemModel1,
+                                    updateCallback: () => safeSetState(() {}),
+                                    child: StateitemWidget(
+                                      label: 'Examens',
+                                      count: labCount.toString(),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  height: 40.0,
+                                  decoration: BoxDecoration(),
+                                  child: wrapWithModel(
+                                    model: _model.stateitemModel2,
+                                    updateCallback: () => safeSetState(() {}),
+                                    child: StateitemWidget(
+                                      label: 'Rendez-vous',
+                                      count: apptCount.toString(),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  height: 40.0,
+                                  decoration: BoxDecoration(),
+                                  child: wrapWithModel(
+                                    model: _model.stateitemModel3,
+                                    updateCallback: () => safeSetState(() {}),
+                                    child: StateitemWidget(
+                                      label: 'Groupe',
+                                      count: bloodGroup,
+                                    ),
+                                  ),
+                                ),
+                              ].divide(SizedBox(width: 32.0)),
+                            );
+                          },
+                        );
+                      },
                     ),
                     Padding(
                       padding: EdgeInsets.all(16.0),
@@ -513,61 +552,74 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                   ),
                                 ),
                               ),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context)
-                                      .primaryBackground,
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(14.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: [
-                                          Icon(
-                                            Icons.edit_calendar,
-                                            color: Color(0xFF8A0DCE),
-                                            size: 18.0,
-                                          ),
-                                          Text(
-                                            'MES CONSULTATIONS',
-                                            style: FlutterFlowTheme.of(context)
-                                                .bodySmall
-                                                .override(
-                                                  font: GoogleFonts.outfit(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodySmall
-                                                            .fontStyle,
+                              InkWell(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (bCtx) => PatientAppointmentsWidget(),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context).primaryBackground,
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    border: Border.all(color: Color(0xFF8A0DCE).withOpacity(0.2)),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(14.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            Icon(
+                                              Icons.edit_calendar,
+                                              color: Color(0xFF8A0DCE),
+                                              size: 18.0,
+                                            ),
+                                            Text(
+                                              'MES CONSULTATIONS',
+                                              style: FlutterFlowTheme.of(context)
+                                                  .bodySmall
+                                                  .override(
+                                                    font: GoogleFonts.outfit(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontStyle: FlutterFlowTheme.of(context).bodySmall.fontStyle,
+                                                    ),
+                                                    color: Color(0xFF8A0DCE),
+                                                    fontSize: 12.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.w600,
                                                   ),
-                                                  color: Color(0xFF8A0DCE),
-                                                  fontSize: 12.0,
-                                                  letterSpacing: 0.0,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodySmall
-                                                          .fontStyle,
-                                                ),
-                                          ),
-                                        ].divide(SizedBox(width: 10.0)),
-                                      ),
-                                      Icon(
-                                        Icons.keyboard_arrow_right_rounded,
-                                        color: FlutterFlowTheme.of(context)
-                                            .success,
-                                        size: 24.0,
-                                      ),
-                                    ].divide(SizedBox(width: 20.0)),
+                                            ),
+                                          ].divide(SizedBox(width: 10.0)),
+                                        ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "Voir l'état",
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 11.0,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF165AC5),
+                                              ),
+                                            ),
+                                            SizedBox(width: 4.0),
+                                            Icon(
+                                              Icons.keyboard_arrow_right_rounded,
+                                              color: Color(0xFF165AC5),
+                                              size: 24.0,
+                                            ),
+                                          ],
+                                        ),
+                                      ].divide(SizedBox(width: 20.0)),
+                                    ),
                                   ),
                                 ),
                               ),

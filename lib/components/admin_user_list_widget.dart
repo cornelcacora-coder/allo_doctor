@@ -39,9 +39,15 @@ class _AdminUserListWidgetState extends State<AdminUserListWidget> {
   }
 
   Future<void> _updateStatus(String uid, String newStatus) async {
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
+    final bool isVal = newStatus == 'validé' || newStatus == 'valide';
+    final payload = {
       'status': newStatus,
-    });
+      'isValidated': isVal,
+      'is_validated': isVal,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+    await FirebaseFirestore.instance.collection('users').doc(uid).set(payload, SetOptions(merge: true));
+    await FirebaseFirestore.instance.collection('User').doc(uid).set(payload, SetOptions(merge: true));
   }
 
   Color _statusColor(String status) {

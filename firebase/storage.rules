@@ -1,12 +1,19 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
-    }
+    // Photos de profil utilisateur
     match /users/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth.uid == userId;
+    }
+    // Photos des medecins
+    match /doctors/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth.uid == userId;
+    }
+    // Fallback: refuser tout le reste
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

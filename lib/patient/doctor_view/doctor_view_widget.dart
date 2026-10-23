@@ -407,6 +407,8 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                                               MediaQuery.viewInsetsOf(context),
                                           child: GetMedicalAppointmentWidget(
                                             isDoctorView: true,
+                                            doctorName: widget.doctorName,
+                                            doctorId: widget.docNumber,
                                           ),
                                         ),
                                       );
@@ -1248,6 +1250,8 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                               padding: MediaQuery.viewInsetsOf(context),
                               child: GetMedicalAppointmentWidget(
                                 isDoctorView: true,
+                                doctorName: widget.doctorName,
+                                doctorId: widget.docNumber,
                               ),
                             ),
                           );

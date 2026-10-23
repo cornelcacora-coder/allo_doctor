@@ -19,9 +19,13 @@ class GetMedicalAppointmentWidget extends StatefulWidget {
   const GetMedicalAppointmentWidget({
     super.key,
     required this.isDoctorView,
+    this.doctorName,
+    this.doctorId,
   });
 
   final bool? isDoctorView;
+  final String? doctorName;
+  final String? doctorId;
 
   @override
   State<GetMedicalAppointmentWidget> createState() =>
@@ -3420,8 +3424,11 @@ class _GetMedicalAppointmentWidgetState
                         try {
                           await AppointmentsRecord.collection.add({
                             'patient_ref': currentUserReference,
-                            'patient_name': currentUserDisplayName,
+                            'patient_id': currentUserUid,
+                            'patient_name': currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Patient',
                             'patient_email': currentUserEmail,
+                            'doctor_name': widget.doctorName ?? '',
+                            'doctor_id': widget.doctorId ?? '',
                             'appointment_type': selectedType ?? 'Consultation',
                             'consult_mode': consultMode,
                             'day': selectedDay,
