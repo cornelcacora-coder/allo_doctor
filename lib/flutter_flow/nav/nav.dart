@@ -219,6 +219,15 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => ConsultationWidget(),
         ),
         FFRoute(
+          name: TeleconsultationWidget.routeName,
+          path: TeleconsultationWidget.routePath,
+          builder: (context, params) => TeleconsultationWidget(
+            channelName: params.getParam('channelName', ParamType.String),
+            token: params.getParam('token', ParamType.String),
+            patientName: params.getParam('patientName', ParamType.String),
+          ),
+        ),
+        FFRoute(
           name: DmpWidget.routeName,
           path: DmpWidget.routePath,
           builder: (context, params) => DmpWidget(),

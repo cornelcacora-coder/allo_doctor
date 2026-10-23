@@ -263,7 +263,13 @@ class _DmpWidgetState extends State<DmpWidget> with TickerProviderStateMixin {
                       ),
                       GestureDetector(
                         onTap: () async {
-                          context.pushNamed(ConsultationWidget.routeName);
+                          context.pushNamed(
+                            TeleconsultationWidget.routeName,
+                            queryParameters: {
+                              'channelName': 'allo_doctor_channel',
+                              'patientName': 'BITODI Cornelca Cora',
+                            },
+                          );
                         },
                         child: Container(
                           decoration: BoxDecoration(
