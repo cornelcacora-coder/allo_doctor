@@ -18,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'home_pharmacy_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/components/notification_bell_widget.dart';
 export 'home_pharmacy_model.dart';
 
 class HomePharmacyWidget extends StatefulWidget {
@@ -152,6 +153,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      NotificationBellWidget(iconColor: FlutterFlowTheme.of(context).onPrimary, size: 24.0),
                       FlutterFlowIconButton(
                         borderRadius: 10.0,
                         buttonSize: 40.0,
@@ -932,3 +934,4 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
     );
   }
 }
+

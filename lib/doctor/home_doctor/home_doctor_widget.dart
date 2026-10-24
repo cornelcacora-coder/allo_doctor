@@ -16,8 +16,10 @@ import 'home_doctor_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 import '/auth/firebase_auth/auth_util.dart';
 import '/components/avatar_image_widget.dart';
+import '/components/notification_bell_widget.dart';
 export 'home_doctor_model.dart';
 
 class HomeDoctorWidget extends StatefulWidget {
@@ -62,13 +64,269 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
     super.initState();
     _model = createModel(context, () => HomeDoctorModel());
 
-    _model.switchValue = true;
     _initStreams();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Garde-fou : cet espace est reserve aux comptes medecins.
       await guardRole(context, 'medecin');
     });
+  }
+
+  Future<void> _setAvailability(bool available, {String? reason, String? returnTime}) async {
+    final uid = currentUserUid;
+    if (uid.isEmpty) return;
+
+    final updatePayload = <String, dynamic>{
+      'is_available': available,
+      'unavailability_reason': available ? null : (reason ?? ''),
+      'available_at': available ? null : (returnTime ?? ''),
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+
+    if (!available) {
+      updatePayload['unavailable_since'] = FieldValue.serverTimestamp();
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set(updatePayload, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('practitioners').doc(uid).set(updatePayload, SetOptions(merge: true));
+      safeSetState(() => _model.switchValue = available);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              available
+                  ? 'Vous êtes de nouveau visible et disponible pour les patients.'
+                  : 'Statut mis à jour : Indisponible ($reason).',
+            ),
+            backgroundColor: available ? const Color(0xFF19BF82) : const Color(0xFFE53935),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la mise à jour : $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showUnavailabilityDialog(BuildContext context) async {
+    final reasonController = TextEditingController();
+    final returnTimeController = TextEditingController();
+    String selectedReason = 'En consultation';
+    reasonController.text = selectedReason;
+
+    final reasonsList = [
+      'En consultation',
+      'Congé / Repos',
+      'Urgence chirurgicale',
+      'En déplacement',
+      'Autre',
+    ];
+
+    final timesList = [
+      'Dans 1 heure',
+      'Dans 2 heures',
+      'Cet après-midi (14h00)',
+      'Demain matin (08h00)',
+      'Lundi prochain',
+    ];
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+          ),
+          padding: EdgeInsets.only(
+            left: 20.0,
+            right: 20.0,
+            top: 20.0,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20.0,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBEE),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.event_busy_rounded, color: Color(0xFFE53935), size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Définir votre indisponibilité',
+                            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Informez vos patients de votre absence et heure de retour.',
+                            style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Motif de l\'indisponibilité',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: reasonsList.map((r) {
+                    final isSel = selectedReason == r;
+                    return ChoiceChip(
+                      label: Text(r, style: GoogleFonts.outfit(fontSize: 11, color: isSel ? Colors.white : Colors.black87, fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
+                      selected: isSel,
+                      selectedColor: const Color(0xFFE53935),
+                      backgroundColor: Colors.grey.shade100,
+                      onSelected: (_) {
+                        setModalState(() {
+                          selectedReason = r;
+                          reasonController.text = r;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: reasonController,
+                  decoration: InputDecoration(
+                    labelText: 'Préciser le motif',
+                    labelStyle: GoogleFonts.outfit(fontSize: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Moment où vous redeviendrez disponible',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: timesList.map((t) {
+                    final isSel = returnTimeController.text == t;
+                    return ChoiceChip(
+                      label: Text(t, style: GoogleFonts.outfit(fontSize: 11, color: isSel ? Colors.white : Colors.black87, fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
+                      selected: isSel,
+                      selectedColor: const Color(0xFF165AC5),
+                      backgroundColor: Colors.grey.shade100,
+                      onSelected: (_) {
+                        setModalState(() {
+                          returnTimeController.text = t;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: returnTimeController,
+                  decoration: InputDecoration(
+                    labelText: 'Date / Heure de retour prévue',
+                    hintText: 'Ex: Demain à 14h00',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.calendar_today_rounded, size: 20),
+                      onPressed: () async {
+                        final pickedDate = await showDatePicker(
+                          context: ctx,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (pickedDate != null) {
+                          final pickedTime = await showTimePicker(
+                            context: ctx,
+                            initialTime: const TimeOfDay(hour: 8, minute: 0),
+                          );
+                          final timeStr = pickedTime != null ? ' à ${pickedTime.format(ctx)}' : '';
+                          setModalState(() {
+                            returnTimeController.text = '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}$timeStr';
+                          });
+                        }
+                      },
+                    ),
+                    labelStyle: GoogleFonts.outfit(fontSize: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text('Annuler', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          final reason = reasonController.text.trim().isNotEmpty ? reasonController.text.trim() : 'Non spécifié';
+                          final returnTime = returnTimeController.text.trim().isNotEmpty ? returnTimeController.text.trim() : 'Non précisé';
+                          await _setAvailability(false, reason: reason, returnTime: returnTime);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE53935),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text('Confirmer indisponible', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -84,8 +342,9 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 80,
-        maxWidth: 1024,
+        imageQuality: 65,
+        maxWidth: 256,
+        maxHeight: 256,
       );
       if (pickedFile == null) return;
 
@@ -121,35 +380,57 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
       // Lire les bytes de l'image
       final bytes = await pickedFile.readAsBytes();
       final uid = currentUserUid;
+      String finalPhotoUrl = '';
 
-      // Upload dans Firebase Storage
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('doctor_photos')
-          .child('$uid.jpg');
+      // Sur Web (localhost), Firebase Storage déclenche des erreurs CORS et des retries infinis dans la console JS.
+      // On encode directement en Data URI Base64 ultra-léger (256x256 ~ 15 KB).
+      // Sur mobile natif (Android / iOS), on utilise Firebase Storage avec fallback Base64.
+      if (kIsWeb) {
+        final base64String = base64Encode(bytes);
+        finalPhotoUrl = 'data:image/jpeg;base64,$base64String';
+      } else {
+        try {
+          final storageRef = FirebaseStorage.instance
+              .ref()
+              .child('doctor_photos')
+              .child('$uid.jpg');
 
-      final uploadTask = storageRef.putData(
-        bytes,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
+          final uploadTask = storageRef.putData(
+            bytes,
+            SettableMetadata(contentType: 'image/jpeg'),
+          );
 
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
+          final snapshot = await uploadTask;
+          finalPhotoUrl = await snapshot.ref.getDownloadURL();
+        } catch (storageErr) {
+          final base64String = base64Encode(bytes);
+          finalPhotoUrl = 'data:image/jpeg;base64,$base64String';
+        }
+      }
 
-      // Sauvegarder uniquement l'URL dans Firestore
+      // Sauvegarder dans users et practitioners
+      final updateData = {
+        'photo_url': finalPhotoUrl,
+        'photoUrl': finalPhotoUrl,
+        'updated_at': FieldValue.serverTimestamp(),
+      };
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
-          .set({
-        'photo_url': downloadUrl,
-        'photoUrl': downloadUrl,
-        'updated_at': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+          .set(updateData, SetOptions(merge: true));
 
-      // Mise à jour Auth photo
-      try {
-        await currentUser?.updatePhotoURL(downloadUrl);
-      } catch (_) {}
+      await FirebaseFirestore.instance
+          .collection('practitioners')
+          .doc(uid)
+          .set(updateData, SetOptions(merge: true));
+
+      // Mise à jour Auth photo si URL http
+      if (!finalPhotoUrl.startsWith('data:')) {
+        try {
+          await currentUser?.updatePhotoURL(finalPhotoUrl);
+        } catch (_) {}
+      }
 
       // Rafraîchir les streams
       _lastLoadedUid = null;
@@ -159,7 +440,7 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Photo mise a jour avec succes !'),
+            content: Text('Photo mise à jour avec succès !'),
             backgroundColor: Color(0xFF16CB83),
           ),
         );
@@ -583,6 +864,10 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      NotificationBellWidget(
+                        iconColor: FlutterFlowTheme.of(context).onPrimary,
+                        size: 24.0,
+                      ),
                       FlutterFlowIconButton(
                         borderRadius: 10.0,
                         buttonSize: 40.0,
@@ -905,88 +1190,181 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
                               ].divide(SizedBox(width: 32.0)),
                             ),
 
-                            // ─── DISPONIBILITE SWITCH ───
+                            // ─── DISPONIBILITE SWITCH & STATUT COMPLET ───
                             Padding(
                               padding: EdgeInsets.all(16.0),
                               child: Container(
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: FlutterFlowTheme.of(context).secondaryBackground,
-                                  borderRadius: BorderRadius.circular(12.0),
+                                  borderRadius: BorderRadius.circular(16.0),
                                   border: Border.all(
-                                    color: FlutterFlowTheme.of(context).alternate,
+                                    color: ((data?['is_available'] as bool?) ?? true)
+                                        ? FlutterFlowTheme.of(context).alternate
+                                        : const Color(0xFFE53935).withOpacity(0.4),
+                                    width: ((data?['is_available'] as bool?) ?? true) ? 1.0 : 1.5,
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: EdgeInsets.all(14.0),
+                                  padding: EdgeInsets.all(16.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.max,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        width: double.infinity,
-                                        decoration: BoxDecoration(
-                                          color: FlutterFlowTheme.of(context).primaryBackground,
-                                          borderRadius: BorderRadius.circular(8.0),
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.all(14.0),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
                                             children: [
-                                              Row(
-                                                mainAxisSize: MainAxisSize.max,
+                                              Container(
+                                                padding: EdgeInsets.all(8.0),
+                                                decoration: BoxDecoration(
+                                                  color: ((data?['is_available'] as bool?) ?? true)
+                                                      ? const Color(0xFFE8F5E9)
+                                                      : const Color(0xFFFFEBEE),
+                                                  borderRadius: BorderRadius.circular(10.0),
+                                                ),
+                                                child: Icon(
+                                                  ((data?['is_available'] as bool?) ?? true)
+                                                      ? Icons.event_available_rounded
+                                                      : Icons.event_busy_rounded,
+                                                  color: ((data?['is_available'] as bool?) ?? true)
+                                                      ? const Color(0xFF19BF82)
+                                                      : const Color(0xFFE53935),
+                                                  size: 24.0,
+                                                ),
+                                              ),
+                                              SizedBox(width: 12.0),
+                                              Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  Icon(
-                                                    Icons.perm_contact_cal,
-                                                    color: FlutterFlowTheme.of(context).tertiary,
-                                                    size: 22.0,
+                                                  Text(
+                                                    'Disponibilité consultations',
+                                                    style: GoogleFonts.outfit(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 14.0,
+                                                      color: FlutterFlowTheme.of(context).primaryText,
+                                                    ),
                                                   ),
-                                                  Column(
-                                                    mainAxisSize: MainAxisSize.max,
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        'Disponibilite',
-                                                        style: FlutterFlowTheme.of(context).bodySmall.override(
-                                                              font: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-                                                              color: FlutterFlowTheme.of(context).tertiary,
-                                                              fontSize: 12.0,
-                                                            ),
-                                                      ),
-                                                      Text(
-                                                        _model.switchValue! ? 'Actuellement disponible' : 'Actuellement indisponible',
-                                                        style: FlutterFlowTheme.of(context).labelSmall.override(
-                                                              font: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-                                                              color: FlutterFlowTheme.of(context).secondaryText,
-                                                              fontSize: 10.0,
-                                                            ),
-                                                      ),
-                                                    ],
+                                                  Text(
+                                                    ((data?['is_available'] as bool?) ?? true)
+                                                        ? 'Actuellement disponible'
+                                                        : 'Actuellement indisponible',
+                                                    style: GoogleFonts.outfit(
+                                                      color: ((data?['is_available'] as bool?) ?? true)
+                                                          ? const Color(0xFF19BF82)
+                                                          : const Color(0xFFE53935),
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 11.0,
+                                                    ),
                                                   ),
-                                                ].divide(SizedBox(width: 8.0)),
+                                                ],
                                               ),
-                                              Switch.adaptive(
-                                                value: _model.switchValue!,
-                                                onChanged: (newValue) async {
-                                                  safeSetState(() => _model.switchValue = newValue);
-                                                  if (currentUserUid.isNotEmpty) {
-                                                    await FirebaseFirestore.instance.collection('users').doc(currentUserUid).update({
-                                                      'is_available': newValue,
-                                                    });
-                                                  }
-                                                },
-                                                activeColor: FlutterFlowTheme.of(context).primary,
-                                                activeTrackColor: FlutterFlowTheme.of(context).accent2,
-                                                inactiveTrackColor: FlutterFlowTheme.of(context).alternate,
-                                                inactiveThumbColor: FlutterFlowTheme.of(context).secondaryBackground,
+                                            ],
+                                          ),
+                                          Switch.adaptive(
+                                            value: (data?['is_available'] as bool?) ?? true,
+                                            onChanged: (newValue) async {
+                                              if (!newValue) {
+                                                await _showUnavailabilityDialog(context);
+                                              } else {
+                                                await _setAvailability(true);
+                                              }
+                                            },
+                                            activeColor: const Color(0xFF19BF82),
+                                            activeTrackColor: const Color(0x3319BF82),
+                                            inactiveTrackColor: const Color(0xFFFFCDD2),
+                                            inactiveThumbColor: const Color(0xFFE53935),
+                                          ),
+                                        ],
+                                      ),
+                                      if (!((data?['is_available'] as bool?) ?? true)) ...[
+                                        SizedBox(height: 12.0),
+                                        Container(
+                                          width: double.infinity,
+                                          padding: EdgeInsets.all(12.0),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFFF3E0),
+                                            borderRadius: BorderRadius.circular(10.0),
+                                            border: Border.all(color: Colors.orange.shade200),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              if (((data?['unavailability_reason'] as String?) ?? '').isNotEmpty)
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.info_outline, size: 16.0, color: Colors.orange.shade900),
+                                                    SizedBox(width: 6.0),
+                                                    Expanded(
+                                                      child: Text(
+                                                        'Motif : ${data?['unavailability_reason']}',
+                                                        style: GoogleFonts.outfit(
+                                                          fontSize: 12.0,
+                                                          fontWeight: FontWeight.w600,
+                                                          color: Colors.orange.shade900,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              if (((data?['available_at'] as String?) ?? '').isNotEmpty) ...[
+                                                SizedBox(height: 4.0),
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.schedule, size: 16.0, color: const Color(0xFF165AC5)),
+                                                    SizedBox(width: 6.0),
+                                                    Expanded(
+                                                      child: Text(
+                                                        'Reprise prévue : ${data?['available_at']}',
+                                                        style: GoogleFonts.outfit(
+                                                          fontSize: 12.0,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: const Color(0xFF165AC5),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                              SizedBox(height: 8.0),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () => _showUnavailabilityDialog(context),
+                                                    child: Text(
+                                                      'Modifier le motif',
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 11.0,
+                                                        color: Colors.grey.shade700,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 8.0),
+                                                  ElevatedButton(
+                                                    onPressed: () => _setAvailability(true),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFF19BF82),
+                                                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                                                    ),
+                                                    child: Text(
+                                                      'Repasser disponible',
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 11.0,
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ],
                                   ),
                                 ),

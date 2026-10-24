@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'doctor_list_model.dart';
+import '/components/notification_bell_widget.dart';
 export 'doctor_list_model.dart';
 
 class DoctorListWidget extends StatefulWidget {
@@ -102,10 +103,20 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                         ),
                       ].divide(SizedBox(width: 10.0)),
                     ),
-                    Icon(
-                      Icons.more_vert_sharp,
-                      color: FlutterFlowTheme.of(context).alternate,
-                      size: 24.0,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NotificationBellWidget(
+                          iconColor: FlutterFlowTheme.of(context).onPrimary,
+                          size: 22.0,
+                        ),
+                        SizedBox(width: 8.0),
+                        Icon(
+                          Icons.more_vert_sharp,
+                          color: FlutterFlowTheme.of(context).alternate,
+                          size: 24.0,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -461,6 +472,14 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                             return false;
                                           }
                                         }
+
+                                        // Filtre par puce (Disponible)
+                                        final chipFilter = _model.choiceChipsValue;
+                                        if (chipFilter == 'Disponible') {
+                                          final isAvail = (data['is_available'] as bool?) ?? true;
+                                          if (!isAvail) return false;
+                                        }
+
                                         return true;
                                       }).toList();
 
@@ -523,6 +542,7 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: filtered.map((docSnap) {
                                           final data = docSnap.data();
+                                          final docUid = (data['uid'] as String?) ?? (data['id'] as String?) ?? docSnap.id;
                                           final docName = (data['name'] as String?)?.trim().isNotEmpty == true
                                               ? data['name'] as String
                                               : ((data['nom'] as String?)?.trim().isNotEmpty == true
@@ -543,6 +563,9 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                                   : '');
                                           final photoUrl = (data['photoUrl'] as String?) ?? '';
                                           final docNumber = (data['docNumber'] as String?) ?? '';
+                                          final isAvailable = (data['is_available'] as bool?) ?? true;
+                                          final unavailabilityReason = (data['unavailability_reason'] as String?) ?? '';
+                                          final availableAt = (data['available_at'] as String?) ?? '';
 
                                           return Padding(
                                             padding: EdgeInsets.only(bottom: 12.0),
@@ -561,6 +584,10 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                                     'phone': phone,
                                                     'photoUrl': photoUrl,
                                                     'docNumber': docNumber,
+                                                    'doctorId': docUid,
+                                                    'isAvailable': isAvailable ? 'true' : 'false',
+                                                    'unavailabilityReason': unavailabilityReason,
+                                                    'availableAt': availableAt,
                                                   },
                                                 );
                                               },
@@ -670,8 +697,12 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                                                   Container(
                                                                     padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
                                                                     decoration: BoxDecoration(
-                                                                      color: Color(0x2339D2C0),
+                                                                      color: isAvailable ? const Color(0x2319BF82) : const Color(0x23E53935),
                                                                       borderRadius: BorderRadius.circular(6.0),
+                                                                      border: Border.all(
+                                                                        color: isAvailable ? const Color(0xFF19BF82).withOpacity(0.4) : const Color(0xFFE53935).withOpacity(0.4),
+                                                                        width: 0.8,
+                                                                      ),
                                                                     ),
                                                                     child: Row(
                                                                       mainAxisSize: MainAxisSize.min,
@@ -680,15 +711,15 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                                                           width: 7.0,
                                                                           height: 7.0,
                                                                           decoration: BoxDecoration(
-                                                                            color: Color(0xFB39D2C0),
+                                                                            color: isAvailable ? const Color(0xFF19BF82) : const Color(0xFFE53935),
                                                                             shape: BoxShape.circle,
                                                                           ),
                                                                         ),
                                                                         SizedBox(width: 4.0),
                                                                         Text(
-                                                                          'Validé',
+                                                                          isAvailable ? 'Disponible' : (unavailabilityReason.isNotEmpty ? 'Indisp. ($unavailabilityReason)' : 'Indisponible'),
                                                                           style: GoogleFonts.outfit(
-                                                                            color: FlutterFlowTheme.of(context).primaryText,
+                                                                            color: isAvailable ? const Color(0xFF19BF82) : const Color(0xFFE53935),
                                                                             fontWeight: FontWeight.bold,
                                                                             fontSize: 10.0,
                                                                           ),

@@ -51,16 +51,8 @@ class OfflineService extends ChangeNotifier {
       } catch (_) {
         // Déjà initialisé
       }
-    } else {
-      // Sur Web, activer le cache multi-onglet Firestore
-      try {
-        FirebaseFirestore.instance.enablePersistence(
-          const PersistenceSettings(synchronizeTabs: true),
-        );
-      } catch (_) {
-        // Déjà activé ou non supporté
-      }
     }
+    // Sur Web, Firestore gère son propre cache via les settings standards, inutile d'appeler enablePersistence qui déclenche failed-precondition lors des hot restarts.
 
     // Écouter les changements de connectivité
     _connectivitySub = Connectivity()

@@ -86,6 +86,7 @@ class PrescriptionService {
 
     // Envoi d'une notification pour le patient
     await _firestore.collection('notifications').add({
+      'recipient_uid': patientUid,
       'user_uid': patientUid,
       'title': 'Nouvelle ordonnance disponible',
       'message': 'Le Dr. $doctorName a émis une ordonnance pour vous.',
@@ -123,6 +124,7 @@ class PrescriptionService {
 
     // Notification pour la pharmacie
     await _firestore.collection('notifications').add({
+      'recipient_uid': pharmacyUid,
       'user_uid': pharmacyUid,
       'title': 'Nouvelle ordonnance reçue',
       'message': 'Un patient vous a transmis une ordonnance (${deliveryType == 'delivery' ? 'Option Livraison' : 'Retrait en pharmacie'}).',
@@ -154,6 +156,7 @@ class PrescriptionService {
 
     // Notification en temps réel pour le patient
     await _firestore.collection('notifications').add({
+      'recipient_uid': patientUid,
       'user_uid': patientUid,
       'title': 'Mise à jour de votre ordonnance',
       'message': 'Votre commande $statusText. ${messageForPatient ?? ''}',

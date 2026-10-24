@@ -13,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'get_medical_appointment_model.dart';
 import 'mobile_payment_modal.dart';
+import '/backend/notification_service.dart';
 export 'get_medical_appointment_model.dart';
 
 /// Book a medical appointement with a clinic
@@ -3460,6 +3461,28 @@ class _GetMedicalAppointmentWidgetState
                             'created_at': FieldValue.serverTimestamp(),
                             'updated_at': FieldValue.serverTimestamp(),
                           });
+
+                          // ── Notifications en temps réel pour Patient & Médecin ──
+                          final patientName = currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Patient';
+                          final docName = widget.doctorName ?? 'Médecin';
+
+                          // Notification pour le Patient
+                          await NotificationService.sendNotification(
+                            recipientUid: currentUserUid,
+                            title: 'Rendez-vous confirmé',
+                            message: 'Votre rendez-vous avec le Dr. $docName est validé pour le $selectedDay à $selectedSlot (Acompte 30% réglé via ${paymentResult['operator']}).',
+                            type: 'appointment',
+                          );
+
+                          // Notification pour le Médecin
+                          if (widget.doctorId != null && widget.doctorId!.isNotEmpty) {
+                            await NotificationService.sendNotification(
+                              recipientUid: widget.doctorId!,
+                              title: 'Nouveau rendez-vous réservé',
+                              message: '$patientName a réservé un rendez-vous le $selectedDay à $selectedSlot avec un acompte de ${paymentResult['depositAmount'].toInt()} FCFA.',
+                              type: 'appointment',
+                            );
+                          }
 
                           // ── Succès ─────────────────────────────────────
                           if (context.mounted) {
