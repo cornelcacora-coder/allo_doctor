@@ -54,100 +54,111 @@ class _LoginOptionWidgetState extends State<LoginOptionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final toneColor = valueOrDefault<Color>(
+      widget.tone,
+      theme.primary,
+    );
+
     return Container(
       decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12.0),
-        shape: BoxShape.rectangle,
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(18.0),
         border: Border.all(
-          color: FlutterFlowTheme.of(context).alternate,
-          width: 1.0,
+          color: theme.alternate.withOpacity(0.7),
+          width: 1.2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 14.0,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(10.0),
-        child: Container(
-          child: Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 40.0,
-                height: 40.0,
-                decoration: BoxDecoration(
-                  color: valueOrDefault<Color>(
-                    widget!.tone,
-                    FlutterFlowTheme.of(context).primary,
+        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    toneColor,
+                    toneColor.withOpacity(0.82),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: toneColor.withOpacity(0.28),
+                    blurRadius: 10.0,
+                    offset: Offset(0, 3),
                   ),
-                  borderRadius: BorderRadius.circular(8.0),
-                  shape: BoxShape.rectangle,
-                ),
-                child: widget!.icon!,
+                ],
               ),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      valueOrDefault<String>(
-                        widget!.title,
-                        'I\'m a Patient',
-                      ),
-                      style: FlutterFlowTheme.of(context).titleMedium.override(
-                            font: GoogleFonts.outfit(
-                              fontWeight: FontWeight.bold,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .titleMedium
-                                  .fontStyle,
-                            ),
-                            color: FlutterFlowTheme.of(context).primaryText,
-                            letterSpacing: 0.0,
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .titleMedium
-                                .fontStyle,
-                            lineHeight: 1.4,
-                          ),
+              child: Center(child: widget.icon ?? Icon(Icons.person, color: Colors.white, size: 24)),
+            ),
+            SizedBox(width: 14.0),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    valueOrDefault<String>(
+                      widget.title,
+                      'I\'m a Patient',
                     ),
-                    Text(
-                      valueOrDefault<String>(
-                        widget!.subtitle,
-                        'Book appointments and consult doctors',
+                    style: theme.titleMedium.override(
+                      font: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16.0,
                       ),
-                      style: FlutterFlowTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.outfit(
-                              fontWeight: FlutterFlowTheme.of(context)
-                                  .bodySmall
-                                  .fontWeight,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .bodySmall
-                                  .fontStyle,
-                            ),
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            letterSpacing: 0.0,
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .bodySmall
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .bodySmall
-                                .fontStyle,
-                            lineHeight: 1.4,
-                          ),
+                      color: theme.primaryText,
                     ),
-                  ].divide(SizedBox(height: 4.0)),
-                ),
+                  ),
+                  SizedBox(height: 3.0),
+                  Text(
+                    valueOrDefault<String>(
+                      widget.subtitle,
+                      'Book appointments and consult doctors',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.bodySmall.override(
+                      font: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 12.5,
+                      ),
+                      color: theme.secondaryText,
+                      lineHeight: 1.3,
+                    ),
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: FlutterFlowTheme.of(context).secondaryText,
-                size: 20.0,
+            ),
+            SizedBox(width: 8.0),
+            Container(
+              width: 32.0,
+              height: 32.0,
+              decoration: BoxDecoration(
+                color: theme.primaryBackground,
+                shape: BoxShape.circle,
               ),
-            ].divide(SizedBox(width: 10.0)),
-          ),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: theme.secondaryText,
+                size: 16.0,
+              ),
+            ),
+          ],
         ),
       ),
     );

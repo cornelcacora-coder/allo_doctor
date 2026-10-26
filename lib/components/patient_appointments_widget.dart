@@ -4,6 +4,7 @@ import '/auth/firebase_auth/auth_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '/backend/notification_service.dart';
 
 class PatientAppointmentsWidget extends StatefulWidget {
   const PatientAppointmentsWidget({super.key});
@@ -483,6 +484,13 @@ class _PatientAppointmentsWidgetState extends State<PatientAppointmentsWidget> {
                         'status': 'cancelled',
                         'updated_at': FieldValue.serverTimestamp(),
                       });
+await NotificationService.sendNotification(
+  recipientUid: data['doctor_id'] ?? '',
+  title: '📅 Rendez-vous annulé',
+  message: 'Le patient ${currentUserDisplayName.isNotEmpty ? currentUserDisplayName : "votre patient"} a annulé le rendez-vous du $day à $slot.',
+  type: 'appointment',
+  referenceId: ref.id,
+);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

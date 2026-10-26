@@ -4,10 +4,12 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/backend.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/backend/notification_service.dart';
 import 'dart:ui';
 import '/index.dart';
 import '/auth/role_guard.dart';
 import 'dart:math' as math;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -125,20 +127,44 @@ class _AgendaWidgetState extends State<AgendaWidget>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             onPressed: () async {
+              final newDay  = dayController.text.trim();
+              final newSlot = timeController.text.trim();
+              final note    = noteController.text.trim();
               await appt.reference.update({
                 'status': 'rescheduled',
-                'rescheduled_day': dayController.text.trim(),
-                'rescheduled_slot': timeController.text.trim(),
-                'rescheduled_note': noteController.text.trim(),
+                'rescheduled_day': newDay,
+                'rescheduled_slot': newSlot,
+                'rescheduled_note': note,
                 'updated_at': FieldValue.serverTimestamp(),
               });
+
+              // ── Notification → Patient ──
+              if (appt.patientId.isNotEmpty) {
+                await NotificationService.sendNotification(
+                  recipientUid: appt.patientId,
+                  title: '📅 Rendez-vous reporté',
+                  message: 'Le Dr. ${currentUserDisplayName.isNotEmpty ? currentUserDisplayName : "votre médecin"} a reporté votre rendez-vous au $newDay à $newSlot.${note.isNotEmpty ? " Motif : $note" : ""}',
+                  type: 'appointment',
+                  referenceId: appt.reference.id,
+                );
+              }
+              // ── Notification → Médecin (confirmation de son action) ──
+              await NotificationService.sendNotification(
+                recipientUid: currentUserUid,
+                title: '✅ Report envoyé',
+                message: 'Vous avez reporté le rendez-vous de ${appt.patientName.isNotEmpty ? appt.patientName : "Patient"} au $newDay à $newSlot.',
+                type: 'appointment',
+                referenceId: appt.reference.id,
+              );
+
               if (dCtx.mounted) Navigator.pop(dCtx);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Rendez-vous reporté. Le patient en est informé ✓'),
+                    content: Text('Rendez-vous reporté — le patient a été notifié ✓'),
                     backgroundColor: Color(0xFFE67E22),
                     behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 );
               }
@@ -743,6 +769,18 @@ class _AgendaWidgetState extends State<AgendaWidget>
                                                                  'status': 'refused',
                                                                  'updated_at': FieldValue.serverTimestamp(),
                                                                });
+                                                              // ── Notification → Patient ──
+                                                              if (appt.patientId.isNotEmpty) {
+                                                                await NotificationService.sendNotification(
+                                                                  recipientUid: appt.patientId,
+                                                                  title: '❌ Rendez-vous refusé',
+                                                                  message: 'Le Dr. ${currentUserDisplayName.isNotEmpty ? currentUserDisplayName : "votre médecin"} ne peut malheureusement pas accepter ce rendez-vous.',
+                                                                  type: 'appointment',
+                                                                  referenceId: appt.reference.id,
+                                                                );
+                                                              }
+
+                                                              
                                                                if (context.mounted) {
                                                                  ScaffoldMessenger.of(context).showSnackBar(
                                                                    SnackBar(
