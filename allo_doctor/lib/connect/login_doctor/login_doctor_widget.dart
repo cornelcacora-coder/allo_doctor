@@ -654,14 +654,28 @@ class _LoginDoctorWidgetState extends State<LoginDoctorWidget> {
                                       msg = 'Aucun compte praticien trouvé avec cet email.';
                                     } else if (e.code == 'wrong-password' ||
                                         e.code == 'invalid-credential') {
-                                      msg = 'Mot de passe incorrect.';
+                                      msg = 'Email ou mot de passe incorrect.';
+                                    } else if (e.code == 'invalid-email') {
+                                      msg = 'Adresse email invalide.';
+                                    } else if (e.code == 'too-many-requests') {
+                                      msg = 'Trop de tentatives échouées. Réessayez plus tard.';
+                                    } else if (e.code == 'user-disabled') {
+                                      msg = 'Ce compte praticien a été désactivé.';
                                     }
+                                    if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(msg)),
+                                      SnackBar(
+                                        content: Text(msg, style: TextStyle(color: Colors.white)),
+                                        backgroundColor: Colors.red.shade700,
+                                      ),
                                     );
                                   } catch (e) {
+                                    if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Erreur: ${e.toString()}')),
+                                      SnackBar(
+                                        content: Text('Erreur: ${e.toString()}', style: TextStyle(color: Colors.white)),
+                                        backgroundColor: Colors.red.shade700,
+                                      ),
                                     );
                                   }
                                 },

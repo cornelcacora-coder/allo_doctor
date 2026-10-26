@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 import 'home_hub_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/components/notification_bell_widget.dart';
 export 'home_hub_model.dart';
 
 class HomeHubWidget extends StatefulWidget {
@@ -154,6 +155,10 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      NotificationBellWidget(
+                        iconColor: FlutterFlowTheme.of(context).onPrimary,
+                        size: 24.0,
+                      ),
                       FlutterFlowIconButton(
                         borderRadius: 10.0,
                         buttonSize: 40.0,
@@ -2237,10 +2242,10 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: docs.map((docSnap) {
                                 final data = docSnap.data();
+                                final docUid = (data['uid'] as String?) ?? (data['id'] as String?) ?? docSnap.id;
                                 final docName = (data['name'] as String?)?.trim().isNotEmpty == true
                                     ? data['name'] as String
                                     : ((data['nom'] as String?)?.trim().isNotEmpty == true
@@ -2261,6 +2266,9 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                         : '');
                                 final photoUrl = (data['photoUrl'] as String?) ?? '';
                                 final docNumber = (data['docNumber'] as String?) ?? '';
+                                final isAvailable = (data['is_available'] as bool?) ?? true;
+                                final unavailabilityReason = (data['unavailability_reason'] as String?) ?? '';
+                                final availableAt = (data['available_at'] as String?) ?? '';
 
                                 return Padding(
                                   padding: EdgeInsets.all(2.0),
@@ -2279,6 +2287,10 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                           'phone': phone,
                                           'photoUrl': photoUrl,
                                           'docNumber': docNumber,
+                                          'doctorId': docUid,
+                                          'isAvailable': isAvailable ? 'true' : 'false',
+                                          'unavailabilityReason': unavailabilityReason,
+                                          'availableAt': availableAt,
                                         },
                                       );
                                     },
@@ -2292,7 +2304,7 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                         borderRadius: BorderRadius.circular(12.0),
                                         child: Container(
                                           width: 120.0,
-                                          height: 150.0,
+                                          height: 165.0,
                                           decoration: BoxDecoration(
                                             color: FlutterFlowTheme.of(context).secondaryBackground,
                                             boxShadow: [
@@ -2310,37 +2322,77 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              ClipRRect(
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: Radius.circular(12.0),
-                                                  topRight: Radius.circular(12.0),
-                                                ),
-                                                child: photoUrl.isNotEmpty
-                                                    ? CachedNetworkImage(
-                                                        fadeInDuration: Duration(milliseconds: 0),
-                                                        fadeOutDuration: Duration(milliseconds: 0),
-                                                        imageUrl: photoUrl,
-                                                        width: double.infinity,
-                                                        height: 90.0,
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : Container(
-                                                        width: double.infinity,
-                                                        height: 90.0,
-                                                        color: FlutterFlowTheme.of(context).primary,
-                                                        alignment: Alignment.center,
-                                                        child: Text(
-                                                          docName.isNotEmpty ? docName[0].toUpperCase() : 'D',
-                                                          style: GoogleFonts.outfit(
-                                                            color: Colors.white,
-                                                            fontSize: 32.0,
-                                                            fontWeight: FontWeight.bold,
+                                              Stack(
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.only(
+                                                      topLeft: Radius.circular(12.0),
+                                                      topRight: Radius.circular(12.0),
+                                                    ),
+                                                    child: photoUrl.isNotEmpty
+                                                        ? CachedNetworkImage(
+                                                            fadeInDuration: Duration(milliseconds: 0),
+                                                            fadeOutDuration: Duration(milliseconds: 0),
+                                                            imageUrl: photoUrl,
+                                                            width: double.infinity,
+                                                            height: 85.0,
+                                                            fit: BoxFit.cover,
+                                                          )
+                                                        : Container(
+                                                            width: double.infinity,
+                                                            height: 85.0,
+                                                            color: FlutterFlowTheme.of(context).primary,
+                                                            alignment: Alignment.center,
+                                                            child: Text(
+                                                              docName.isNotEmpty ? docName[0].toUpperCase() : 'D',
+                                                              style: GoogleFonts.outfit(
+                                                                color: Colors.white,
+                                                                fontSize: 32.0,
+                                                                fontWeight: FontWeight.bold,
+                                                              ),
+                                                            ),
                                                           ),
-                                                        ),
+                                                  ),
+                                                  Positioned(
+                                                    top: 6,
+                                                    right: 6,
+                                                    child: Container(
+                                                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: isAvailable ? const Color(0xFF19BF82) : const Color(0xFFE53935),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        boxShadow: [
+                                                          BoxShadow(color: Colors.black26, blurRadius: 2),
+                                                        ],
                                                       ),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Container(
+                                                            width: 5,
+                                                            height: 5,
+                                                            decoration: const BoxDecoration(
+                                                              color: Colors.white,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 3),
+                                                          Text(
+                                                            isAvailable ? 'Dispo' : 'Indisp.',
+                                                            style: GoogleFonts.outfit(
+                                                              color: Colors.white,
+                                                              fontSize: 8.5,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                               Padding(
-                                                padding: EdgeInsets.all(10.0),
+                                                padding: EdgeInsets.all(8.0),
                                                 child: Column(
                                                   mainAxisSize: MainAxisSize.min,
                                                   mainAxisAlignment: MainAxisAlignment.start,
@@ -2352,30 +2404,34 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                                       style: FlutterFlowTheme.of(context).titleMedium.override(
                                                             font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
                                                             color: FlutterFlowTheme.of(context).secondaryText,
-                                                            fontSize: 12.0,
+                                                            fontSize: 11.0,
                                                             letterSpacing: 0.0,
                                                           ),
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
-                                                    Row(
-                                                      mainAxisSize: MainAxisSize.max,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Text(
-                                                            specialty,
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                            style: FlutterFlowTheme.of(context).bodyLarge.override(
-                                                                  font: GoogleFonts.outfit(fontWeight: FontWeight.w500),
-                                                                  color: FlutterFlowTheme.of(context).secondary,
-                                                                  fontSize: 11.0,
-                                                                  letterSpacing: 0.0,
-                                                                ),
+                                                    Text(
+                                                      specialty,
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                      style: FlutterFlowTheme.of(context).bodyLarge.override(
+                                                            font: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                                                            color: FlutterFlowTheme.of(context).secondary,
+                                                            fontSize: 10.0,
+                                                            letterSpacing: 0.0,
                                                           ),
-                                                        ),
-                                                      ],
                                                     ),
-                                                  ].divide(SizedBox(height: 4.0)),
+                                                    if (!isAvailable && (unavailabilityReason.isNotEmpty || availableAt.isNotEmpty))
+                                                      Text(
+                                                        unavailabilityReason.isNotEmpty ? unavailabilityReason : 'Retour: $availableAt',
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                        style: GoogleFonts.outfit(
+                                                          fontSize: 8.5,
+                                                          color: const Color(0xFFE53935),
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                  ].divide(SizedBox(height: 2.0)),
                                                 ),
                                               ),
                                             ],

@@ -9,6 +9,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '/components/notification_bell_widget.dart';
 import 'doctor_view_model.dart';
 export 'doctor_view_model.dart';
 
@@ -21,6 +23,10 @@ class DoctorViewWidget extends StatefulWidget {
     this.phone,
     this.photoUrl,
     this.docNumber,
+    this.doctorId,
+    this.isAvailable,
+    this.unavailabilityReason,
+    this.availableAt,
   });
 
   final String? doctorName;
@@ -29,6 +35,10 @@ class DoctorViewWidget extends StatefulWidget {
   final String? phone;
   final String? photoUrl;
   final String? docNumber;
+  final String? doctorId;
+  final String? isAvailable;
+  final String? unavailabilityReason;
+  final String? availableAt;
 
   static String routeName = 'DoctorView';
   static String routePath = '/doctorView';
@@ -110,10 +120,20 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                           lineHeight: 1.4,
                         ),
                   ),
-                  Icon(
-                    Icons.more_vert_sharp,
-                    color: FlutterFlowTheme.of(context).alternate,
-                    size: 24.0,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      NotificationBellWidget(
+                        iconColor: FlutterFlowTheme.of(context).alternate,
+                        size: 22.0,
+                      ),
+                      SizedBox(width: 8.0),
+                      Icon(
+                        Icons.more_vert_sharp,
+                        color: FlutterFlowTheme.of(context).alternate,
+                        size: 24.0,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -384,101 +404,161 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                             ),
                             Align(
                               alignment: AlignmentDirectional(1.0, -1.0),
-                              child: InkWell(
-                                splashColor: Colors.transparent,
-                                focusColor: Colors.transparent,
-                                hoverColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
-                                onTap: () async {
-                                  await showModalBottomSheet(
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    enableDrag: false,
-                                    context: context,
-                                    builder: (context) {
-                                      return GestureDetector(
-                                        onTap: () {
-                                          FocusScope.of(context).unfocus();
-                                          FocusManager.instance.primaryFocus
-                                              ?.unfocus();
-                                        },
-                                        child: Padding(
-                                          padding:
-                                              MediaQuery.viewInsetsOf(context),
-                                          child: GetMedicalAppointmentWidget(
-                                            isDoctorView: true,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ).then((value) => safeSetState(() {}));
-                                },
-                                child: Material(
-                                  color: Colors.transparent,
-                                  elevation: 0.0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                  child: Container(
-                                    width: 120.0,
-                                    height: 40.0,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          FlutterFlowTheme.of(context).accent2,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          blurRadius: 6.0,
-                                          color: FlutterFlowTheme.of(context)
-                                              .accent2,
-                                          offset: Offset(
-                                            0.0,
-                                            2.0,
-                                          ),
-                                        )
-                                      ],
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.waving_hand_sharp,
-                                          color: FlutterFlowTheme.of(context)
-                                              .primary,
-                                          size: 16.0,
-                                        ),
-                                        Text(
-                                          'Disponible',
-                                          style: FlutterFlowTheme.of(context)
-                                              .labelSmall
-                                              .override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelSmall
-                                                          .fontStyle,
+                              child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                stream: (widget.doctorId != null && widget.doctorId!.isNotEmpty)
+                                    ? FirebaseFirestore.instance.collection('practitioners').doc(widget.doctorId).snapshots()
+                                    : null,
+                                builder: (context, docSnap) {
+                                  final data = docSnap.data?.data();
+                                  final bool doctorIsAvailable = data != null
+                                      ? ((data['is_available'] as bool?) ?? true)
+                                      : (widget.isAvailable != 'false');
+                                  final String reason = (data?['unavailability_reason'] as String?) ?? widget.unavailabilityReason ?? '';
+                                  final String returnTime = (data?['available_at'] as String?) ?? widget.availableAt ?? '';
+
+                                  return InkWell(
+                                    splashColor: Colors.transparent,
+                                    focusColor: Colors.transparent,
+                                    hoverColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: () async {
+                                      // Si le médecin est indisponible, informer le patient
+                                      if (!doctorIsAvailable) {
+                                        final bool? continueBooking = await showDialog<bool>(
+                                          context: context,
+                                          builder: (dialogCtx) => AlertDialog(
+                                            title: Row(
+                                              children: [
+                                                Icon(Icons.event_busy_rounded, color: const Color(0xFFE53935)),
+                                                SizedBox(width: 8),
+                                                Text('Médecin indisponible', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                                              ],
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Le Dr. ${widget.doctorName ?? ''} est actuellement indisponible.',
+                                                  style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
                                                 ),
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .primary,
-                                                fontSize: 12.0,
-                                                letterSpacing: 0.0,
-                                                fontWeight: FontWeight.w600,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelSmall
-                                                        .fontStyle,
-                                                lineHeight: 1.3,
+                                                if (reason.isNotEmpty) ...[
+                                                  SizedBox(height: 8),
+                                                  Text('Motif : $reason', style: GoogleFonts.outfit(fontSize: 13, color: Colors.grey.shade700)),
+                                                ],
+                                                if (returnTime.isNotEmpty) ...[
+                                                  SizedBox(height: 4),
+                                                  Text('Moment de reprise : $returnTime', style: GoogleFonts.outfit(fontSize: 13, color: const Color(0xFF165AC5), fontWeight: FontWeight.bold)),
+                                                ],
+                                                SizedBox(height: 12),
+                                                Text(
+                                                  'Souhaitez-vous quand même planifier un rendez-vous pour une date ultérieure à son retour ?',
+                                                  style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade600),
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(dialogCtx, false),
+                                                child: Text('Annuler', style: GoogleFonts.outfit(color: Colors.grey.shade600)),
                                               ),
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.pop(dialogCtx, true),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: FlutterFlowTheme.of(context).primary,
+                                                ),
+                                                child: Text('Planifier quand même', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+                                        if (continueBooking != true) return;
+                                      }
+
+                                      await showModalBottomSheet(
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        enableDrag: false,
+                                        context: context,
+                                        builder: (context) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              FocusScope.of(context).unfocus();
+                                              FocusManager.instance.primaryFocus?.unfocus();
+                                            },
+                                            child: Padding(
+                                              padding: MediaQuery.viewInsetsOf(context),
+                                              child: GetMedicalAppointmentWidget(
+                                                isDoctorView: true,
+                                                doctorName: widget.doctorName,
+                                                doctorId: (widget.doctorId?.isNotEmpty == true) ? widget.doctorId : widget.docNumber,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ).then((value) => safeSetState(() {}));
+                                    },
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      elevation: 0.0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                      ),
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(horizontal: 14.0),
+                                        height: 40.0,
+                                        decoration: BoxDecoration(
+                                          color: doctorIsAvailable
+                                              ? FlutterFlowTheme.of(context).accent2
+                                              : const Color(0xFFFFEBEE),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              blurRadius: 6.0,
+                                              color: doctorIsAvailable
+                                                  ? FlutterFlowTheme.of(context).accent2
+                                                  : const Color(0x33E53935),
+                                              offset: Offset(0.0, 2.0),
+                                            )
+                                          ],
+                                          borderRadius: BorderRadius.circular(12.0),
+                                          border: Border.all(
+                                            color: doctorIsAvailable
+                                                ? FlutterFlowTheme.of(context).primary.withOpacity(0.3)
+                                                : const Color(0xFFE53935).withOpacity(0.4),
+                                            width: 1.0,
+                                          ),
                                         ),
-                                      ].divide(SizedBox(width: 10.0)),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              doctorIsAvailable ? Icons.event_available_rounded : Icons.event_busy_rounded,
+                                              color: doctorIsAvailable
+                                                  ? FlutterFlowTheme.of(context).primary
+                                                  : const Color(0xFFE53935),
+                                              size: 16.0,
+                                            ),
+                                            SizedBox(width: 8.0),
+                                            Text(
+                                              doctorIsAvailable ? 'Disponible' : 'Indisponible',
+                                              style: FlutterFlowTheme.of(context).labelSmall.override(
+                                                    font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                                                    color: doctorIsAvailable
+                                                        ? FlutterFlowTheme.of(context).primary
+                                                        : const Color(0xFFE53935),
+                                                    fontSize: 12.0,
+                                                    fontWeight: FontWeight.w600,
+                                                    lineHeight: 1.3,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
+                                  );
+                                },
                               ),
                             ),
                           ].divide(SizedBox(width: 16.0)),
@@ -1248,6 +1328,10 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                               padding: MediaQuery.viewInsetsOf(context),
                               child: GetMedicalAppointmentWidget(
                                 isDoctorView: true,
+                                doctorName: widget.doctorName,
+                                doctorId: (widget.doctorId?.isNotEmpty == true)
+                                    ? widget.doctorId
+                                    : widget.docNumber,
                               ),
                             ),
                           );

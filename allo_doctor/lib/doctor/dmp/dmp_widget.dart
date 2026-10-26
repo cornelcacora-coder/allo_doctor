@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dmp_model.dart';
+import 'prescription_creation_dialog.dart';
 export 'dmp_model.dart';
 
 class DmpWidget extends StatefulWidget {
@@ -148,13 +149,13 @@ class _DmpWidgetState extends State<DmpWidget> with TickerProviderStateMixin {
             children: [
               Container(
                 width: double.infinity,
-                height: MediaQuery.sizeOf(context).height * 0.1,
+                height: MediaQuery.sizeOf(context).height * 0.12,
                 decoration: BoxDecoration(),
                 child: Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Align(
                         alignment: AlignmentDirectional(0.0, -1.0),
@@ -207,106 +208,115 @@ class _DmpWidgetState extends State<DmpWidget> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      Column(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'BITODI Cornelca Cora',
-                            style: FlutterFlowTheme.of(context)
-                                .headlineSmall
-                                .override(
-                                  font: GoogleFonts.outfit(
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'BITODI Cornelca Cora',
+                              style: FlutterFlowTheme.of(context)
+                                  .headlineSmall
+                                  .override(
+                                    font: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w600,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .headlineSmall
+                                          .fontStyle,
+                                    ),
+                                    color:
+                                        FlutterFlowTheme.of(context).primaryText,
+                                    fontSize: 12.0,
+                                    letterSpacing: 0.0,
                                     fontWeight: FontWeight.w600,
                                     fontStyle: FlutterFlowTheme.of(context)
                                         .headlineSmall
                                         .fontStyle,
                                   ),
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
-                                  fontSize: 12.0,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FontWeight.w600,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .headlineSmall
-                                      .fontStyle,
-                                ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            'Toux + Fièvre',
-                            style: FlutterFlowTheme.of(context)
-                                .labelSmall
-                                .override(
-                                  font: GoogleFonts.outfit(
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 4.0),
+                            Text(
+                              'Toux + Fièvre',
+                              style: FlutterFlowTheme.of(context)
+                                  .labelSmall
+                                  .override(
+                                    font: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w500,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .labelSmall
+                                          .fontStyle,
+                                    ),
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    fontSize: 11.0,
+                                    letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
                                     fontStyle: FlutterFlowTheme.of(context)
                                         .labelSmall
                                         .fontStyle,
+                                    lineHeight: 1.4,
                                   ),
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryText,
-                                  fontSize: 11.0,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FontWeight.w500,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .labelSmall
-                                      .fontStyle,
-                                  lineHeight: 1.4,
-                                ),
-                          ),
-                        ].divide(SizedBox(height: 5.0)),
-                      ),
-                      Flexible(
-                        child: Align(
-                          alignment: AlignmentDirectional(1.0, 1.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: FlutterFlowTheme.of(context).error,
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(
-                                color: Color(0x4DD23D39),
-                              ),
                             ),
-                            child: Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  5.0, 3.0, 5.0, 3.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsetsDirectional.fromSTEB(
-                                        5.0, 1.0, 5.0, 1.0),
-                                    child: Text(
-                                      'Démarrer',
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            font: GoogleFonts.outfit(
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                            color: Colors.white,
-                                            letterSpacing: 0.0,
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          context.pushNamed(
+                            TeleconsultationWidget.routeName,
+                            queryParameters: {
+                              'channelName': 'allo_doctor_channel',
+                              'patientName': 'BITODI Cornelca Cora',
+                            },
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: FlutterFlowTheme.of(context).error,
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(
+                              color: Color(0x4DD23D39),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                5.0, 6.0, 5.0, 6.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      5.0, 0.0, 5.0, 0.0),
+                                  child: Text(
+                                    'Démarrer',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          font: GoogleFonts.outfit(
                                             fontWeight: FontWeight.w600,
                                             fontStyle:
                                                 FlutterFlowTheme.of(context)
                                                     .bodyMedium
                                                     .fontStyle,
                                           ),
-                                    ),
+                                          color: Colors.white,
+                                          letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w600,
+                                          fontStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .bodyMedium
+                                                  .fontStyle,
+                                        ),
                                   ),
-                                  Icon(
-                                    Icons.video_call_rounded,
-                                    color: Colors.white,
-                                    size: 24.0,
-                                  ),
-                                ].divide(SizedBox(width: 5.0)),
-                              ),
+                                ),
+                                Icon(
+                                  Icons.video_call_rounded,
+                                  color: Colors.white,
+                                  size: 24.0,
+                                ),
+                              ].divide(SizedBox(width: 5.0)),
                             ),
                           ),
                         ),
@@ -3163,66 +3173,53 @@ class _DmpWidgetState extends State<DmpWidget> with TickerProviderStateMixin {
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
                                                     0.0, 16.0, 0.0, 0.0),
-                                            child: Container(
-                                              width: double.infinity,
-                                              height: 35.0,
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF6D2F19),
-                                                    Color(0xFFC34213)
-                                                  ],
-                                                  stops: [0.0, 1.0],
-                                                  begin: AlignmentDirectional(
-                                                      1.0, -1.0),
-                                                  end: AlignmentDirectional(
-                                                      -1.0, 1.0),
+                                            child: InkWell(
+                                              onTap: () async {
+                                                await PrescriptionCreationDialog.show(
+                                                  context,
+                                                  patientUid: 'patient_bitodi_cora',
+                                                  patientName: 'BITODI Cornelca Cora',
+                                                );
+                                              },
+                                              borderRadius: BorderRadius.circular(5.0),
+                                              child: Container(
+                                                width: double.infinity,
+                                                height: 38.0,
+                                                decoration: BoxDecoration(
+                                                  gradient: const LinearGradient(
+                                                    colors: [
+                                                      Color(0xFF16C583),
+                                                      Color(0xFF0F9D58),
+                                                    ],
+                                                    stops: [0.0, 1.0],
+                                                    begin: AlignmentDirectional(1.0, -1.0),
+                                                    end: AlignmentDirectional(-1.0, 1.0),
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(5.0),
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(5.0),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.max,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    'Conifrmer la Prescription',
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .labelSmall
-                                                        .override(
-                                                          font: GoogleFonts
-                                                              .outfit(
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            fontStyle:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontStyle,
-                                                          ),
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .secondaryBackground,
-                                                          fontSize: 12.0,
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontStyle,
-                                                          lineHeight: 1.3,
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.max,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      'Émettre & Signer l\'Ordonnance',
+                                                      style: FlutterFlowTheme.of(context).labelSmall.override(
+                                                        font: GoogleFonts.outfit(
+                                                          fontWeight: FontWeight.w600,
                                                         ),
-                                                  ),
-                                                  Icon(
-                                                    Icons.sell_outlined,
-                                                    color: Colors.white,
-                                                    size: 14.0,
-                                                  ),
-                                                ].divide(SizedBox(width: 10.0)),
+                                                        color: Colors.white,
+                                                        fontSize: 12.0,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                    const Icon(
+                                                      Icons.verified_outlined,
+                                                      color: Colors.white,
+                                                      size: 16.0,
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ),

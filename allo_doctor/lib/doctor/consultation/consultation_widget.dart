@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'consultation_model.dart';
+import '/auth/firebase_auth/auth_util.dart';
 export 'consultation_model.dart';
 
 class ConsultationWidget extends StatefulWidget {
@@ -28,13 +29,29 @@ class _ConsultationWidgetState extends State<ConsultationWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _consultationsStream;
+  String? _lastLoadedUid;
+
+  void _initStreams() {
+    final uid = currentUserUid;
+    if (uid.isNotEmpty && uid != _lastLoadedUid) {
+      _lastLoadedUid = uid;
+      _consultationsStream = FirebaseFirestore.instance
+          .collection('appointments')
+          .snapshots();
+    } else if (uid.isEmpty) {
+      _lastLoadedUid = null;
+      _consultationsStream = null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => ConsultationModel());
+    _initStreams();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      safeSetState(() {});
       // Garde-fou : cet espace est reserve aux comptes médecins.
       await guardRole(context, 'medecin');
     });
@@ -49,6 +66,21 @@ class _ConsultationWidgetState extends State<ConsultationWidget> {
 
   @override
   Widget build(BuildContext context) {
+    _initStreams();
+
+    if (currentUserUid.isEmpty) {
+      return Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              FlutterFlowTheme.of(context).primary,
+            ),
+          ),
+        ),
+      );
+    }
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -183,17 +215,42 @@ class _ConsultationWidgetState extends State<ConsultationWidget> {
                     Padding(
                       padding: EdgeInsets.all(24.0),
                       child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: FirebaseFirestore.instance.collection('appointments').snapshots(),
+                        stream: _consultationsStream,
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
                             return Center(
                               child: Padding(
                                 padding: EdgeInsets.all(24.0),
-                                child: CircularProgressIndicator(),
+                                child: CircularProgressIndicator(
+                                  color: FlutterFlowTheme.of(context).primary,
+                                ),
                               ),
                             );
                           }
-                          final docs = snapshot.data!.docs;
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(24.0),
+                                child: Text(
+                                  'Erreur de chargement des consultations',
+                                  style: FlutterFlowTheme.of(context).labelMedium,
+                                ),
+                              ),
+                            );
+                          }
+                          final allDocs = snapshot.data?.docs ?? [];
+                          final docs = allDocs.where((doc) {
+                            final a = doc.data();
+                            final mode = (a['consult_mode'] as String?) ?? '';
+                            // Exclure les visites à domicile
+                            if (mode == 'domicile') return false;
+                            final docId = (a['doctor_id'] as String?) ?? '';
+                            final docName = (a['doctor_name'] as String?) ?? '';
+                            if (docId.isNotEmpty && currentUserUid.isNotEmpty && docId == currentUserUid) return true;
+                            if (docName.isNotEmpty && currentUserDisplayName.isNotEmpty && docName.toLowerCase() == currentUserDisplayName.toLowerCase()) return true;
+                            return docId.isEmpty && docName.isEmpty;
+                          }).toList();
+
                           if (docs.isEmpty) {
                             return Center(
                               child: Padding(
@@ -231,6 +288,7 @@ class _ConsultationWidgetState extends State<ConsultationWidget> {
                               final patientName = (data['patient_name'] as String?)?.trim().isNotEmpty == true
                                   ? data['patient_name'] as String
                                   : 'Patient';
+                              final patientPhoto = (data['patient_photo'] as String?) ?? '';
                               final type = (data['consult_mode'] as String?) ?? (data['appointment_type'] as String?) ?? 'Téléconsultation';
                               final day = (data['day'] as String?) ?? '';
                               final timeSlot = (data['time_slot'] as String?) ?? '';
@@ -245,7 +303,7 @@ class _ConsultationWidgetState extends State<ConsultationWidget> {
                                   context.pushNamed(DmpWidget.routeName);
                                 },
                                 child: PatientCardWidget(
-                                  photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
+                                  photo: patientPhoto,
                                   name: patientName,
                                   sympto: sympto,
                                   type: type,

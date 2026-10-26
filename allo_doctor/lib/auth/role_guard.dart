@@ -103,23 +103,43 @@ Future<void> redirectToOwnHome(BuildContext context) async {
 /// Retourne true si l'acces est autorise. Sinon, l'utilisateur est
 /// redirige vers son propre accueil et la fonction retourne false.
 Future<bool> guardRole(BuildContext context, String expectedRole) async {
-  final role = await currentUserRole();
-  // Un administrateur n'est pas bloque par un garde-fou de role.
-  if (role == expectedRole || role == 'admin') return true;
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!context.mounted) return false;
+      if (expectedRole == 'medecin') {
+        context.goNamed(LoginDoctorWidget.routeName);
+      } else if (expectedRole == 'pharmacie') {
+        context.goNamed(LoginPharmacyWidget.routeName);
+      } else if (expectedRole == 'clinique') {
+        context.goNamed(LoginClinicWidget.routeName);
+      } else {
+        context.goNamed(WelcomeWidget.routeName);
+      }
+      return false;
+    }
 
-  if (!context.mounted) return false;
+    final role = await currentUserRole();
+    // Un administrateur n'est pas bloque par un garde-fou de role.
+    if (role == expectedRole || role == 'admin') return true;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        'Cet espace est réservé aux comptes ${roleLabel(expectedRole)}. '
-        'Vous êtes connecté en tant que ${roleLabel(role)}.',
-        style: TextStyle(color: Colors.white),
+    if (!context.mounted) return false;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Cet espace est réservé aux comptes ${roleLabel(expectedRole)}. '
+          'Vous êtes connecté en tant que ${roleLabel(role)}.',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF14563C),
       ),
-      backgroundColor: Color(0xFF14563C),
-    ),
-  );
+    );
 
-  context.goNamed(homeRouteForRole(role));
-  return false;
+    context.goNamed(homeRouteForRole(role));
+    return false;
+  } catch (e) {
+    print('Error in guardRole: $e');
+    return false;
+  }
 }

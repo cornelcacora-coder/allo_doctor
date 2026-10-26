@@ -156,6 +156,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             phone: params.getParam('phone', ParamType.String),
             photoUrl: params.getParam('photoUrl', ParamType.String),
             docNumber: params.getParam('docNumber', ParamType.String),
+            doctorId: params.getParam('doctorId', ParamType.String),
+            isAvailable: params.getParam('isAvailable', ParamType.String),
+            unavailabilityReason: params.getParam('unavailabilityReason', ParamType.String),
+            availableAt: params.getParam('availableAt', ParamType.String),
           ),
         ),
         FFRoute(
@@ -217,6 +221,15 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: ConsultationWidget.routeName,
           path: ConsultationWidget.routePath,
           builder: (context, params) => ConsultationWidget(),
+        ),
+        FFRoute(
+          name: TeleconsultationWidget.routeName,
+          path: TeleconsultationWidget.routePath,
+          builder: (context, params) => TeleconsultationWidget(
+            channelName: params.getParam('channelName', ParamType.String),
+            token: params.getParam('token', ParamType.String),
+            patientName: params.getParam('patientName', ParamType.String),
+          ),
         ),
         FFRoute(
           name: DmpWidget.routeName,

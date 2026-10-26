@@ -46,6 +46,8 @@ class _IntroWidgetState extends State<IntroWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -53,732 +55,454 @@ class _IntroWidgetState extends State<IntroWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        body: Align(
-          alignment: AlignmentDirectional(0.0, 0.0),
+        backgroundColor: theme.primaryBackground,
+        body: Center(
           child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            constraints: BoxConstraints(maxWidth: 500.0),
+            decoration: BoxDecoration(
+              color: theme.primaryBackground,
+            ),
+            child: Column(
+              children: [
+                // ─── HERO HEADER ───
+                Container(
                   width: double.infinity,
-                  height: double.infinity,
-                  constraints: BoxConstraints(
-                    maxWidth: 480.0,
-                  ),
                   decoration: BoxDecoration(
-                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF09392D),
+                        Color(0xFF0C5241),
+                        Color(0xFF107058),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(36.0),
+                      bottomRight: Radius.circular(36.0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF09392D).withOpacity(0.25),
+                        blurRadius: 20.0,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(40.0),
-                          bottomRight: Radius.circular(40.0),
-                        ),
-                        child: Container(
-                          height: 280.0,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                FlutterFlowTheme.of(context).primary,
-                                FlutterFlowTheme.of(context).secondary
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 28.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Logo avec halo doux
+                          Container(
+                            width: 76.0,
+                            height: 76.0,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(22.0),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.25),
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.12),
+                                  blurRadius: 16.0,
+                                  offset: Offset(0, 6),
+                                ),
                               ],
-                              stops: [0.0, 1.0],
-                              begin: AlignmentDirectional(0.0, -1.0),
-                              end: AlignmentDirectional(0, 1.0),
                             ),
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(40.0),
-                              bottomRight: Radius.circular(40.0),
-                            ),
-                            shape: BoxShape.rectangle,
-                          ),
-                          child: Stack(
-                            alignment: AlignmentDirectional(-1.0, -1.0),
-                            children: [
-                              Align(
-                                alignment: AlignmentDirectional(1.2, -0.5),
-                                child: Container(
-                                  width: 200.0,
-                                  height: 200.0,
-                                  decoration: BoxDecoration(
-                                    color: Color(0x1AFFFFFF),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Container(
-                                    width: 50.0,
-                                    height: 100.0,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                        fit: BoxFit.contain,
-                                        image: Image.asset(
-                                          'assets/images/Logo_Mini-removebg-preview.png',
-                                        ).image,
-                                      ),
-                                      borderRadius: BorderRadius.circular(32.0),
-                                      shape: BoxShape.rectangle,
-                                    ),
-                                    alignment: AlignmentDirectional(0.0, 0.0),
-                                  ),
+                            child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Image.asset(
+                                'assets/images/Logo_Mini-removebg-preview.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.medical_services_rounded,
+                                  color: Colors.white,
+                                  size: 38.0,
                                 ),
                               ),
-                              Padding(
-                                padding: EdgeInsets.all(24.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Lottie.network(
-                                      'https://raw.githubusercontent.com/xvrh/lottie-flutter/master/example/assets/Mobilo/A.json',
-                                      width: 100.0,
-                                      height: 110.0,
-                                      fit: BoxFit.contain,
-                                      animate: true,
-                                      errorBuilder:
-                                          (context, error, stackTrace) => Icon(
-                                        Icons.medical_services_rounded,
-                                        color: Colors.white,
-                                        size: 64.0,
-                                      ),
-                                    ),
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          'Allo Doctor',
-                                          style: FlutterFlowTheme.of(context)
-                                              .headlineLarge
-                                              .override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight: FontWeight.w900,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .headlineLarge
-                                                          .fontStyle,
-                                                ),
-                                                color: Colors.white,
-                                                letterSpacing: 0.0,
-                                                fontWeight: FontWeight.w900,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .headlineLarge
-                                                        .fontStyle,
-                                                lineHeight: 1.4,
-                                              ),
-                                        ),
-                                        Text(
-                                          'Healthcare at your fingertips',
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodyMedium
-                                              .override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontStyle,
-                                                ),
-                                                color: Color(0xCCFFFFFF),
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                                lineHeight: 1.4,
-                                              ),
-                                        ),
-                                      ].divide(SizedBox(height: 4.0)),
-                                    ),
-                                  ],
+                            ),
+                          ),
+                          SizedBox(height: 14.0),
+                          Text(
+                            'Allô Docteur',
+                            style: GoogleFonts.outfit(
+                              fontSize: 28.0,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          SizedBox(height: 4.0),
+                          Text(
+                            'Votre santé connectée, partout & en toute sérénité',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white.withOpacity(0.88),
+                            ),
+                          ),
+                          SizedBox(height: 18.0),
+                          // Badges de réassurance
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8.0,
+                            runSpacing: 6.0,
+                            children: [
+                              _buildTrustBadge('🔒 100% Sécurisé'),
+                              _buildTrustBadge('🩺 Praticiens Agréés'),
+                              _buildTrustBadge('⚡ Service 24/7'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ─── LISTE DES PROFILS ───
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 22.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 4.0, bottom: 14.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Choisissez votre profil',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 19.0,
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.primaryText,
+                                ),
+                              ),
+                              SizedBox(height: 2.0),
+                              Text(
+                                'Accédez à votre espace dédié en un clic',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13.0,
+                                  color: theme.secondaryText,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          child: SingleChildScrollView(
-                            primary: false,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Container(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Content de te revoir',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .titleLarge
-                                                  .override(
-                                                    font: GoogleFonts.outfit(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleLarge
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .primaryText,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleLarge
-                                                            .fontStyle,
-                                                    lineHeight: 1.4,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Veuillez sélectionner votre type de compte pour continuer',
-                                              textAlign: TextAlign.center,
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .bodyMedium
-                                                  .override(
-                                                    font: GoogleFonts.outfit(
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .secondaryText,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodyMedium
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .bodyMedium
-                                                            .fontStyle,
-                                                    lineHeight: 1.4,
-                                                  ),
-                                            ),
-                                          ].divide(SizedBox(height: 4.0)),
-                                        ),
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            InkWell(
-                                              splashColor: Colors.transparent,
-                                              focusColor: Colors.transparent,
-                                              hoverColor: Colors.transparent,
-                                              highlightColor:
-                                                  Colors.transparent,
-                                              onTap: () async {
-                                                context.pushNamed(
-                                                    LoginPatientWidget
-                                                        .routeName);
-                                              },
-                                              child: wrapWithModel(
-                                                model: _model.loginOptionModel1,
-                                                updateCallback: () =>
-                                                    safeSetState(() {}),
-                                                child: LoginOptionWidget(
-                                                  tone: FlutterFlowTheme.of(
-                                                          context)
-                                                      .warning,
-                                                  icon: Icon(
-                                                    Icons.person_rounded,
-                                                    color: Colors.white,
-                                                    size: 24.0,
-                                                  ),
-                                                  title: 'Je suis un patient',
-                                                  subtitle:
-                                                      'Je cherche des soins',
-                                                ),
-                                              ),
-                                            ),
-                                            InkWell(
-                                              splashColor: Colors.transparent,
-                                              focusColor: Colors.transparent,
-                                              hoverColor: Colors.transparent,
-                                              highlightColor:
-                                                  Colors.transparent,
-                                              onTap: () async {
-                                                context.pushNamed(
-                                                    LoginDoctorWidget
-                                                        .routeName);
-                                              },
-                                              child: wrapWithModel(
-                                                model: _model.loginOptionModel2,
-                                                updateCallback: () =>
-                                                    safeSetState(() {}),
-                                                child: LoginOptionWidget(
-                                                  tone: FlutterFlowTheme.of(
-                                                          context)
-                                                      .tertiary,
-                                                  icon: Icon(
-                                                    Icons
-                                                        .medical_services_rounded,
-                                                    color: Colors.white,
-                                                    size: 24.0,
-                                                  ),
-                                                  title: 'Je suis médecin',
-                                                  subtitle:
-                                                      'Je propose des consultations',
-                                                ),
-                                              ),
-                                            ),
-                                            InkWell(
-                                              splashColor: Colors.transparent,
-                                              focusColor: Colors.transparent,
-                                              hoverColor: Colors.transparent,
-                                              highlightColor:
-                                                  Colors.transparent,
-                                              onTap: () async {
-                                                context.pushNamed(
-                                                    LoginPharmacyWidget
-                                                        .routeName);
-                                              },
-                                              child: wrapWithModel(
-                                                model: _model.loginOptionModel3,
-                                                updateCallback: () =>
-                                                    safeSetState(() {}),
-                                                child: LoginOptionWidget(
-                                                  tone: Color(0xD90AA0FD),
-                                                  icon: Icon(
-                                                    Icons.medication_liquid,
-                                                    color: Colors.white,
-                                                    size: 24.0,
-                                                  ),
-                                                  title: 'Je suis pharmacien',
-                                                  subtitle:
-                                                      'Je gère une pharmacie',
-                                                ),
-                                              ),
-                                            ),
-                                            InkWell(
-                                              splashColor: Colors.transparent,
-                                              focusColor: Colors.transparent,
-                                              hoverColor: Colors.transparent,
-                                              highlightColor:
-                                                  Colors.transparent,
-                                              onTap: () async {
-                                                context.pushNamed(
-                                                    LoginClinicWidget
-                                                        .routeName);
-                                              },
-                                              child: wrapWithModel(
-                                                model: _model.loginOptionModel4,
-                                                updateCallback: () =>
-                                                    safeSetState(() {}),
-                                                child: LoginOptionWidget(
-                                                  tone: Color(0xFF0DDF8A),
-                                                  icon: Icon(
-                                                    Icons.store_mall_directory,
-                                                    color: Colors.white,
-                                                    size: 24.0,
-                                                  ),
-                                                  title:
-                                                      'Etablissement de Santé',
-                                                  subtitle:
-                                                      'Hopital, clininque ou Laboratoire',
-                                                ),
-                                              ),
-                                            ),
-                                          ].divide(SizedBox(height: 16.0)),
-                                        ),
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Wrap(
-                                              alignment:
-                                                  WrapAlignment.center,
-                                              crossAxisAlignment:
-                                                  WrapCrossAlignment.center,
-                                              spacing: 20.0,
-                                              runSpacing: 8.0,
-                                              children: [
-                                                Text(
-                                                  'En savoir plus ?',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyMedium
-                                                      .override(
-                                                        font:
-                                                            GoogleFonts.outfit(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyMedium
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodyMedium
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondaryText,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontStyle,
-                                                        lineHeight: 1.4,
-                                                      ),
-                                                ),
-                                              ].divide(SizedBox(width: 4.0)),
-                                            ),
-                                            Divider(
-                                              height: 16.0,
-                                              thickness: 1.0,
-                                              indent: 24.0,
-                                              endIndent: 24.0,
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .alternate,
-                                            ),
-                                            Wrap(
-                                              alignment:
-                                                  WrapAlignment.center,
-                                              crossAxisAlignment:
-                                                  WrapCrossAlignment.center,
-                                              spacing: 20.0,
-                                              runSpacing: 8.0,
-                                              children: [
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    FlutterFlowIconButton(
-                                                      borderColor:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .alternate,
-                                                      borderRadius: 9999.0,
-                                                      borderWidth: 1.0,
-                                                      buttonSize: 40.0,
-                                                      fillColor: FlutterFlowTheme
-                                                              .of(context)
-                                                          .secondaryBackground,
-                                                      icon: Icon(
-                                                        Icons
-                                                            .help_outline_rounded,
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondaryText,
-                                                        size: 24.0,
-                                                      ),
-                                                      onPressed: () async {
-                                                        final Uri supportUrl = Uri.parse('mailto:support@allodoctor.com?subject=Support');
-                                                        if (await canLaunchUrl(supportUrl)) {
-                                                          await launchUrl(supportUrl);
-                                                        } else {
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            SnackBar(content: Text('Contactez-nous: support@allodoctor.com')),
-                                                          );
-                                                        }
-                                                      },
-                                                    ),
-                                                    Text(
-                                                      'Support',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelSmall
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .outfit(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelSmall
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelSmall
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontStyle,
-                                                                lineHeight: 1.4,
-                                                              ),
-                                                    ),
-                                                  ].divide(
-                                                      SizedBox(height: 4.0)),
-                                                ),
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    FlutterFlowIconButton(
-                                                      borderColor:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .alternate,
-                                                      borderRadius: 9999.0,
-                                                      borderWidth: 1.0,
-                                                      buttonSize: 40.0,
-                                                      fillColor: FlutterFlowTheme
-                                                              .of(context)
-                                                          .secondaryBackground,
-                                                      icon: Icon(
-                                                        Icons.language_rounded,
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondaryText,
-                                                        size: 24.0,
-                                                      ),
-                                                      onPressed: () async {
-                                                        context.pushNamed(SettingsWidget.routeName);
-                                                      },
-                                                    ),
-                                                    Text(
-                                                      'Language',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelSmall
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .outfit(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelSmall
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelSmall
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontStyle,
-                                                                lineHeight: 1.4,
-                                                              ),
-                                                    ),
-                                                  ].divide(
-                                                      SizedBox(height: 4.0)),
-                                                ),
-                                                Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    FlutterFlowIconButton(
-                                                      borderColor:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .alternate,
-                                                      borderRadius: 9999.0,
-                                                      borderWidth: 1.0,
-                                                      buttonSize: 40.0,
-                                                      fillColor: FlutterFlowTheme
-                                                              .of(context)
-                                                          .secondaryBackground,
-                                                      icon: Icon(
-                                                        Icons
-                                                            .location_on_rounded,
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondaryText,
-                                                        size: 24.0,
-                                                      ),
-                                                      onPressed: () {
-                                                        showAboutDialog(
-                                                          context: context,
-                                                          applicationName: 'AlloDoctor',
-                                                          applicationVersion: '1.0.0',
-                                                          applicationIcon: Icon(Icons.medical_services_rounded, color: FlutterFlowTheme.of(context).primary, size: 40),
-                                                          children: [
-                                                            Text('AlloDoctor est une plateforme dédiée à améliorer l\'accès aux soins de santé en Afrique.\n\nPatients, médecins, pharmaciens et établissements de santé — tous connectés en un seul endroit.'),
-                                                          ],
-                                                        );
-                                                      },
-                                                    ),
-                                                    Text(
-                                                      'Equipe',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelSmall
-                                                              .override(
-                                                                font:
-                                                                    GoogleFonts
-                                                                        .outfit(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelSmall
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelSmall
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelSmall
-                                                                    .fontStyle,
-                                                                lineHeight: 1.4,
-                                                              ),
-                                                    ),
-                                                  ].divide(
-                                                      SizedBox(height: 4.0)),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ].divide(SizedBox(height: 24.0)),
-                                    ),
+
+                        // 1. PATIENT
+                        _buildRoleCard(
+                          context: context,
+                          title: 'Je suis un Patient',
+                          subtitle: 'Consultez des médecins, prenez RDV et suivez vos soins',
+                          badge: 'Particulier',
+                          badgeColor: Color(0xFF10B981),
+                          gradientColors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+                          icon: Icons.person_rounded,
+                          onTap: () => context.pushNamed(LoginPatientWidget.routeName),
+                        ),
+                        SizedBox(height: 12.0),
+
+                        // 2. MEDECIN
+                        _buildRoleCard(
+                          context: context,
+                          title: 'Je suis Médecin',
+                          subtitle: 'Cabinet virtuel, téléconsultations et prescriptions médicales',
+                          badge: 'Espace Pro',
+                          badgeColor: Color(0xFF0284C7),
+                          gradientColors: [Color(0xFF0369A1), Color(0xFF38BDF8)],
+                          icon: Icons.medical_services_rounded,
+                          onTap: () => context.pushNamed(LoginDoctorWidget.routeName),
+                        ),
+                        SizedBox(height: 12.0),
+
+                        // 3. PHARMACIE
+                        _buildRoleCard(
+                          context: context,
+                          title: 'Je suis Pharmacien',
+                          subtitle: 'Réception, validation d\'ordonnances et vente de produits',
+                          badge: 'Officine',
+                          badgeColor: Color(0xFF6366F1),
+                          gradientColors: [Color(0xFF4F46E5), Color(0xFF818CF8)],
+                          icon: Icons.medication_rounded,
+                          onTap: () => context.pushNamed(LoginPharmacyWidget.routeName),
+                        ),
+                        SizedBox(height: 12.0),
+
+                        // 4. CLINIQUE / ETABLISSEMENT
+                        _buildRoleCard(
+                          context: context,
+                          title: 'Établissement de Santé',
+                          subtitle: 'Hôpital, clinique médicale, centre de santé ou laboratoire',
+                          badge: 'Structure',
+                          badgeColor: Color(0xFFF59E0B),
+                          gradientColors: [Color(0xFFD97706), Color(0xFFFBBF24)],
+                          icon: Icons.local_hospital_rounded,
+                          onTap: () => context.pushNamed(LoginClinicWidget.routeName),
+                        ),
+                        SizedBox(height: 24.0),
+
+                        // ─── FOOTER ACTIONS ───
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildFooterButton(
+                              icon: Icons.help_outline_rounded,
+                              label: 'Assistance',
+                              onTap: () async {
+                                final Uri supportUrl = Uri.parse('mailto:support@allodoctor.com?subject=Support');
+                                if (await canLaunchUrl(supportUrl)) {
+                                  await launchUrl(supportUrl);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Contact : support@allodoctor.com')),
+                                  );
+                                }
+                              },
+                            ),
+                            SizedBox(width: 16.0),
+                            _buildFooterButton(
+                              icon: Icons.info_outline_rounded,
+                              label: 'À propos',
+                              onTap: () {
+                                showAboutDialog(
+                                  context: context,
+                                  applicationName: 'Allô Docteur',
+                                  applicationVersion: '2.0.0',
+                                  applicationIcon: Icon(
+                                    Icons.medical_services_rounded,
+                                    color: Color(0xFF10B981),
+                                    size: 40,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: AlignmentDirectional(0.0, 0.0),
-                        child: Container(
-                          child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Container(
-                              child: Text(
-                                'En continuant, vous acceptez nos Conditions d\'utilisation et notre Politique de confidentialité',
-                                textAlign: TextAlign.center,
-                                style: FlutterFlowTheme.of(context)
-                                    .labelSmall
-                                    .override(
-                                      font: GoogleFonts.outfit(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .labelSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .labelSmall
-                                            .fontStyle,
-                                      ),
-                                      color:
-                                          FlutterFlowTheme.of(context).accent3,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .labelSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .labelSmall
-                                          .fontStyle,
-                                      lineHeight: 1.4,
+                                  children: [
+                                    Text(
+                                      'Allô Docteur est la plateforme de télémédecine et de santé numérique '
+                                      'dédiée à faciliter l\'accès aux soins de santé de qualité.\n\n'
+                                      'Patients, médecins et pharmaciens réunis dans un écosystème sécurisé.',
+                                      style: GoogleFonts.outfit(fontSize: 13.5),
                                     ),
-                              ),
+                                  ],
+                                );
+                              },
                             ),
+                          ],
+                        ),
+                        SizedBox(height: 16.0),
+
+                        // Note légale
+                        Text(
+                          '🔒 Données de santé chiffrées de bout en bout et protégées selon les normes médicales en vigueur.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 11.5,
+                            color: theme.secondaryText.withOpacity(0.8),
+                            height: 1.4,
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 12.0),
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrustBadge(String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.5),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.20),
+          width: 1.0,
+        ),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.outfit(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required String badge,
+    required Color badgeColor,
+    required List<Color> gradientColors,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final theme = FlutterFlowTheme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20.0),
+        splashColor: gradientColors.first.withOpacity(0.08),
+        highlightColor: gradientColors.first.withOpacity(0.04),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 15.0),
+          decoration: BoxDecoration(
+            color: theme.secondaryBackground,
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(
+              color: theme.alternate.withOpacity(0.8),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.035),
+                blurRadius: 14.0,
+                offset: Offset(0, 4),
               ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Icône avec dégradé et ombre
+              Container(
+                width: 52.0,
+                height: 52.0,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: gradientColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: gradientColors.first.withOpacity(0.30),
+                      blurRadius: 10.0,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(icon, color: Colors.white, size: 26.0),
+                ),
+              ),
+              SizedBox(width: 14.0),
+              // Textes
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: GoogleFonts.outfit(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w700,
+                              color: theme.primaryText,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.0),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 7.0, vertical: 2.0),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          child: Text(
+                            badge,
+                            style: GoogleFonts.outfit(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: badgeColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 3.5),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12.5,
+                        color: theme.secondaryText,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 8.0),
+              // Flèche moderne
+              Container(
+                width: 32.0,
+                height: 32.0,
+                decoration: BoxDecoration(
+                  color: theme.primaryBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  color: theme.secondaryText,
+                  size: 16.0,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooterButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.0),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16.0, color: Color(0xFF10B981)),
+            SizedBox(width: 6.0),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 13.0,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF10B981),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

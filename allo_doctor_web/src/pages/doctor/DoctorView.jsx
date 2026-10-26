@@ -42,6 +42,7 @@ export const DoctorView = ({ subTab = 'doctor_home', setSubTab }) => {
 
   // Recherche dans le DMP
   const [dmpSearch, setDmpSearch] = useState('');
+  const [viewingRecordApt, setViewingRecordApt] = useState(null);
 
   // VISITES À DOMICILE (Feature fidèle à doctor/visite dans Flutter)
   const [homeVisits, setHomeVisits] = useState([
@@ -568,65 +569,192 @@ export const DoctorView = ({ subTab = 'doctor_home', setSubTab }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {appointments.map((apt) => (
-                    <tr key={apt.id}>
-                      <td>
-                        <strong>{apt.patient_name}</strong>
-                        <div style={{ fontSize: '11px', color: '#56605B' }}>{apt.patient_phone || '+212 600...'}</div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Clock size={14} color="#14583D" />
-                          <span>{apt.date_time}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="badge badge-secondary">{apt.consult_mode || 'Cabinet'}</span>
-                      </td>
-                      <td style={{ maxWidth: '220px' }}>{apt.symptoms}</td>
-                      <td><strong>{apt.fee || 350} F CFA</strong></td>
-                      <td>
-                        <span className={`badge ${
-                          apt.status === 'confirmé' ? 'badge-success' : 
-                          apt.status === 'terminé' ? 'badge-info' :
-                          apt.status === 'en_attente' ? 'badge-warning' : 'badge-danger'
-                        }`}>
-                          {apt.status || 'En attente'}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          {apt.status !== 'confirmé' && (
-                            <button 
-                              className="btn btn-primary" 
-                              style={{ padding: '4px 10px', fontSize: '11px' }}
-                              onClick={() => handleUpdateStatus(apt.id, 'confirmé')}
+                  {appointments.map((apt) => {
+                    const isPending = apt.status === 'en_attente' || apt.status === 'pending';
+                    const isConfirmed = apt.status === 'confirmé' || apt.status === 'confirmed';
+                    const isFinished = apt.status === 'terminé' || apt.status === 'completed';
+
+                    return (
+                      <tr key={apt.id}>
+                        <td>
+                          <strong>{apt.patient_name}</strong>
+                          <div style={{ fontSize: '11px', color: '#56605B' }}>{apt.patient_phone || '+212 600...'}</div>
+                          {apt.medical_record && (
+                            <button
+                              type="button"
+                              onClick={() => setViewingRecordApt(apt)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: '#e8efe8',
+                                border: 'none',
+                                borderRadius: '12px',
+                                padding: '2px 8px',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                color: '#14583D',
+                                cursor: 'pointer',
+                                marginTop: '4px'
+                              }}
                             >
-                              Confirmer
+                              <FileText size={11} /> Dossier joint
                             </button>
                           )}
-                          {apt.status === 'confirmé' && (
-                            <button 
-                              className="btn btn-secondary" 
-                              style={{ padding: '4px 10px', fontSize: '11px', color: '#14583D' }}
-                              onClick={() => handleUpdateStatus(apt.id, 'terminé')}
-                            >
-                              Terminer
-                            </button>
-                          )}
-                          <button 
-                            className="btn btn-secondary" 
-                            style={{ padding: '4px 8px', fontSize: '11px', color: '#BE3232' }}
-                            onClick={() => handleUpdateStatus(apt.id, 'annulé')}
-                          >
-                            <XCircle size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Clock size={14} color="#14583D" />
+                            <span>{apt.date_time}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="badge badge-secondary">{apt.consult_mode || 'Cabinet'}</span>
+                        </td>
+                        <td style={{ maxWidth: '220px' }}>{apt.symptoms}</td>
+                        <td><strong>{apt.fee || 350} F CFA</strong></td>
+                        <td>
+                          <span className={`badge ${
+                            isConfirmed ? 'badge-success' : 
+                            isFinished ? 'badge-info' :
+                            isPending ? 'badge-warning' : 'badge-danger'
+                          }`}>
+                            {isPending ? 'En attente' : isConfirmed ? 'Confirmé' : isFinished ? 'Terminé' : (apt.status || 'Refusé')}
+                          </span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {isPending && (
+                              <>
+                                <button 
+                                  className="btn btn-primary" 
+                                  style={{ padding: '4px 10px', fontSize: '11px', background: '#14583D' }}
+                                  onClick={() => handleUpdateStatus(apt.id, 'confirmé')}
+                                >
+                                  Valider
+                                </button>
+                                <button 
+                                  className="btn btn-secondary" 
+                                  style={{ padding: '4px 10px', fontSize: '11px', color: '#BE3232', borderColor: '#BE3232' }}
+                                  onClick={() => handleUpdateStatus(apt.id, 'refusé')}
+                                >
+                                  Refuser
+                                </button>
+                              </>
+                            )}
+                            {isConfirmed && (
+                              <>
+                                <button 
+                                  className="btn btn-secondary" 
+                                  style={{ padding: '4px 10px', fontSize: '11px', color: '#14583D' }}
+                                  onClick={() => handleUpdateStatus(apt.id, 'terminé')}
+                                >
+                                  Terminer
+                                </button>
+                                <button 
+                                  className="btn btn-secondary" 
+                                  style={{ padding: '4px 8px', fontSize: '11px', color: '#BE3232' }}
+                                  onClick={() => handleUpdateStatus(apt.id, 'annulé')}
+                                >
+                                  <XCircle size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONSULTATION DOSSIER MÉDICAL JOINT AU RDV */}
+      {viewingRecordApt && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(11, 20, 16, 0.72)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: '20px',
+            width: '100%',
+            maxWidth: '560px',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.22)',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #14583D 0%, #5B8E7B 100%)',
+              padding: '20px 24px',
+              color: 'white',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileCheck2 size={22} />
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: '16px' }}>Dossier Médical du Patient</div>
+                  <div style={{ fontSize: '12px', opacity: 0.9 }}>{viewingRecordApt.patient_name} — RDV {viewingRecordApt.date_time}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingRecordApt(null)}
+                style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', padding: '6px' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <div style={{ background: '#f2f7f4', borderRadius: '12px', padding: '16px', marginBottom: '16px', borderLeft: '4px solid #14583D' }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#14583D', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  Catégorie du document
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '15px', color: '#1A1C1B' }}>
+                  📁 {viewingRecordApt.medical_record?.category || 'Comptes-rendus médicaux'}
+                </div>
+                <div style={{ fontSize: '13px', color: '#56605B', marginTop: '4px' }}>
+                  Pièce : <strong>{viewingRecordApt.medical_record?.document_name || 'Document médical numérisé'}</strong>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: '#1A1C1B', marginBottom: '6px' }}>Observations & Antécédents transmis :</div>
+                <div style={{ background: '#FAFBFB', border: '1px solid #E5E7EB', borderRadius: '10px', padding: '12px', fontSize: '13px', color: '#374151', minHeight: '60px' }}>
+                  {viewingRecordApt.medical_record?.description || 'Aucune observation textuelle renseignée par le patient.'}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setViewingRecordApt(null)}
+                >
+                  Fermer
+                </button>
+                {viewingRecordApt.status === 'en_attente' && (
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => {
+                      handleUpdateStatus(viewingRecordApt.id, 'confirmé');
+                      setViewingRecordApt(null);
+                    }}
+                  >
+                    Valider ce Rendez-vous
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

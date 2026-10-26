@@ -30,6 +30,7 @@ export '/pharmacy/home_pharmacy/home_pharmacy_widget.dart'
     show HomePharmacyWidget;
 export '/doctor/home_doctor/home_doctor_widget.dart' show HomeDoctorWidget;
 export '/doctor/consultation/consultation_widget.dart' show ConsultationWidget;
+export '/doctor/teleconsultation/teleconsultation_widget.dart' show TeleconsultationWidget;
 export '/doctor/dmp/dmp_widget.dart' show DmpWidget;
 export '/doctor/agenda/agenda_widget.dart' show AgendaWidget;
 export '/doctor/visite/visite_widget.dart' show VisiteWidget;

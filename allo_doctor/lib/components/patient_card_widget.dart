@@ -86,38 +86,66 @@ class _PatientCardWidgetState extends State<PatientCardWidget> {
                       padding:
                           EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 6.0, 6.0),
                       child: Container(
-                        width: 40.0,
-                        height: 40.0,
+                        width: 42.0,
+                        height: 42.0,
                         clipBehavior: Clip.antiAlias,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
+                          color: FlutterFlowTheme.of(context).primary.withOpacity(0.15),
                         ),
-                        child: Image.network(
-                          valueOrDefault<String>(
-                            widget!.photo,
-                            'https://cdn-icons-png.flaticon.com/512/9411/9411434.png',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
+                        child: (widget!.photo != null &&
+                                widget!.photo!.isNotEmpty &&
+                                !widget!.photo!.contains('unsplash') &&
+                                !widget!.photo!.contains('flaticon'))
+                            ? Image.network(
+                                widget!.photo!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(
+                                    (widget!.name?.isNotEmpty == true)
+                                        ? widget!.name![0].toUpperCase()
+                                        : 'P',
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      color: FlutterFlowTheme.of(context).primary,
+                                      fontSize: 16.0,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  (widget!.name?.isNotEmpty == true)
+                                      ? widget!.name![0].toUpperCase()
+                                      : 'P',
+                                  style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold,
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 18.0,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                     Container(
                       width: 20.0,
                       height: 20.0,
                       decoration: BoxDecoration(
-                        color: valueOrDefault<Color>(
-                          widget!.tagBg,
-                          FlutterFlowTheme.of(context).tertiary,
-                        ),
+                        color: widget!.type.toLowerCase().contains('domicile')
+                            ? Color(0xFF16CB83)
+                            : FlutterFlowTheme.of(context).tertiary,
                         shape: BoxShape.circle,
                       ),
                       child: Align(
                         alignment: AlignmentDirectional(0.0, 0.0),
                         child: Icon(
-                          Icons.lock_rounded,
-                          color:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          size: 16.0,
+                          widget!.type.toLowerCase().contains('domicile')
+                              ? Icons.home_rounded
+                              : (widget!.type.toLowerCase().contains('tele')
+                                  ? Icons.videocam_rounded
+                                  : Icons.medical_services_rounded),
+                          color: Colors.white,
+                          size: 12.0,
                         ),
                       ),
                     ),
@@ -137,10 +165,9 @@ class _PatientCardWidgetState extends State<PatientCardWidget> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          valueOrDefault<String>(
-                            widget!.name,
-                            'Roger Kokolo',
-                          ),
+                          (widget!.name != null && widget!.name!.trim().isNotEmpty)
+                              ? widget!.name!
+                              : 'Patient',
                           style: FlutterFlowTheme.of(context)
                               .labelMedium
                               .override(

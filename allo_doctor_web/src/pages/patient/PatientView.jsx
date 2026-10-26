@@ -38,6 +38,10 @@ export const PatientView = ({ subTab = 'patient_home', setSubTab }) => {
   const [bookingMode, setBookingMode] = useState('Cabinet');
   const [bookingSymptoms, setBookingSymptoms] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [hasMedicalRecord, setHasMedicalRecord] = useState(false);
+  const [recordCategory, setRecordCategory] = useState('Comptes-rendus');
+  const [recordDescription, setRecordDescription] = useState('');
+  const [recordDocName, setRecordDocName] = useState('');
 
   // Modal Aperçu Ordonnance / PDF
   const [selectedPrescription, setSelectedPrescription] = useState(null);
@@ -90,7 +94,14 @@ export const PatientView = ({ subTab = 'patient_home', setSubTab }) => {
       appointment_type: bookingMode.toLowerCase(),
       consult_mode: bookingMode,
       fee: selectedDoctor.fee,
-      symptoms: bookingSymptoms || 'Consultation standard'
+      symptoms: bookingSymptoms || 'Consultation standard',
+      status: 'en_attente',
+      medical_record: hasMedicalRecord ? {
+        category: recordCategory,
+        description: recordDescription,
+        document_name: recordDocName || 'Document médical joint',
+        date: new Date().toLocaleDateString('fr-FR')
+      } : null
     });
 
     setBookingSuccess(true);
@@ -98,7 +109,10 @@ export const PatientView = ({ subTab = 'patient_home', setSubTab }) => {
       setBookingSuccess(false);
       setBookingModalOpen(false);
       setBookingSymptoms('');
-      showToast('Votre rendez-vous a été enregistré dans Firestore !');
+      setHasMedicalRecord(false);
+      setRecordDescription('');
+      setRecordDocName('');
+      showToast('Votre demande de RDV a été envoyée (en attente de confirmation du médecin) !');
     }, 1500);
   };
 
@@ -752,19 +766,84 @@ export const PatientView = ({ subTab = 'patient_home', setSubTab }) => {
                     <label className="form-label">Motif ou symptômes</label>
                     <textarea 
                       className="form-textarea" 
-                      rows={3} 
+                      rows={2} 
                       placeholder="Ex: Douleurs thoraciques, renouvellement traitement..."
                       value={bookingSymptoms}
                       onChange={(e) => setBookingSymptoms(e.target.value)}
                     ></textarea>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                  {/* SECTION DOSSIER MÉDICAL & ANTÉCÉDENTS */}
+                  <div style={{
+                    border: '1px solid #DADDDD',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    marginBottom: '16px',
+                    background: hasMedicalRecord ? '#f2f7f4' : '#fafbfb'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: hasMedicalRecord ? '12px' : '0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={18} color="#14583D" />
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: '13px', color: '#1A1C1B' }}>Joindre mon Dossier Médical</div>
+                          <div style={{ fontSize: '11px', color: '#56605B' }}>Permet au médecin d'étudier vos antécédents avant validation</div>
+                        </div>
+                      </div>
+                      <input 
+                        type="checkbox"
+                        checked={hasMedicalRecord}
+                        onChange={(e) => setHasMedicalRecord(e.target.checked)}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#14583D' }}
+                      />
+                    </div>
+
+                    {hasMedicalRecord && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', borderTop: '1px solid #E5E7EB', paddingTop: '10px' }}>
+                        <div>
+                          <label className="form-label" style={{ fontSize: '11px' }}>Catégorie du document</label>
+                          <select 
+                            className="form-select"
+                            value={recordCategory}
+                            onChange={(e) => setRecordCategory(e.target.value)}
+                            style={{ fontSize: '12px', padding: '6px 10px' }}
+                          >
+                            <option value="Comptes-rendus">1. Comptes-rendus de consultation</option>
+                            <option value="Résultats d'examens">2. Résultats d'examens (biologie / imagerie)</option>
+                            <option value="Ordonnances">3. Ordonnances antérieures</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="form-label" style={{ fontSize: '11px' }}>Nom ou référence de la pièce</label>
+                          <input 
+                            type="text"
+                            className="form-input"
+                            placeholder="Ex: Bilan sanguin NFS ou Radio pulmonaire..."
+                            value={recordDocName}
+                            onChange={(e) => setRecordDocName(e.target.value)}
+                            style={{ fontSize: '12px', padding: '6px 10px' }}
+                          />
+                        </div>
+                        <div>
+                          <label className="form-label" style={{ fontSize: '11px' }}>Observations / Antécédents</label>
+                          <textarea 
+                            className="form-textarea"
+                            rows={2}
+                            placeholder="Antécédents d'allergie, maladies chroniques, interventions..."
+                            value={recordDescription}
+                            onChange={(e) => setRecordDescription(e.target.value)}
+                            style={{ fontSize: '12px', padding: '6px 10px' }}
+                          ></textarea>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px' }}>
                     <button type="button" className="btn btn-secondary" onClick={() => setBookingModalOpen(false)}>
                       Annuler
                     </button>
                     <button type="submit" className="btn btn-primary">
-                      Confirmer le Rendez-vous ({selectedDoctor?.fee || 350} F CFA)
+                      Envoyer la Demande ({selectedDoctor?.fee || 350} F CFA)
                     </button>
                   </div>
                 </form>
