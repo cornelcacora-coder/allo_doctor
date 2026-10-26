@@ -35,6 +35,8 @@ class _AgendaWidgetState extends State<AgendaWidget>
   Stream<List<AppointmentsRecord>>? _pendingAppointmentsStream;
   Stream<List<AppointmentsRecord>>? _confirmedAppointmentsStream;
   String? _lastLoadedUid;
+  String _agendaSearchQuery = '';
+  final _agendaSearchController = TextEditingController();
 
   void _initStreams() {
     final uid = currentUserUid;
@@ -683,7 +685,7 @@ class _AgendaWidgetState extends State<AgendaWidget>
                                     }).toList()
                                       ..sort((a, b) => (b.createdAt ?? DateTime(0))
                                           .compareTo(a.createdAt ?? DateTime(0)));
-                                    if (appointments.isEmpty) {
+                                    final displayedAppts = _agendaSearchQuery.isEmpty ? appointments : appointments.where((a) { final p = a.patientName.toLowerCase(); final d = a.day.toLowerCase(); final s = a.timeSlot.toLowerCase(); return p.contains(_agendaSearchQuery) || d.contains(_agendaSearchQuery) || s.contains(_agendaSearchQuery); }).toList(); if (displayedAppts.isEmpty) {
                                       return Center(
                                         child: Padding(
                                           padding: EdgeInsets.all(32),
@@ -719,7 +721,7 @@ class _AgendaWidgetState extends State<AgendaWidget>
                                       child: ListView.separated(
                                         padding: EdgeInsets.zero,
                                         shrinkWrap: true,
-                                        itemCount: appointments.length,
+                                        itemCount: displayedAppts.length,
                                         separatorBuilder: (_, __) =>
                                             SizedBox(height: 14),
                                         itemBuilder: (context, idx) {
@@ -1133,7 +1135,7 @@ class _AgendaWidgetState extends State<AgendaWidget>
                                     }).toList()
                                       ..sort((a, b) => (b.createdAt ?? DateTime(0))
                                           .compareTo(a.createdAt ?? DateTime(0)));
-                                    if (appointments.isEmpty) {
+                                    final displayedAppts = _agendaSearchQuery.isEmpty ? appointments : appointments.where((a) { final p = a.patientName.toLowerCase(); final d = a.day.toLowerCase(); final s = a.timeSlot.toLowerCase(); return p.contains(_agendaSearchQuery) || d.contains(_agendaSearchQuery) || s.contains(_agendaSearchQuery); }).toList(); if (displayedAppts.isEmpty) {
                                       return Center(
                                         child: Padding(
                                           padding: EdgeInsets.all(32),
@@ -1169,7 +1171,7 @@ class _AgendaWidgetState extends State<AgendaWidget>
                                       child: ListView.separated(
                                         padding: EdgeInsets.zero,
                                         shrinkWrap: true,
-                                        itemCount: appointments.length,
+                                        itemCount: displayedAppts.length,
                                         separatorBuilder: (_, __) =>
                                             SizedBox(height: 14),
                                         itemBuilder: (context, idx) {

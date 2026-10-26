@@ -48,6 +48,7 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
   void initState() {
     super.initState();
     _model = createModel(context, () => HomeHubModel());
+    _model.searchController ??= TextEditingController();
 
     animationsMap.addAll({
       'containerOnPageLoadAnimation1': AnimationInfo(
@@ -378,57 +379,59 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                               ),
                               child: Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
-                                    20.0, 6.0, 6.0, 6.0),
-                                child: Container(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.search_rounded,
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondaryText,
-                                        size: 24.0,
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Text(
-                                          'Médicament, médecin, clinique...',
-                                          style: FlutterFlowTheme.of(context)
+                                    16.0, 4.0, 6.0, 4.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.search_rounded,
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                      size: 24.0,
+                                    ),
+                                    SizedBox(width: 8.0),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _model.searchController,
+                                        autofocus: false,
+                                        decoration: InputDecoration(
+                                          hintText: 'Médicament, médecin, clinique...',
+                                          hintStyle: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontStyle,
-                                                ),
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .onSurface,
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                                lineHeight: 1.5,
+                                                font: GoogleFonts.outfit(),
+                                                color: FlutterFlowTheme.of(context).secondaryText,
                                               ),
-                                          overflow: TextOverflow.ellipsis,
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(vertical: 10.0),
                                         ),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              font: GoogleFonts.outfit(),
+                                              color: FlutterFlowTheme.of(context).primaryText,
+                                            ),
+                                        onSubmitted: (query) {
+                                          final text = query.trim();
+                                          context.pushNamed(
+                                            DoctorListWidget.routeName,
+                                            queryParameters: text.isNotEmpty ? {'initialQuery': text} : <String, dynamic>{},
+                                          );
+                                        },
                                       ),
-                                      Container(
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        final query = _model.searchController?.text.trim() ?? '';
+                                        context.pushNamed(
+                                          DoctorListWidget.routeName,
+                                          queryParameters: query.isNotEmpty ? {'initialQuery': query} : <String, dynamic>{},
+                                        );
+                                      },
+                                      child: Container(
                                         decoration: BoxDecoration(
                                           color: Color(0xFF165C40),
                                           borderRadius:
@@ -439,40 +442,28 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
                                                   20.0, 10.0, 20.0, 10.0),
-                                          child: Container(
-                                            child: Text(
-                                              'Rechercher',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .labelLarge
-                                                  .override(
-                                                    font: GoogleFonts.outfit(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelLarge
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .onPrimary,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .labelLarge
-                                                            .fontStyle,
-                                                    lineHeight: 1.4,
+                                          child: Text(
+                                            'Rechercher',
+                                            style: FlutterFlowTheme.of(
+                                                    context)
+                                                .labelLarge
+                                                .override(
+                                                  font: GoogleFonts.outfit(
+                                                    fontWeight:
+                                                        FontWeight.bold,
                                                   ),
-                                            ),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .onPrimary,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  lineHeight: 1.4,
+                                                ),
                                           ),
                                         ),
                                       ),
-                                    ].divide(SizedBox(width: 16.0)),
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -1178,6 +1169,81 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                           ].divide(SizedBox(width: 16.0)),
                         ),
                       ].divide(SizedBox(height: 16.0)),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(14.0, 0.0, 14.0, 14.0),
+                    child: InkWell(
+                      onTap: () => context.pushNamed(PatientDocumentsWidget.routeName),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF165AC5), Color(0xFF16C583)],
+                            stops: [0.0, 1.0],
+                            begin: AlignmentDirectional(-1.0, 0.0),
+                            end: AlignmentDirectional(1.0, 0.0),
+                          ),
+                          borderRadius: BorderRadius.circular(14.0),
+                        ),
+                        padding: const EdgeInsets.all(14.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Mes Ordonnances & Documents',
+                                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(color: const Color(0xFF0A0E1A), borderRadius: BorderRadius.circular(6)),
+                                        child: Text(
+                                          'NOUVEAU',
+                                          style: GoogleFonts.outfit(fontSize: 9, fontWeight: FontWeight.w800, color: const Color(0xFF16C583)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Ordonnances avec QR Code et comptes-rendus certifiés',
+                                    style: GoogleFonts.outfit(fontSize: 11, color: Colors.white.withOpacity(0.9)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Consulter',
+                                    style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF165AC5)),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF165AC5)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   Padding(

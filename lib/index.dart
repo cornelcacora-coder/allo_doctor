@@ -67,3 +67,4 @@ export '/admin/home_admin/home_admin_widget.dart' show HomeAdminWidget;
 export '/admin/admin_user_liste/admin_user_liste_widget.dart'
     show AdminUserListeWidget;
 export '/connect/intro_copy/intro_copy_widget.dart' show IntroCopyWidget;
+export '/patient/patient_documents/patient_documents_widget.dart' show PatientDocumentsWidget;

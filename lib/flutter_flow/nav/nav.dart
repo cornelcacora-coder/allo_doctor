@@ -165,7 +165,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: DoctorListWidget.routeName,
           path: DoctorListWidget.routePath,
-          builder: (context, params) => DoctorListWidget(),
+          builder: (context, params) => DoctorListWidget(
+            initialQuery: params.getParam('initialQuery', ParamType.String),
+          ),
         ),
         FFRoute(
           name: BloodBankListWidget.routeName,
@@ -203,6 +205,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => CarnetSanteWidget(),
         ),
         FFRoute(
+          name: PatientDocumentsWidget.routeName,
+          path: PatientDocumentsWidget.routePath,
+          builder: (context, params) => const PatientDocumentsWidget(),
+        ),
+        FFRoute(
           name: SettingsWidget.routeName,
           path: SettingsWidget.routePath,
           builder: (context, params) => SettingsWidget(),
@@ -234,7 +241,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: DmpWidget.routeName,
           path: DmpWidget.routePath,
-          builder: (context, params) => DmpWidget(),
+          builder: (context, params) => DmpWidget(
+            patientUid: params.getParam('patientUid', ParamType.String),
+            patientName: params.getParam('patientName', ParamType.String),
+            patientPhoto: params.getParam('patientPhoto', ParamType.String),
+            symptoms: params.getParam('symptoms', ParamType.String),
+          ),
         ),
         FFRoute(
           name: AgendaWidget.routeName,
@@ -299,7 +311,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: ClinicDMPWidget.routeName,
           path: ClinicDMPWidget.routePath,
-          builder: (context, params) => ClinicDMPWidget(),
+          builder: (context, params) => ClinicDMPWidget(
+            patientUid: params.getParam('patientUid', ParamType.String),
+            patientName: params.getParam('patientName', ParamType.String),
+            patientPhoto: params.getParam('patientPhoto', ParamType.String),
+            symptoms: params.getParam('symptoms', ParamType.String),
+          ),
         ),
         FFRoute(
           name: ClinicLaboWidget.routeName,
