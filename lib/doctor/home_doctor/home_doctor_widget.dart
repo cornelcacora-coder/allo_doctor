@@ -21,6 +21,7 @@ import 'dart:convert';
 import '/auth/firebase_auth/auth_util.dart';
 import '/components/avatar_image_widget.dart';
 import '/components/notification_bell_widget.dart';
+import '/backend/notification_service.dart';
 export 'home_doctor_model.dart';
 
 class HomeDoctorWidget extends StatefulWidget {
@@ -1793,6 +1794,16 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
                                                             ),
                                                             onPressed: () async {
                                                               await aptDoc.reference.update({'status': 'confirmed', 'updated_at': FieldValue.serverTimestamp()});
+                                                               final patientUid = (apt['patient_id'] as String?) ?? ((apt['patient_ref'] as DocumentReference?)?.id ?? '');
+                                                               if (patientUid.isNotEmpty) {
+                                                                 await NotificationService.sendNotification(
+                                                                   recipientUid: patientUid,
+                                                                   title: '📅 Rendez-vous confirmé',
+                                                                   message: 'Le Dr. ' + (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : "votre médecin") + ' a confirmé votre rendez-vous.',
+                                                                   type: 'appointment',
+                                                                   referenceId: aptDoc.id,
+                                                                 );
+                                                               }
                                                               ScaffoldMessenger.of(context).showSnackBar(
                                                                 SnackBar(content: Text('Rendez-vous confirme !'), backgroundColor: Color(0xFF16CB83)),
                                                               );
@@ -1810,7 +1821,17 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
                                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                                             ),
                                                             onPressed: () async {
-                                                              await aptDoc.reference.update({'status': 'cancelled', 'updated_at': FieldValue.serverTimestamp()});
+                                                              await aptDoc.reference.update({'status': 'refused', 'updated_at': FieldValue.serverTimestamp()});
+                                                               final patientUid = (apt['patient_id'] as String?) ?? ((apt['patient_ref'] as DocumentReference?)?.id ?? '');
+                                                               if (patientUid.isNotEmpty) {
+                                                                 await NotificationService.sendNotification(
+                                                                   recipientUid: patientUid,
+                                                                   title: '❌ Rendez-vous refusé',
+                                                                   message: 'Le Dr. ' + (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : "votre médecin") + ' ne peut malheureusement pas accepter ce rendez-vous.',
+                                                                   type: 'appointment',
+                                                                   referenceId: aptDoc.id,
+                                                                 );
+                                                               }
                                                               ScaffoldMessenger.of(context).showSnackBar(
                                                                 SnackBar(content: Text('Rendez-vous refuse.'), backgroundColor: Colors.red),
                                                               );

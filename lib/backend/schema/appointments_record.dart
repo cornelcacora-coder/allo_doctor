@@ -93,8 +93,23 @@ class AppointmentsRecord extends FirestoreRecord {
 
   // "symptoms" field.
   String? _symptoms;
-  String get symptoms => _symptoms ?? '';
-  bool hasSymptoms() => _symptoms != null;
+  String get symptoms => _symptoms ?? (snapshotData['symptoms'] as String? ?? '');
+  bool hasSymptoms() => _symptoms != null || snapshotData['symptoms'] != null;
+
+  // "appointment_cause" field.
+  String? _appointmentCause;
+  String get appointmentCause => _appointmentCause ?? (snapshotData['appointment_cause'] as String? ?? '');
+  bool hasAppointmentCause() => _appointmentCause != null || snapshotData['appointment_cause'] != null;
+
+  // "has_medical_record" field.
+  bool? _hasMedicalRecord;
+  bool get hasMedicalRecord => _hasMedicalRecord ?? (snapshotData['has_medical_record'] as bool? ?? false);
+  bool hasHasMedicalRecord() => _hasMedicalRecord != null || snapshotData['has_medical_record'] != null;
+
+  // "medical_documents" field.
+  List<dynamic>? _medicalDocuments;
+  List<dynamic> get medicalDocuments => _medicalDocuments ?? (snapshotData['medical_documents'] as List<dynamic>? ?? []);
+  bool hasMedicalDocuments() => _medicalDocuments != null || snapshotData['medical_documents'] != null;
 
   // "fee" field.
   double? _fee;
@@ -128,6 +143,9 @@ class AppointmentsRecord extends FirestoreRecord {
     _type = snapshotData['type'] as String?;
     _status = snapshotData['status'] as String?;
     _symptoms = snapshotData['symptoms'] as String?;
+    _appointmentCause = snapshotData['appointment_cause'] as String?;
+    _hasMedicalRecord = snapshotData['has_medical_record'] as bool?;
+    _medicalDocuments = snapshotData['medical_documents'] as List<dynamic>?;
     _fee = castToNullableNumber(snapshotData['fee'])?.toDouble();
     _createdAt = snapshotData['created_at'] as DateTime?;
     _updatedAt = snapshotData['updated_at'] as DateTime?;

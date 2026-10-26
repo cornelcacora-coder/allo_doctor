@@ -176,6 +176,231 @@ class _AgendaWidgetState extends State<AgendaWidget>
     );
   }
 
+  void _showPatientMedicalRecordDialog(BuildContext context, AppointmentsRecord appt) {
+    final docs = List<Map<String, dynamic>>.from(
+      appt.medicalDocuments.map((e) => Map<String, dynamic>.from(e as Map)),
+    );
+    // Tri chronologique décroissant (du plus récent au plus ancien)
+    docs.sort((a, b) {
+      final int tA = a['timestamp'] as int? ?? 0;
+      final int tB = b['timestamp'] as int? ?? 0;
+      return tB.compareTo(tA);
+    });
+
+    final crList = docs.where((d) => (d['category'] as String? ?? '').contains('Compte-rendu')).toList();
+    final bioList = docs.where((d) => (d['category'] as String? ?? '').contains('biologiques') || (d['category'] as String? ?? '').contains('imagerie')).toList();
+    final ordoList = docs.where((d) => (d['category'] as String? ?? '').contains('Ordonnances') || (d['category'] as String? ?? '').contains('traitements')).toList();
+    final otherList = docs.where((d) => !crList.contains(d) && !bioList.contains(d) && !ordoList.contains(d)).toList();
+
+    showDialog(
+      context: context,
+      builder: (dCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.folder_shared_rounded, color: Color(0xFF165AC5), size: 22),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Dossier patient — ${appt.patientName.isNotEmpty ? appt.patientName : "Patient"}',
+                style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Container(
+          width: double.maxFinite,
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (appt.appointmentCause.isNotEmpty) ...[
+                  Text('Cause principale du rendez-vous :', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF165AC5))),
+                  SizedBox(height: 2),
+                  Text(appt.appointmentCause, style: GoogleFonts.outfit(fontSize: 12)),
+                  SizedBox(height: 10),
+                ],
+                if (appt.symptoms.isNotEmpty) ...[
+                  Text('Signes & symptômes actuels :', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF8A0DCE))),
+                  SizedBox(height: 2),
+                  Text(appt.symptoms, style: GoogleFonts.outfit(fontSize: 12)),
+                  SizedBox(height: 10),
+                ],
+                if (appt.hasMedicalRecord) ...[
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF00A651).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Color(0xFF00A651).withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.verified_user_outlined, color: Color(0xFF00A651), size: 18),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Le patient possède un dossier médical antérieur. Importation de l\'historique activée.',
+                            style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF00A651)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                ],
+                Text(
+                  'Pièces classées par catégorie & chronologie :',
+                  style: GoogleFonts.outfit(fontSize: 12.5, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+
+                // 1. Comptes-rendus
+                _buildCategoryGroup(
+                  '1. Comptes-rendus (Consultation & Hospitalisation)',
+                  crList,
+                  Color(0xFF165AC5),
+                  Icons.description_outlined,
+                ),
+                SizedBox(height: 10),
+
+                // 2. Examens bio & imagerie
+                _buildCategoryGroup(
+                  '2. Examens biologiques & Imagerie (Radios, IRM)',
+                  bioList,
+                  Color(0xFF8A0DCE),
+                  Icons.biotech_outlined,
+                ),
+                SizedBox(height: 10),
+
+                // 3. Ordonnances & traitements
+                _buildCategoryGroup(
+                  '3. Ordonnances & Suivis de traitements',
+                  ordoList,
+                  Color(0xFF00A651),
+                  Icons.medication_outlined,
+                ),
+                if (otherList.isNotEmpty) ...[
+                  SizedBox(height: 10),
+                  _buildCategoryGroup(
+                    'Autres documents',
+                    otherList,
+                    Colors.grey.shade700,
+                    Icons.attach_file,
+                  ),
+                ],
+                if (docs.isEmpty && !appt.hasMedicalRecord)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Aucune pièce jointe transmise pour ce rendez-vous.',
+                      style: GoogleFonts.outfit(fontSize: 11.5, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF165AC5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(dCtx),
+            child: Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryGroup(String title, List<Map<String, dynamic>> items, Color color, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      padding: EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.bold, color: color),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+                child: Text('${items.length}', style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
+              ),
+            ],
+          ),
+          if (items.isNotEmpty) ...[
+            SizedBox(height: 6),
+            ...items.map((item) {
+              final isConfirmed = item['status'] == 'Confirmé';
+              return Container(
+                margin: EdgeInsets.only(top: 4),
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      item['date'] ?? '',
+                      style: GoogleFonts.outfit(fontSize: 10.5, fontWeight: FontWeight.w600, color: Color(0xFF165AC5)),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        item['title'] ?? 'Document',
+                        style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: isConfirmed ? Color(0xFF00A651).withOpacity(0.12) : Color(0xFFE67E22).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        item['status'] ?? 'Confirmé',
+                        style: GoogleFonts.outfit(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: isConfirmed ? Color(0xFF00A651) : Color(0xFFE67E22),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ] else ...[
+            Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text('Aucune pièce dans cette catégorie.', style: GoogleFonts.outfit(fontSize: 10, color: Colors.grey.shade500, fontStyle: FontStyle.italic)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -663,7 +888,52 @@ class _AgendaWidgetState extends State<AgendaWidget>
                                                       ),
                                                     ],
                                                   ),
-                                                  SizedBox(height: 12),
+                                                  if (appt.appointmentCause.isNotEmpty || appt.symptoms.isNotEmpty || appt.hasMedicalRecord || appt.medicalDocuments.isNotEmpty) ...[
+                                                     SizedBox(height: 8),
+                                                     Container(
+                                                       width: double.infinity,
+                                                       padding: EdgeInsets.all(8),
+                                                       decoration: BoxDecoration(
+                                                         color: FlutterFlowTheme.of(context).primaryBackground,
+                                                         borderRadius: BorderRadius.circular(8),
+                                                         border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                                                       ),
+                                                       child: Column(
+                                                         crossAxisAlignment: CrossAxisAlignment.start,
+                                                         children: [
+                                                           if (appt.appointmentCause.isNotEmpty)
+                                                             Text(
+                                                               'Motif : ' + appt.appointmentCause,
+                                                               style: GoogleFonts.outfit(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF165AC5)),
+                                                             ),
+                                                           if (appt.symptoms.isNotEmpty)
+                                                             Padding(
+                                                               padding: EdgeInsets.only(top: 2),
+                                                               child: Text(
+                                                                 'Symptômes : ' + appt.symptoms,
+                                                                 style: GoogleFonts.outfit(fontSize: 11, color: FlutterFlowTheme.of(context).primaryText),
+                                                               ),
+                                                             ),
+                                                           SizedBox(height: 4),
+                                                           InkWell(
+                                                             onTap: () => _showPatientMedicalRecordDialog(context, appt),
+                                                             child: Row(
+                                                               mainAxisSize: MainAxisSize.min,
+                                                               children: [
+                                                                 Icon(Icons.folder_shared_outlined, size: 14, color: Color(0xFF8A0DCE)),
+                                                                 SizedBox(width: 4),
+                                                                 Text(
+                                                                   appt.hasMedicalRecord ? 'Consulter dossier médical complet' : 'Voir les pièces du dossier (' + appt.medicalDocuments.length.toString() + ')',
+                                                                   style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF8A0DCE), decoration: TextDecoration.underline),
+                                                                 ),
+                                                               ],
+                                                             ),
+                                                           ),
+                                                         ],
+                                                       ),
+                                                     ),
+                                                   ],
+                                                   SizedBox(height: 12),
                                                    Row(
                                                      children: [
                                                        // 1. Bouton Valider

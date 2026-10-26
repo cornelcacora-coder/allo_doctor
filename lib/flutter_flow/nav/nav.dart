@@ -156,6 +156,10 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             phone: params.getParam('phone', ParamType.String),
             photoUrl: params.getParam('photoUrl', ParamType.String),
             docNumber: params.getParam('docNumber', ParamType.String),
+            doctorId: params.getParam('doctorId', ParamType.String),
+            isAvailable: params.getParam('isAvailable', ParamType.String),
+            unavailabilityReason: params.getParam('unavailabilityReason', ParamType.String),
+            availableAt: params.getParam('availableAt', ParamType.String),
           ),
         ),
         FFRoute(

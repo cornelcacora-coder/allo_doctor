@@ -1329,7 +1329,9 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                               child: GetMedicalAppointmentWidget(
                                 isDoctorView: true,
                                 doctorName: widget.doctorName,
-                                doctorId: widget.docNumber,
+                                doctorId: (widget.doctorId?.isNotEmpty == true)
+                                    ? widget.doctorId
+                                    : widget.docNumber,
                               ),
                             ),
                           );
