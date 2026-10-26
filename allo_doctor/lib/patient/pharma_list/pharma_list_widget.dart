@@ -149,8 +149,22 @@ class _PharmaListWidgetState extends State<PharmaListWidget> {
                                 autofocus: false,
                                 enabled: true,
                                 obscureText: false,
+                                onChanged: (_) => safeSetState(() {}),
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).unfocus();
+                                  safeSetState(() {});
+                                },
                                 decoration: InputDecoration(
                                   isDense: true,
+                                  suffixIcon: (_model.textController?.text.isNotEmpty ?? false)
+                                      ? IconButton(
+                                          icon: Icon(Icons.clear_rounded, color: FlutterFlowTheme.of(context).secondaryText, size: 20),
+                                          onPressed: () {
+                                            _model.textController?.clear();
+                                            safeSetState(() {});
+                                          },
+                                        )
+                                      : null,
                                   labelStyle: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(

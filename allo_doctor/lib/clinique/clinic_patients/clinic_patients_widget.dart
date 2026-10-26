@@ -5,6 +5,8 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
 import '/index.dart';
 import '/auth/role_guard.dart';
+import '/auth/firebase_auth/auth_util.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +27,8 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
   late ClinicPatientsModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -106,7 +110,7 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
                   ),
                 ],
               ),
-            ].divide(SizedBox(height: 10.0)),
+            ].divide(const SizedBox(height: 10.0)),
           ),
           actions: [],
           centerTitle: false,
@@ -117,7 +121,7 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
             mainAxisSize: MainAxisSize.max,
             children: [
               Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(20.0, 14.0, 20.0, 12.0),
+                padding: const EdgeInsetsDirectional.fromSTEB(20.0, 14.0, 20.0, 12.0),
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -127,7 +131,7 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
                       width: 4.0,
                       height: 24.0,
                       decoration: BoxDecoration(
-                        color: Color(0xFF165C40),
+                        color: const Color(0xFF165C40),
                         borderRadius: BorderRadius.circular(2.0),
                         shape: BoxShape.rectangle,
                       ),
@@ -150,60 +154,117 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
                             lineHeight: 1.4,
                           ),
                     ),
-                  ].divide(SizedBox(width: 8.0)),
+                  ].divide(const SizedBox(width: 8.0)),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(24.0),
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  primary: false,
-                  shrinkWrap: true,
-                  scrollDirection: Axis.vertical,
-                  children: [
-                    InkWell(
-                      splashColor: Colors.transparent,
-                      focusColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      onTap: () async {
-                        context.pushNamed(ClinicDMPWidget.routeName);
-                      },
-                      child: wrapWithModel(
-                        model: _model.patientCardModel1,
-                        updateCallback: () => safeSetState(() {}),
-                        child: PatientCardWidget(
-                          photo:
-                              'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                          name: '',
-                          sympto: '',
-                          type: 'Domicile',
-                          tagBg: FlutterFlowTheme.of(context).warning,
+                padding: const EdgeInsets.all(24.0),
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance
+                      .collection('appointments')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
                         ),
-                      ),
-                    ),
-                    InkWell(
-                      splashColor: Colors.transparent,
-                      focusColor: Colors.transparent,
-                      hoverColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      onTap: () async {
-                        context.pushNamed(ClinicDMPWidget.routeName);
-                      },
-                      child: wrapWithModel(
-                        model: _model.patientCardModel2,
-                        updateCallback: () => safeSetState(() {}),
-                        child: PatientCardWidget(
-                          photo:
-                              'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxzbWlsZSUyMHxlbnwwfHx8fDE3ODYwODY1NzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
-                          name: '',
-                          sympto: '',
-                          type: 'Domicile',
-                          tagBg: FlutterFlowTheme.of(context).warning,
+                      );
+                    }
+                    final docs = snapshot.data?.docs.where((doc) {
+                      final data = doc.data();
+                      final clinicId = data['clinic_uid'] as String?;
+                      final doctorId = data['doctor_uid'] as String?;
+                      return clinicId == currentUserUid ||
+                          doctorId == currentUserUid ||
+                          (clinicId == null && doctorId == null);
+                    }).toList() ?? [];
+                    final displayedDocs = _searchQuery.isEmpty ? docs : docs.where((doc) {
+                      final data = doc.data();
+                      final pName = (data['patient_name'] as String? ?? '').toLowerCase();
+                      final day = (data['day'] as String? ?? '').toLowerCase();
+                      final timeSlot = (data['time_slot'] as String? ?? '').toLowerCase();
+                      return pName.contains(_searchQuery) || day.contains(_searchQuery) || timeSlot.contains(_searchQuery);
+                    }).toList();
+
+                    if (displayedDocs.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.people_outline,
+                                size: 48,
+                                color: FlutterFlowTheme.of(context).secondaryText,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Aucun patient trouvé',
+                                style: FlutterFlowTheme.of(context).bodyMedium,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ].divide(SizedBox(height: 14.0)),
+                      );
+                    }
+
+                    return ListView.separated(
+                      padding: EdgeInsets.zero,
+                      primary: false,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: displayedDocs.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 14.0),
+                      itemBuilder: (context, index) {
+                        final data = displayedDocs[index].data();
+                        final patientName = (data['patient_name'] as String?)?.trim().isNotEmpty == true
+                            ? data['patient_name'] as String
+                            : ((data['userName'] as String?) ?? 'Patient');
+                        final patientPhoto = (data['patient_photo'] as String?) ??
+                            (data['photoUrl'] as String?) ??
+                            (data['photo_url'] as String?) ??
+                            '';
+                        final type = (data['consult_mode'] as String?) ??
+                            (data['appointment_type'] as String?) ??
+                            'Domicile';
+                        final day = (data['day'] as String?) ?? '';
+                        final timeSlot = (data['time_slot'] as String?) ?? '';
+                        final sympto = day.isNotEmpty
+                            ? (day + (timeSlot.isNotEmpty ? ' • $timeSlot' : ''))
+                            : ((data['symptoms'] as String?) ?? 'Consultation');
+                        final patientUid = (data['patient_uid'] as String?) ??
+                            (data['patient_id'] as String?) ??
+                            docs[index].id;
+
+                        return InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: () async {
+                            context.pushNamed(
+                              ClinicDMPWidget.routeName,
+                              queryParameters: {
+                                if (patientUid.isNotEmpty) 'patientUid': patientUid,
+                                'patientName': patientName,
+                                if (patientPhoto.isNotEmpty) 'patientPhoto': patientPhoto,
+                                'symptoms': sympto,
+                              },
+                            );
+                          },
+                          child: PatientCardWidget(
+                            photo: patientPhoto,
+                            name: patientName,
+                            sympto: sympto,
+                            type: type,
+                            tagBg: FlutterFlowTheme.of(context).warning,
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],

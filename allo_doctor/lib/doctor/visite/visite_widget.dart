@@ -31,6 +31,8 @@ class _VisiteWidgetState extends State<VisiteWidget> {
 
   Stream<QuerySnapshot<Map<String, dynamic>>>? _visiteStream;
   String? _lastLoadedUid;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
   void _initStreams() {
     final uid = currentUserUid;
@@ -247,7 +249,15 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                           return docId.isEmpty && docName.isEmpty;
                         }).toList();
 
-                        if (docs.isEmpty) {
+                        final displayedDocs = _searchQuery.isEmpty ? docs : docs.where((doc) {
+                              final a = doc.data();
+                              final pName = (a['patient_name'] as String? ?? '').toLowerCase();
+                              final day = (a['day'] as String? ?? '').toLowerCase();
+                              final slot = (a['time_slot'] as String? ?? '').toLowerCase();
+                              final address = (a['address'] as String? ?? '').toLowerCase();
+                              return pName.contains(_searchQuery) || day.contains(_searchQuery) || slot.contains(_searchQuery) || address.contains(_searchQuery);
+                            }).toList();
+                            if (displayedDocs.isEmpty) {
                           return Center(
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
@@ -278,7 +288,7 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           scrollDirection: Axis.vertical,
-                          children: docs.map((doc) {
+                          children: displayedDocs.map((doc) {
                             final data = doc.data();
                             final patientName = (data['patient_name'] as String?)?.trim().isNotEmpty == true
                                 ? data['patient_name'] as String
@@ -288,13 +298,23 @@ class _VisiteWidgetState extends State<VisiteWidget> {
                             final timeSlot = (data['time_slot'] as String?) ?? '';
                             final sympto = day + (timeSlot.isNotEmpty ? ' • ' + timeSlot : '');
 
+                            final patientUid = (data['patient_uid'] as String?) ?? (data['patient_id'] as String?) ?? '';
+
                             return InkWell(
                               splashColor: Colors.transparent,
                               focusColor: Colors.transparent,
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
-                                context.pushNamed(DmpWidget.routeName);
+                                context.pushNamed(
+                                  DmpWidget.routeName,
+                                  queryParameters: {
+                                    if (patientUid.isNotEmpty) 'patientUid': patientUid,
+                                    'patientName': patientName,
+                                    if (patientPhoto.isNotEmpty) 'patientPhoto': patientPhoto,
+                                    'symptoms': (data['symptoms'] as String?) ?? sympto,
+                                  },
+                                );
                               },
                               child: PatientCardWidget(
                                 photo: patientPhoto,

@@ -42,6 +42,8 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
   Stream<DocumentSnapshot<Map<String, dynamic>>>? _userStream;
   Stream<QuerySnapshot<Map<String, dynamic>>>? _appointmentsStream;
   String? _lastLoadedUid;
+  String _patientSearchQuery = '';
+  final _patientSearchController = TextEditingController();
 
   void _initStreams() {
     final uid = currentUserUid;
@@ -993,6 +995,19 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
 
                         final rdvCount = doctorApts.where((d) => d.data()['status'] != 'cancelled').length;
                         final domicileCount = doctorApts.where((d) => d.data()['consult_mode'] == 'domicile').length;
+                        final displayedApts = _patientSearchQuery.isEmpty
+                            ? doctorApts
+                            : doctorApts.where((doc) {
+                                final apt = doc.data();
+                                final pName = (apt['patient_name'] as String? ?? '').toLowerCase();
+                                final mode = (apt['consult_mode'] as String? ?? '').toLowerCase();
+                                final day = (apt['day'] as String? ?? '').toLowerCase();
+                                final status = (apt['status'] as String? ?? '').toLowerCase();
+                                return pName.contains(_patientSearchQuery) ||
+                                    mode.contains(_patientSearchQuery) ||
+                                    day.contains(_patientSearchQuery) ||
+                                    status.contains(_patientSearchQuery);
+                              }).toList();
 
                         return Column(
                           mainAxisSize: MainAxisSize.max,
@@ -1683,10 +1698,10 @@ class _HomeDoctorWidgetState extends State<HomeDoctorWidget> {
                                         ListView.separated(
                                           shrinkWrap: true,
                                           primary: false,
-                                          itemCount: doctorApts.length > 5 ? 5 : doctorApts.length,
+                                          itemCount: displayedApts.length > 8 ? 8 : displayedApts.length,
                                           separatorBuilder: (_, __) => SizedBox(height: 10),
                                           itemBuilder: (ctx, idx) {
-                                            final aptDoc = doctorApts[idx];
+                                            final aptDoc = displayedApts[idx];
                                             final apt = aptDoc.data();
                                             final patientName = (apt['patient_name'] as String?)?.trim().isNotEmpty == true
                                                 ? apt['patient_name'] as String

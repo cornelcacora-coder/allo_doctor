@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import '/patient/patient_documents/patient_documents_widget.dart';
 import 'carnet_sante_model.dart';
 export 'carnet_sante_model.dart';
 
@@ -417,6 +418,89 @@ class _CarnetSanteWidgetState extends State<CarnetSanteWidget> {
                                 ),
                               ),
                               Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF165AC5)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14.0),
+                InkWell(
+                  onTap: () {
+                    context.pushNamed(PatientDocumentsWidget.routeName);
+                  },
+                  borderRadius: BorderRadius.circular(14.0),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14.0),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF16C583), Color(0xFF0F9D58)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF16C583).withOpacity(0.25),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.folder_shared_rounded, color: Colors.white, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mes Ordonnances & Dossiers Reçus',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "Ordonnances avec QR Code, comptes-rendus SOAP et historiques envoyés par vos médecins",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Ouvrir',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF16C583),
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF16C583)),
                             ],
                           ),
                         ),

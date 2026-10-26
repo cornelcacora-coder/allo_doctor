@@ -16,7 +16,9 @@ import '/components/notification_bell_widget.dart';
 export 'doctor_list_model.dart';
 
 class DoctorListWidget extends StatefulWidget {
-  const DoctorListWidget({super.key});
+  const DoctorListWidget({super.key, this.initialQuery});
+
+  final String? initialQuery;
 
   static String routeName = 'DoctorList';
   static String routePath = '/doctorList';
@@ -35,7 +37,7 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
     super.initState();
     _model = createModel(context, () => DoctorListModel());
 
-    _model.textController ??= TextEditingController();
+    _model.textController ??= TextEditingController(text: widget.initialQuery ?? '');
     _model.textFieldFocusNode ??= FocusNode();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
@@ -163,8 +165,26 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                 autofocus: false,
                                 enabled: true,
                                 obscureText: false,
+                                onChanged: (_) => safeSetState(() {}),
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).unfocus();
+                                  safeSetState(() {});
+                                },
                                 decoration: InputDecoration(
                                   isDense: true,
+                                  suffixIcon: (_model.textController?.text.isNotEmpty ?? false)
+                                      ? IconButton(
+                                          icon: Icon(
+                                            Icons.clear_rounded,
+                                            color: FlutterFlowTheme.of(context).secondaryText,
+                                            size: 20.0,
+                                          ),
+                                          onPressed: () {
+                                            _model.textController?.clear();
+                                            safeSetState(() {});
+                                          },
+                                        )
+                                      : null,
                                   labelStyle: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(
@@ -186,7 +206,7 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                             .labelMedium
                                             .fontStyle,
                                       ),
-                                  hintText: 'Recherchezun médecin ...',
+                                  hintText: 'Recherchez un médecin, spécialité, ville...',
                                   hintStyle: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(
@@ -267,10 +287,16 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.search_rounded,
-                            color: FlutterFlowTheme.of(context).primary,
-                            size: 24.0,
+                          InkWell(
+                            onTap: () {
+                              FocusScope.of(context).unfocus();
+                              safeSetState(() {});
+                            },
+                            child: Icon(
+                              Icons.search_rounded,
+                              color: FlutterFlowTheme.of(context).primary,
+                              size: 24.0,
+                            ),
                           ),
                         ].divide(SizedBox(width: 16.0)),
                       ),
@@ -426,8 +452,6 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
                                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                                     stream: FirebaseFirestore.instance
                                         .collection('practitioners')
-                                        .where('type', isEqualTo: 'medecin')
-                                        .where('status', isEqualTo: 'validé')
                                         .snapshots(),
                                     builder: (context, snapshot) {
                                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -461,14 +485,32 @@ class _DoctorListWidgetState extends State<DoctorListWidget> {
 
                                       final filtered = docs.where((doc) {
                                         final data = doc.data();
-                                        final name = (data['name'] ?? data['nom'] ?? '').toString().toLowerCase();
-                                        final specialty = (data['specialty'] ?? '').toString().toLowerCase();
+                                        final type = (data['type'] ?? data['role'] ?? '').toString().toLowerCase().trim();
+                                        if (type.isNotEmpty &&
+                                            type != 'medecin' &&
+                                            type != 'doctor' &&
+                                            type != 'médecin') {
+                                          return false;
+                                        }
+
+                                        final status = (data['status'] as String?)?.toLowerCase().trim() ?? '';
+                                        if (status == 'refuse' || status == 'refusé' || status == 'bloque' || status == 'bloqué') {
+                                          return false;
+                                        }
+
+                                        final name = (data['name'] ?? data['nom'] ?? data['displayName'] ?? data['display_name'] ?? '').toString().toLowerCase();
+                                        final specialty = (data['specialty'] ?? data['specialite'] ?? '').toString().toLowerCase();
                                         final city = (data['city'] ?? data['ville'] ?? '').toString().toLowerCase();
+                                        final phone = (data['phone'] ?? data['telephone'] ?? data['docNumber'] ?? '').toString().toLowerCase();
+                                        final bio = (data['bio'] ?? '').toString().toLowerCase();
 
                                         if (searchQuery.isNotEmpty) {
-                                          if (!name.contains(searchQuery) &&
-                                              !specialty.contains(searchQuery) &&
-                                              !city.contains(searchQuery)) {
+                                          final matches = name.contains(searchQuery) ||
+                                              specialty.contains(searchQuery) ||
+                                              city.contains(searchQuery) ||
+                                              phone.contains(searchQuery) ||
+                                              bio.contains(searchQuery);
+                                          if (!matches) {
                                             return false;
                                           }
                                         }

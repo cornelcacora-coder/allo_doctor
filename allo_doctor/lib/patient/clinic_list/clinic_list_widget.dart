@@ -165,8 +165,22 @@ class _ClinicListWidgetState extends State<ClinicListWidget> {
                                 autofocus: false,
                                 enabled: true,
                                 obscureText: false,
+                                onChanged: (_) => safeSetState(() {}),
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(context).unfocus();
+                                  safeSetState(() {});
+                                },
                                 decoration: InputDecoration(
                                   isDense: true,
+                                  suffixIcon: (_model.textController?.text.isNotEmpty ?? false)
+                                      ? IconButton(
+                                          icon: Icon(Icons.clear_rounded, color: FlutterFlowTheme.of(context).secondaryText, size: 20),
+                                          onPressed: () {
+                                            _model.textController?.clear();
+                                            safeSetState(() {});
+                                          },
+                                        )
+                                      : null,
                                   labelStyle: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .override(
@@ -475,6 +489,16 @@ class _ClinicListWidgetState extends State<ClinicListWidget> {
                                        }
                                        var docs = snapshot.data!.docs;
                                        final selectedFilter = _model.choiceChipsValue;
+                                        final searchQuery = _model.textController?.text.trim().toLowerCase() ?? '';
+                                        if (searchQuery.isNotEmpty) {
+                                          docs = docs.where((d) {
+                                            final name = (d.data()['name'] as String? ?? '').toLowerCase();
+                                            final city = (d.data()['city'] as String? ?? '').toLowerCase();
+                                            final addr = (d.data()['address'] as String? ?? '').toLowerCase();
+                                            final services = (d.data()['services'] as List<dynamic>?)?.map((e) => e.toString().toLowerCase()).toList() ?? [];
+                                            return name.contains(searchQuery) || city.contains(searchQuery) || addr.contains(searchQuery) || services.any((s) => s.contains(searchQuery));
+                                          }).toList();
+                                        }
                                        if (selectedFilter != null && selectedFilter != 'Tous') {
                                          docs = docs.where((d) {
                                            final services = (d.data()['services'] as List<dynamic>?)?.map((e) => e.toString().toLowerCase()).toList() ?? [];

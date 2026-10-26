@@ -29,6 +29,7 @@ class HomeHubModel extends FlutterFlowModel<HomeHubWidget> {
   FormFieldController<String>? dropdownValueController;
   // State field(s) for Carousel widget.
   CarouselSliderController? carouselController;
+  TextEditingController? searchController;
   int carouselCurrentIndex = 1;
 
   // Model for ServiceCard.
@@ -58,5 +59,6 @@ class HomeHubModel extends FlutterFlowModel<HomeHubWidget> {
     serviceCardModel3.dispose();
     serviceCardModel4.dispose();
     navBarUserModel.dispose();
+    searchController?.dispose();
   }
 }

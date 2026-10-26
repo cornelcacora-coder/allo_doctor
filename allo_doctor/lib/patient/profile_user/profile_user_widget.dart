@@ -620,6 +620,72 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                   ),
                                 ),
                               ),
+                              InkWell(
+                                onTap: () {
+                                  context.pushNamed(PatientDocumentsWidget.routeName);
+                                },
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context).primaryBackground,
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    border: Border.all(color: const Color(0xFF16C583).withOpacity(0.3)),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(14.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            const Icon(
+                                              Icons.receipt_long_rounded,
+                                              color: Color(0xFF16C583),
+                                              size: 18.0,
+                                            ),
+                                            Text(
+                                              'ORDONNANCES & DOSSIERS REÇUS',
+                                              style: FlutterFlowTheme.of(context)
+                                                  .bodySmall
+                                                  .override(
+                                                    font: GoogleFonts.outfit(
+                                                      fontWeight: FontWeight.w600,
+                                                      fontStyle: FlutterFlowTheme.of(context).bodySmall.fontStyle,
+                                                    ),
+                                                    color: const Color(0xFF16C583),
+                                                    fontSize: 12.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                          ].divide(const SizedBox(width: 10.0)),
+                                        ),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              'Consulter',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 11.0,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF16C583),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4.0),
+                                            const Icon(
+                                              Icons.keyboard_arrow_right_rounded,
+                                              color: Color(0xFF16C583),
+                                              size: 24.0,
+                                            ),
+                                          ],
+                                        ),
+                                      ].divide(const SizedBox(width: 20.0)),
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Container(
                                 width: double.infinity,
                                 decoration: BoxDecoration(
