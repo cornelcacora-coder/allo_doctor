@@ -217,14 +217,39 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
                       stream: currentUserUid.isNotEmpty
                           ? FirebaseFirestore.instance.collection('users').doc(currentUserUid).snapshots()
                           : null,
-                      builder: (context, snapshot) {
-                        final data = snapshot.data?.data();
-                        final displayName = (data?['displayName'] as String?)?.trim().isNotEmpty == true
-                            ? data!['displayName'] as String
-                            : (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Clinique Partenaire');
-                        final photoUrl = (data?['photoUrl'] as String?) ?? currentUserPhoto;
-                        final status = (data?['status'] as String?) ?? 'en_attente';
-                        final isValidated = status == 'validé' || status == 'active';
+                      builder: (context, userSnapshot) {
+                        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                          stream: currentUserUid.isNotEmpty
+                              ? FirebaseFirestore.instance.collection('practitioners').doc(currentUserUid).snapshots()
+                              : null,
+                          builder: (context, practSnapshot) {
+                            final userData = userSnapshot.data?.data();
+                            final practData = practSnapshot.data?.data();
+
+                            final userStatus = ((userData?['status'] as String?) ?? '').toLowerCase().trim();
+                            final practStatus = ((practData?['status'] as String?) ?? '').toLowerCase().trim();
+
+                            final isValidated = userStatus == 'validé' ||
+                                userStatus == 'valide' ||
+                                userStatus == 'active' ||
+                                userData?['isValidated'] == true ||
+                                userData?['is_validated'] == true ||
+                                practStatus == 'validé' ||
+                                practStatus == 'valide' ||
+                                practStatus == 'active' ||
+                                practData?['isValidated'] == true ||
+                                practData?['is_validated'] == true;
+
+                            final rawName = (practData?['name'] as String?) ??
+                                (userData?['displayName'] as String?) ??
+                                (userData?['name'] as String?) ??
+                                (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Clinique Partenaire');
+                            final displayName = rawName.trim().isNotEmpty ? rawName.trim() : 'Clinique Partenaire';
+
+                            final photoUrl = (practData?['photo_url'] as String?) ??
+                                (userData?['photoUrl'] as String?) ??
+                                (userData?['photo_url'] as String?) ??
+                                currentUserPhoto;
 
                         return Column(
                           mainAxisSize: MainAxisSize.min,
@@ -316,6 +341,8 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
                               ),
                             ),
                           ],
+                        );
+                          },
                         );
                       },
                     ),

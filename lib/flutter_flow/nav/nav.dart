@@ -15,6 +15,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import 'serialization_util.dart';
 
 import '/index.dart';
+import '/pharmacy/pharmacy_orders/pharmacy_orders_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -139,12 +140,32 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: PharmaViewWidget.routeName,
           path: PharmaViewWidget.routePath,
-          builder: (context, params) => PharmaViewWidget(),
+          builder: (context, params) => PharmaViewWidget(
+            pharmacyId: params.getParam('pharmacyId', ParamType.String),
+            name: params.getParam('name', ParamType.String),
+            address: params.getParam('address', ParamType.String),
+            phone: params.getParam('phone', ParamType.String),
+            hours: params.getParam('hours', ParamType.String),
+            isGuard: params.getParam('isGuard', ParamType.String) == 'true',
+            photoUrl: params.getParam('photoUrl', ParamType.String),
+          ),
         ),
         FFRoute(
           name: ProductViewWidget.routeName,
           path: ProductViewWidget.routePath,
-          builder: (context, params) => ProductViewWidget(),
+          builder: (context, params) => ProductViewWidget(
+            name: params.getParam('name', ParamType.String),
+            price: params.getParam('price', ParamType.String),
+            cover: params.getParam('cover', ParamType.String),
+            category: params.getParam('category', ParamType.String),
+            pharmacyId: params.getParam('pharmacyId', ParamType.String),
+            pharmacyName: params.getParam('pharmacyName', ParamType.String),
+          ),
+        ),
+        FFRoute(
+          name: PharmacyOrdersWidget.routeName,
+          path: PharmacyOrdersWidget.routePath,
+          builder: (context, params) => const PharmacyOrdersWidget(),
         ),
         FFRoute(
           name: DoctorViewWidget.routeName,

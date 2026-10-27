@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'add_product_to_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '/auth/firebase_auth/auth_util.dart';
 export 'add_product_to_model.dart';
 
 class AddProductToWidget extends StatefulWidget {
@@ -263,10 +265,15 @@ class _AddProductToWidgetState extends State<AddProductToWidget> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8.0),
                               child: Image.network(
-                                'https://png.pngtree.com/png-vector/20241219/ourmid/pngtree-orange-medicine-bottles-with-capsules-pharmaceutical-drugs-healthcare-concept-illustration-png-image_14813620.png',
+                                'https://placehold.co/90x90/e8f5e9/1a6b3c?text=Rx',
                                 width: 90.0,
                                 height: 90.0,
                                 fit: BoxFit.cover,
+                                errorBuilder: (ctx, _, __) => Container(
+                                  width: 90, height: 90,
+                                  color: const Color(0xFFe8f5e9),
+                                  child: const Icon(Icons.medication, color: Color(0xFF1a6b3c), size: 40),
+                                ),
                               ),
                             ),
                           ),
@@ -1676,49 +1683,106 @@ class _AddProductToWidgetState extends State<AddProductToWidget> {
                 ),
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 0.0),
-                  child: Container(
-                    width: double.infinity,
-                    height: 45.0,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF143158), Color(0xFF4954F8)],
-                        stops: [0.0, 1.0],
-                        begin: AlignmentDirectional(1.0, -1.0),
-                        end: AlignmentDirectional(-1.0, 1.0),
+                  child: InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async {
+                      final name = _model.textController1?.text.trim() ?? '';
+                      final price = _model.textController2?.text.trim() ?? '';
+                      if (name.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Veuillez renseigner le nom du médicament'),
+                          backgroundColor: Colors.red,
+                        ));
+                        return;
+                      }
+                      if (price.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Veuillez renseigner le prix du médicament'),
+                          backgroundColor: Colors.red,
+                        ));
+                        return;
+                      }
+
+                      final category = _model.dropDownValue ?? 'Urgence';
+                      final lot = _model.textController3?.text.trim() ?? '';
+                      final expiration = _model.textController4?.text.trim() ?? '';
+                      final requiresPrescription = _model.switchValue ?? false;
+                      final stock = _model.qtyValue ?? 10;
+                      final uid = currentUserUid.isNotEmpty ? currentUserUid : 'pharmacie_partenaire';
+                      final pharmaName = currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Pharmacie Partenaire';
+
+                      try {
+                        await FirebaseFirestore.instance.collection('medicines').add({
+                          'name': name,
+                          'price': price,
+                          'category': category,
+                          'lot_number': lot,
+                          'expiration': expiration,
+                          'requires_prescription': requiresPrescription,
+                          'stock': stock,
+                          'is_in_stock': stock > 0,
+                          'pharmacy_uid': uid,
+                          'pharmacy_name': pharmaName,
+                          'cover': 'https://placehold.co/500x500/e8f5e9/1a6b3c?text=Médicament',
+                          'created_at': FieldValue.serverTimestamp(),
+                        });
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('$name ajouté avec succès au catalogue ✓'),
+                            backgroundColor: Color(0xFF16CB83),
+                          ));
+                          context.safePop();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('Erreur lors de l\'ajout : $e'),
+                            backgroundColor: Colors.red,
+                          ));
+                        }
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 45.0,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF143158), Color(0xFF4954F8)],
+                          stops: [0.0, 1.0],
+                          begin: AlignmentDirectional(1.0, -1.0),
+                          end: AlignmentDirectional(-1.0, 1.0),
+                        ),
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Ajouter le produit',
-                          style:
-                              FlutterFlowTheme.of(context).labelSmall.override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .labelSmall
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    fontSize: 14.0,
-                                    letterSpacing: 0.0,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Ajouter le produit',
+                            style: FlutterFlowTheme.of(context).labelSmall.override(
+                                  font: GoogleFonts.outfit(
                                     fontWeight: FontWeight.w600,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .labelSmall
-                                        .fontStyle,
-                                    lineHeight: 1.3,
+                                    fontStyle: FlutterFlowTheme.of(context).labelSmall.fontStyle,
                                   ),
-                        ),
-                        Icon(
-                          Icons.verified_outlined,
-                          color: Colors.white,
-                          size: 20.0,
-                        ),
-                      ].divide(SizedBox(width: 10.0)),
+                                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                                  fontSize: 14.0,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.w600,
+                                  lineHeight: 1.3,
+                                ),
+                          ),
+                          Icon(
+                            Icons.verified_outlined,
+                            color: Colors.white,
+                            size: 20.0,
+                          ),
+                        ].divide(SizedBox(width: 10.0)),
+                      ),
                     ),
                   ),
                 ),

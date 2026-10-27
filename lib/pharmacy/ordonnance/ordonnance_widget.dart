@@ -11,6 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'ordonnance_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/prescription_service.dart';
+import '/patient/prescription_view_modal.dart';
+import '/pharmacy/pharmacy_prescription_processing_sheet.dart';
 export 'ordonnance_model.dart';
 
 class OrdonnanceWidget extends StatefulWidget {
@@ -418,52 +423,345 @@ class _OrdonnanceWidgetState extends State<OrdonnanceWidget> {
                                       ),
                                       wrapped: true,
                                     ),
-                                    wrapWithModel(
-                                      model: _model.pharmaCardModel1,
-                                      updateCallback: () => safeSetState(() {}),
-                                      child: PharmaCardWidget(
-                                        name: 'Peniciline 10 mg',
-                                        cover:
-                                            'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
-                                        prescripteur: 'Moko Auriole',
-                                        specialite: 'Cardiologue',
-                                        coverPrescript:
-                                            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlVk55czOxAiN71OE3QJuNhyqr1D5Iu4ZVdqhqqNne4bmWOEbCrCODPvvN&s=10',
-                                        qty: 2,
-                                        date: getCurrentTimestamp,
-                                        sendOrder: () async {},
-                                      ),
-                                    ),
-                                    wrapWithModel(
-                                      model: _model.pharmaCardModel2,
-                                      updateCallback: () => safeSetState(() {}),
-                                      child: PharmaCardWidget(
-                                        name: 'Peniciline 10 mg',
-                                        cover:
-                                            'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
-                                        prescripteur: 'Moko Auriole',
-                                        specialite: 'Cardiologue',
-                                        coverPrescript:
-                                            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlVk55czOxAiN71OE3QJuNhyqr1D5Iu4ZVdqhqqNne4bmWOEbCrCODPvvN&s=10',
-                                        qty: 2,
-                                        date: getCurrentTimestamp,
-                                        sendOrder: () async {},
-                                      ),
-                                    ),
-                                    wrapWithModel(
-                                      model: _model.pharmaCardModel3,
-                                      updateCallback: () => safeSetState(() {}),
-                                      child: PharmaCardWidget(
-                                        name: 'Peniciline 10 mg',
-                                        prescripteur: 'Moko Auriole',
-                                        specialite: 'Cardiologue',
-                                        coverPrescript:
-                                            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlVk55czOxAiN71OE3QJuNhyqr1D5Iu4ZVdqhqqNne4bmWOEbCrCODPvvN&s=10',
-                                        qty: 2,
-                                        date: getCurrentTimestamp,
-                                        sendOrder: () async {},
-                                      ),
-                                    ),
+                                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                                      stream: FirebaseFirestore.instance
+                                          .collection('prescriptions')
+                                          .orderBy('created_at', descending: true)
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasError) {
+                                          return Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(24.0),
+                                              child: Text(
+                                                'Erreur de chargement des ordonnances',
+                                                style: FlutterFlowTheme.of(context).bodyMedium,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        if (!snapshot.hasData) {
+                                          return Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(32.0),
+                                              child: CircularProgressIndicator(
+                                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF165AC5)),
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        final docs = snapshot.data!.docs;
+                                        final currentTab = _model.choiceChipsValue ?? 'Nouvelles';
+                                        final queryText = _model.textController?.text.toLowerCase().trim() ?? '';
+
+                                        final filtered = docs.where((doc) {
+                                          final data = doc.data();
+                                          final status = (data['status'] as String?) ?? 'active';
+                                          final pharmacyUid = (data['pharmacy_uid'] as String?) ?? '';
+
+                                          if (currentTab == 'Nouvelles') {
+                                            if (status != 'sent_to_pharmacy' && status != 'active') return false;
+                                          } else {
+                                            if (status == 'sent_to_pharmacy' || status == 'active') return false;
+                                            if (currentUserUid.isNotEmpty &&
+                                                 pharmacyUid.isNotEmpty &&
+                                                 pharmacyUid != currentUserUid &&
+                                                 !pharmacyUid.startsWith('pharma_') &&
+                                                 pharmacyUid != 'pharmacie_partenaire' &&
+                                                 pharmacyUid != 'pharmacie_centrale') {
+                                               return false;
+                                             }
+                                          }
+
+                                          if (queryText.isNotEmpty) {
+                                            final patName = (data['patient_name'] as String? ?? '').toLowerCase();
+                                            final docName = (data['doctor_name'] as String? ?? '').toLowerCase();
+                                            final patId = (data['patient_id'] as String? ?? '').toLowerCase();
+                                            if (!patName.contains(queryText) && !docName.contains(queryText) && !patId.contains(queryText)) {
+                                              return false;
+                                            }
+                                          }
+                                          return true;
+                                        }).toList();
+
+                                        if (filtered.isEmpty) {
+                                          return Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.receipt_long_outlined, size: 54.0, color: Color(0xFF165AC5)),
+                                                  SizedBox(height: 12.0),
+                                                  Text(
+                                                    currentTab == 'Nouvelles'
+                                                        ? 'Aucune nouvelle ordonnance'
+                                                        : 'Aucune ordonnance en cours',
+                                                    style: GoogleFonts.outfit(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                                  ),
+                                                  SizedBox(height: 6.0),
+                                                  Text(
+                                                    'Les ordonnances transmises apparaîtront ici automatiquement.',
+                                                    textAlign: TextAlign.center,
+                                                    style: FlutterFlowTheme.of(context).labelMedium,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }
+
+                                        return Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: filtered.map((doc) {
+                                            final data = doc.data();
+                                            final prescriptionId = doc.id;
+                                            final docName = (data['doctor_name'] as String?) ?? 'Médecin Prescripteur';
+                                            final docSpecialty = (data['doctor_specialty'] as String?) ?? 'Généraliste';
+                                            final patId = (data['patient_id'] as String?) ?? '';
+                                            final status = (data['status'] as String?) ?? 'sent_to_pharmacy';
+                                            final meds = (data['medications'] as List<dynamic>?) ?? [];
+                                            final medCount = meds.length;
+                                            final firstMedName = meds.isNotEmpty && meds[0] is Map
+                                                ? (meds[0]['name'] as String? ?? 'Médicament')
+                                                : 'Médicaments prescrits';
+                                            final deliveryType = (data['delivery_type'] as String?) ?? 'pickup';
+                                             final patPhone = (data['patient_phone'] as String?)?.isNotEmpty == true
+                                                 ? (data['patient_phone'] as String)
+                                                 : ((data['delivery_phone'] as String?)?.isNotEmpty == true
+                                                     ? (data['delivery_phone'] as String)
+                                                     : '+242 06 719 9098');
+                                             final riderPhone = (data['delivery_person_phone'] as String?) ?? '';
+
+                                            String statusLabel = '1. Lire & Traiter l\'ordonnance (3 étapes) ➔';
+                                            Color btnColor = Color(0xFF165AC5);
+                                            if (status == 'in_preparation') {
+                                              statusLabel = deliveryType == 'delivery'
+                                                  ? '2. Préparation terminée : Envoyer Livreur 🚚 ➔'
+                                                  : '2. Préparation terminée : Mettre en Retrait 🏪 ➔';
+                                              btnColor = Color(0xFFD97706);
+                                            } else if (status == 'ready' || status == 'out_for_delivery') {
+                                              statusLabel = deliveryType == 'delivery'
+                                                  ? '3. Livreur en route 🚚 (Gérer / Clôturer ✅)'
+                                                  : '3. Prêt en pharmacie 🏪 (Gérer / Clôturer ✅)';
+                                              btnColor = Color(0xFF16CB83);
+                                            } else if (status == 'delivered') {
+                                              statusLabel = 'Commande délivrée avec succès ✓';
+                                              btnColor = Colors.grey.shade600;
+                                            }
+
+                                            return Container(
+                                              width: double.infinity,
+                                              decoration: BoxDecoration(
+                                                color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                borderRadius: BorderRadius.circular(12.0),
+                                                border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                                              ),
+                                              child: Padding(
+                                                padding: EdgeInsets.all(14.0),
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Container(
+                                                              width: 42,
+                                                              height: 42,
+                                                              decoration: BoxDecoration(
+                                                                color: Color(0xFFEEF2FF),
+                                                                borderRadius: BorderRadius.circular(8),
+                                                              ),
+                                                              child: Icon(Icons.medication, color: Color(0xFF165AC5), size: 24),
+                                                            ),
+                                                            SizedBox(width: 10),
+                                                            Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Text(
+                                                                  firstMedName + (medCount > 1 ? ' + ${medCount - 1} autre(s)' : ''),
+                                                                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15),
+                                                                ),
+                                                                Row(
+                                                                  children: [
+                                                                    Icon(Icons.qr_code_2_rounded, size: 14, color: Color(0xFF16C583)),
+                                                                    SizedBox(width: 4),
+                                                                    Text(
+                                                                      'Patient : ████████ (Masqué par QR) ${patId.isNotEmpty ? "• $patId" : ""}',
+                                                                      style: GoogleFonts.outfit(color: Colors.grey.shade600, fontSize: 12),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Container(
+                                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                          decoration: BoxDecoration(
+                                                            color: deliveryType == 'delivery' ? Color(0xFFFFF3E0) : Color(0xFFE8F5E9),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                          ),
+                                                          child: Text(
+                                                            deliveryType == 'delivery' ? '🚚 Livraison' : '🏪 Retrait',
+                                                            style: GoogleFonts.outfit(
+                                                              fontSize: 11,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: deliveryType == 'delivery' ? Colors.orange.shade900 : Colors.green.shade800,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    SizedBox(height: 10),
+                                                    Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Text('Dr. $docName ($docSpecialty)', style: GoogleFonts.outfit(fontSize: 12, color: Colors.blueGrey)),
+                                                        InkWell(
+                                                          onTap: () {
+                                                            PharmacyPrescriptionProcessingSheet.show(
+                                                              context,
+                                                              prescriptionData: data,
+                                                              prescriptionId: prescriptionId,
+                                                            );
+                                                          },
+                                                          child: Text(
+                                                            'Traiter en 3 étapes (QR \u0026 Stock) ↗',
+                                                            style: GoogleFonts.outfit(fontSize: 12, color: Color(0xFF165AC5), fontWeight: FontWeight.bold),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    SizedBox(height: 12),
+                                                    // ── BARRE DE COMMUNICATION DIRECTE DU PHARMACIEN ──
+                                                     Container(
+                                                       margin: EdgeInsets.only(bottom: 10.0),
+                                                       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                       decoration: BoxDecoration(
+                                                         color: Color(0xFFF1F5F9),
+                                                         borderRadius: BorderRadius.circular(8),
+                                                       ),
+                                                       child: Row(
+                                                         children: [
+                                                           Icon(Icons.phone_in_talk, size: 14, color: Color(0xFF165AC5)),
+                                                           SizedBox(width: 6),
+                                                           Expanded(
+                                                             child: Text(
+                                                               'Patient : ' + patPhone,
+                                                               style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                                               overflow: TextOverflow.ellipsis,
+                                                             ),
+                                                           ),
+                                                           InkWell(
+                                                             onTap: () => launchURL('tel:' + patPhone),
+                                                             child: Container(
+                                                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                               decoration: BoxDecoration(
+                                                                 color: Color(0xFF165AC5),
+                                                                 borderRadius: BorderRadius.circular(6),
+                                                               ),
+                                                               child: Row(
+                                                                 children: [
+                                                                   Icon(Icons.call, size: 11, color: Colors.white),
+                                                                   SizedBox(width: 4),
+                                                                   Text('Appel', style: GoogleFonts.outfit(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                                                                 ],
+                                                               ),
+                                                             ),
+                                                           ),
+                                                           SizedBox(width: 6),
+                                                           InkWell(
+                                                             onTap: () {
+                                                               final clean = patPhone.replaceAll(RegExp(r'[^0-9]'), '');
+                                                               launchURL('https://wa.me/' + clean);
+                                                             },
+                                                             child: Container(
+                                                               padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                               decoration: BoxDecoration(
+                                                                 color: Color(0xFF25D366),
+                                                                 borderRadius: BorderRadius.circular(6),
+                                                               ),
+                                                               child: Row(
+                                                                 children: [
+                                                                   Icon(Icons.chat_bubble_outline, size: 11, color: Colors.white),
+                                                                   SizedBox(width: 4),
+                                                                   Text('WhatsApp', style: GoogleFonts.outfit(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                                                                 ],
+                                                               ),
+                                                             ),
+                                                           ),
+                                                           if (riderPhone.isNotEmpty) ...[
+                                                             SizedBox(width: 6),
+                                                             InkWell(
+                                                               onTap: () => launchURL('tel:' + riderPhone),
+                                                               child: Container(
+                                                                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                                 decoration: BoxDecoration(
+                                                                   color: Color(0xFFD97706),
+                                                                   borderRadius: BorderRadius.circular(6),
+                                                                 ),
+                                                                 child: Row(
+                                                                   children: [
+                                                                     Icon(Icons.two_wheeler, size: 11, color: Colors.white),
+                                                                     SizedBox(width: 4),
+                                                                     Text('Livreur', style: GoogleFonts.outfit(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                                                                   ],
+                                                                 ),
+                                                               ),
+                                                             ),
+                                                           ],
+                                                         ],
+                                                       ),
+                                                     ),
+                                                     if (status != 'delivered')
+                                                      InkWell(
+                                                        onTap: () {
+                                                          PharmacyPrescriptionProcessingSheet.show(
+                                                            context,
+                                                            prescriptionData: data,
+                                                            prescriptionId: prescriptionId,
+                                                          );
+                                                        },
+                                                        child: Container(
+                                                          width: double.infinity,
+                                                          height: 40,
+                                                          decoration: BoxDecoration(
+                                                            color: btnColor,
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          alignment: Alignment.center,
+                                                          child: Text(
+                                                            statusLabel,
+                                                            style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                                          ),
+                                                        ),
+                                                      )
+                                                    else
+                                                      Container(
+                                                        width: double.infinity,
+                                                        height: 36,
+                                                        decoration: BoxDecoration(
+                                                          color: Color(0xFFE8F5E9),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        alignment: Alignment.center,
+                                                        child: Text(
+                                                          'Délivré avec succès ✓',
+                                                          style: GoogleFonts.outfit(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold, fontSize: 12),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        );
+                                      },
+                                    )
                                   ].divide(SizedBox(height: 24.0)),
                                 ),
                               ),

@@ -374,7 +374,7 @@ class _LoginDoctorWidgetState extends State<LoginDoctorWidget> {
                           ),
                         ),
                         Text(
-                          'Se connecter · Particulier',
+                          'Se connecter · Médecin',
                           textAlign: TextAlign.start,
                           style: FlutterFlowTheme.of(context)
                               .titleMedium

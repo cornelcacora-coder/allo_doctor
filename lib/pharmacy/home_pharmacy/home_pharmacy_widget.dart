@@ -1,4 +1,4 @@
-import '/components/log_out_widget.dart';
+﻿import '/components/log_out_widget.dart';
 import '/components/nav_bar_pharma_widget.dart';
 import '/components/product_card_widget.dart';
 import '/components/stateitem_widget.dart';
@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'home_pharmacy_model.dart';
+import '/pharmacy/pharma_chat_inbox_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/components/notification_bell_widget.dart';
@@ -49,6 +50,38 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
       safeSetState(() {});
       // Garde-fou : cet espace est reserve aux comptes pharmacies.
       await guardRole(context, 'pharmacie');
+      if (currentUserUid.isNotEmpty) {
+        try {
+          final pharmaRef = FirebaseFirestore.instance.collection('pharmacies').doc(currentUserUid);
+          final pharmaSnap = await pharmaRef.get();
+          if (!pharmaSnap.exists) {
+            final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUserUid).get();
+            final ud = userDoc.data() ?? {};
+            final pName = (ud['name'] ?? ud['nom'] ?? currentUserDisplayName ?? 'Pharmacie').toString();
+            final pPhone = (ud['phone'] ?? ud['telephone'] ?? '').toString();
+            final pCity = (ud['city'] ?? ud['ville'] ?? 'Brazzaville').toString();
+            await pharmaRef.set({
+              'id': currentUserUid,
+              'uid': currentUserUid,
+              'name': pName.isNotEmpty ? pName : 'Pharmacie Partenaire',
+              'pharmacy_name': pName.isNotEmpty ? pName : 'Pharmacie Partenaire',
+              'phone': pPhone,
+              'phone_number': pPhone,
+              'city': pCity,
+              'address': pCity,
+              'email': currentUserEmail,
+              'is_open': true,
+              'is_available': true,
+              'is_guard': false,
+              'rating': 5.0,
+              'status': 'actif',
+              'guard_hours': '08h00 - 20h00',
+              'hours': '08h00 - 20h00',
+              'created_at': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+          }
+        } catch (_) {}
+      }
     });
   }
 
@@ -220,14 +253,39 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                       stream: currentUserUid.isNotEmpty
                           ? FirebaseFirestore.instance.collection('users').doc(currentUserUid).snapshots()
                           : null,
-                      builder: (context, snapshot) {
-                        final data = snapshot.data?.data();
-                        final displayName = (data?['displayName'] as String?)?.trim().isNotEmpty == true
-                            ? data!['displayName'] as String
-                            : (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Pharmacie Partenaire');
-                        final photoUrl = (data?['photoUrl'] as String?) ?? currentUserPhoto;
-                        final status = (data?['status'] as String?) ?? 'en_attente';
-                        final isValidated = status == 'validé' || status == 'active';
+                      builder: (context, userSnapshot) {
+                        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                          stream: currentUserUid.isNotEmpty
+                              ? FirebaseFirestore.instance.collection('practitioners').doc(currentUserUid).snapshots()
+                              : null,
+                          builder: (context, practSnapshot) {
+                            final userData = userSnapshot.data?.data();
+                            final practData = practSnapshot.data?.data();
+
+                            final userStatus = ((userData?['status'] as String?) ?? '').toLowerCase().trim();
+                            final practStatus = ((practData?['status'] as String?) ?? '').toLowerCase().trim();
+
+                            final isValidated = userStatus == 'validé' ||
+                                userStatus == 'valide' ||
+                                userStatus == 'active' ||
+                                userData?['isValidated'] == true ||
+                                userData?['is_validated'] == true ||
+                                practStatus == 'validé' ||
+                                practStatus == 'valide' ||
+                                practStatus == 'active' ||
+                                practData?['isValidated'] == true ||
+                                practData?['is_validated'] == true;
+
+                            final rawName = (practData?['name'] as String?) ??
+                                (userData?['displayName'] as String?) ??
+                                (userData?['name'] as String?) ??
+                                (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Pharmacie Partenaire');
+                            final displayName = rawName.trim().isNotEmpty ? rawName.trim() : 'Pharmacie Partenaire';
+
+                            final photoUrl = (practData?['photo_url'] as String?) ??
+                                (userData?['photoUrl'] as String?) ??
+                                (userData?['photo_url'] as String?) ??
+                                currentUserPhoto;
 
                         return Column(
                           mainAxisSize: MainAxisSize.min,
@@ -258,10 +316,11 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                           fadeInDuration: Duration(milliseconds: 0),
                                           fadeOutDuration: Duration(milliseconds: 0),
                                           imageUrl:
-                                              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuJd79lESiMSYUkRiR6opa4IdwozzX3xy1WKWfCEQ0j-58u2c3RFLYxqsx&s=10',
+                                              'https://placehold.co/800x400/1a6b3c/ffffff?text=Pharmacie',
                                           width: double.infinity,
                                           fit: BoxFit.cover,
                                           alignment: Alignment(0.0, 0.0),
+                                          errorWidget: (_, __, ___) => Container(color: const Color(0xFF1a6b3c), child: const Icon(Icons.local_pharmacy, color: Colors.white, size: 48)),
                                         ),
                                       ),
                                     ),
@@ -361,48 +420,76 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                             ),
                           ],
                         );
+                          },
+                        );
                       },
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Container(
-                          height: 40.0,
-                          child: wrapWithModel(
-                            model: _model.stateitemModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'En attente',
-                              count: '22',
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: FirebaseFirestore.instance.collection('prescriptions').snapshots(),
+                      builder: (context, presSnapshot) {
+                        int pendingCount = 0;
+                        int inProgressCount = 0;
+                        int deliveredCount = 0;
+
+                        if (presSnapshot.hasData) {
+                          for (final doc in presSnapshot.data!.docs) {
+                            final d = doc.data();
+                            final pUid = (d['pharmacy_uid'] as String?) ?? '';
+                            final st = (d['status'] as String?) ?? 'sent_to_pharmacy';
+                            if (pUid.isEmpty || currentUserUid.isEmpty || pUid == currentUserUid) {
+                              if (st == 'sent_to_pharmacy' || st == 'active') {
+                                pendingCount++;
+                              } else if (st == 'in_preparation') {
+                                inProgressCount++;
+                              } else if (st == 'ready' || st == 'out_for_delivery' || st == 'delivered') {
+                                deliveredCount++;
+                              }
+                            }
+                          }
+                        }
+
+                        return Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Container(
+                              height: 40.0,
+                              child: wrapWithModel(
+                                model: _model.stateitemModel1,
+                                updateCallback: () => safeSetState(() {}),
+                                child: StateitemWidget(
+                                  label: 'En attente',
+                                  count: '$pendingCount',
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.0,
-                          decoration: BoxDecoration(),
-                          child: wrapWithModel(
-                            model: _model.stateitemModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'Livrer',
-                              count: '10',
+                            Container(
+                              height: 40.0,
+                              decoration: BoxDecoration(),
+                              child: wrapWithModel(
+                                model: _model.stateitemModel2,
+                                updateCallback: () => safeSetState(() {}),
+                                child: StateitemWidget(
+                                  label: 'Livrées',
+                                  count: '$deliveredCount',
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.0,
-                          decoration: BoxDecoration(),
-                          child: wrapWithModel(
-                            model: _model.stateitemModel3,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'En cours',
-                              count: '7',
+                            Container(
+                              height: 40.0,
+                              decoration: BoxDecoration(),
+                              child: wrapWithModel(
+                                model: _model.stateitemModel3,
+                                updateCallback: () => safeSetState(() {}),
+                                child: StateitemWidget(
+                                  label: 'En cours',
+                                  count: '$inProgressCount',
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                     Padding(
                       padding: EdgeInsets.all(16.0),
@@ -521,8 +608,20 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                       Switch.adaptive(
                                         value: _model.switchValue!,
                                         onChanged: (newValue) async {
-                                          safeSetState(() =>
-                                              _model.switchValue = newValue!);
+                                          safeSetState(() => _model.switchValue = newValue);
+                                          if (currentUserUid.isNotEmpty) {
+                                            try {
+                                              await FirebaseFirestore.instance.collection('users').doc(currentUserUid).set({
+                                                'is_open': newValue,
+                                                'is_available': newValue,
+                                              }, SetOptions(merge: true));
+                                              await FirebaseFirestore.instance.collection('pharmacies').doc(currentUserUid).set({
+                                                'is_open': newValue,
+                                                'is_available': newValue,
+                                                'is_guard': newValue,
+                                              }, SetOptions(merge: true));
+                                            } catch (_) {}
+                                          }
                                         },
                                         activeColor:
                                             FlutterFlowTheme.of(context)
@@ -799,109 +898,223 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                         wrapped: true,
                       ),
                     ),
-                    Container(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: GridView(
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.zero,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 10.0,
-                            mainAxisSpacing: 10.0,
-                            childAspectRatio: 0.8,
+                    // Section Messagerie Patients
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.chat_bubble_rounded, color: Color(0xFF4954F8), size: 18.0),
+                              SizedBox(width: 8.0),
+                              Text(
+                                'MESSAGES PATIENTS',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.bold,
+                                  color: FlutterFlowTheme.of(context).secondaryText,
+                                ),
+                              ),
+                            ],
                           ),
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          children: [
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel1,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
+                          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: FirebaseFirestore.instance
+                                .collection('chats')
+                                .where('pharmacyId', isEqualTo: currentUserUid)
+                                .snapshots(),
+                            builder: (ctx, snap) {
+                              final totalUnread = (snap.data?.docs ?? []).fold<int>(
+                                  0, (acc, doc) => acc + ((doc.data()['unreadByPharmacy'] as int?) ?? 0));
+                              if (totalUnread == 0) return const SizedBox();
+                              return Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF4954F8),
+                                  borderRadius: BorderRadius.circular(99),
                                 ),
-                              ),
-                            ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel2,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
+                                child: Text(
+                                  ' non lu',
+                                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 11.0, fontWeight: FontWeight.bold),
                                 ),
-                              ),
-                            ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel3,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
-                                ),
-                              ),
-                            ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel4,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      height: 260.0,
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).secondaryBackground,
+                        borderRadius: BorderRadius.circular(16.0),
+                        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16.0),
+                        child: const PharmaChatInboxWidget(),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'CATALOGUE PHARMACIE',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.bold,
+                              color: FlutterFlowTheme.of(context).secondaryText,
+                            ),
+                          ),
+                          FFButtonWidget(
+                            onPressed: () async {
+                              context.pushNamed(AddProductToWidget.routeName);
+                            },
+                            text: '+ Nouveau Produit',
+                            options: FFButtonOptions(
+                              height: 32.0,
+                              padding: EdgeInsets.symmetric(horizontal: 12.0),
+                              color: Color(0xFF4954F8),
+                              textStyle: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: currentUserUid.isNotEmpty
+                       ? FirebaseFirestore.instance.collection('pharmacies').doc(currentUserUid).collection('products').snapshots()
+                       : Stream.empty(),
+                      builder: (context, medSnapshot) {
+                        if (!medSnapshot.hasData) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: CircularProgressIndicator(color: Color(0xFF4954F8)),
+                            ),
+                          );
+                        }
+                        final allDocs = medSnapshot.data!.docs;
+                        final selectedCat = _model.choiceChipsValue;
+                        final searchQ = _model.textController?.text.toLowerCase().trim() ?? '';
+
+                        final filtered = allDocs.where((d) {
+                          final data = d.data();
+                          if (selectedCat != null && selectedCat.isNotEmpty && selectedCat != 'Tous') {
+                            final cat = (data['category'] as String?) ?? '';
+                            if (cat.toLowerCase() != selectedCat.toLowerCase()) return false;
+                          }
+                          if (searchQ.isNotEmpty) {
+                            final name = (data['name'] as String? ?? '').toLowerCase();
+                            if (!name.contains(searchQ)) return false;
+                          }
+                          return true;
+                        }).toList();
+
+                        if (filtered.isEmpty) {
+                          return Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(24.0),
+                              decoration: BoxDecoration(
+                                color: FlutterFlowTheme.of(context).secondaryBackground,
+                                borderRadius: BorderRadius.circular(16.0),
+                                border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.inventory_2_outlined, size: 48.0, color: Color(0xFF4954F8)),
+                                  SizedBox(height: 12.0),
+                                  Text(
+                                    'Aucun médicament dans le catalogue',
+                                    style: GoogleFonts.outfit(fontSize: 16.0, fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 6.0),
+                                  Text(
+                                    'Ajoutez vos produits en stock pour que vos clients puissent les commander.',
+                                    textAlign: TextAlign.center,
+                                    style: FlutterFlowTheme.of(context).labelMedium,
+                                  ),
+                                  SizedBox(height: 16.0),
+                                  FFButtonWidget(
+                                    onPressed: () async {
+                                      context.pushNamed(AddProductToWidget.routeName);
+                                    },
+                                    text: 'Ajouter mon premier médicament',
+                                    options: FFButtonOptions(
+                                      width: 240.0,
+                                      height: 40.0,
+                                      color: Color(0xFF4954F8),
+                                      textStyle: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13.0,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+
+                        return Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10.0,
+                              mainAxisSpacing: 10.0,
+                              childAspectRatio: 0.8,
+                            ),
+                            shrinkWrap: true,
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final data = filtered[index].data();
+                              final name = (data['name'] as String?) ?? 'Médicament';
+                              final price = (data['price'] as String?) ?? '1000';
+                              final category = (data['category'] as String?) ?? 'En Stock';
+                              final cover = (data['cover'] as String?) ??
+                                  (data['photo_url'] as String?) ??
+                                  'https://placehold.co/500x500/e8f5e9/1a6b3c?text=M%C3%A9dicament';
+
+                              return InkWell(
+                                onTap: () async {
+                                  context.pushNamed(
+                                    ProductViewWidget.routeName,
+                                    queryParameters: {
+                                      'name': name,
+                                      'price': price,
+                                      'cover': cover,
+                                      'category': category,
+                                    },
+                                  );
+                                },
+                                child: ProductCardWidget(
+                                  isFavorite: false,
+                                  category: category,
+                                  name: name,
+                                  price: price,
+                                  cover: cover,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     ),
                     Container(
                       width: double.infinity,

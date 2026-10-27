@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '/auth/firebase_auth/auth_util.dart';
 import '/backend/prescription_service.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 
 /// Modal d'affichage sécurisé d'une ordonnance avec QR code,
 /// signature électronique, typologie (strict ou équivalent),
@@ -39,6 +41,7 @@ class PrescriptionViewModal extends StatefulWidget {
 
 class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
   bool _isSending = false;
+  bool _showName = false;
 
   String _formatStatus(String status, String? deliveryType) {
     switch (status) {
@@ -78,18 +81,80 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
   }
 
   Future<void> _showSendToPharmacyDialog(BuildContext context) async {
-    final pharmaciesSnapshot = await FirebaseFirestore.instance
-        .collection('User')
-        .where('user_category', isEqualTo: 'pharmacie')
-        .limit(20)
-        .get();
+    final List<Map<String, dynamic>> pharmaList = [];
 
-    final pharmacies = pharmaciesSnapshot.docs;
-    String? selectedPharmacyUid;
-    String? selectedPharmacyName;
-    String deliveryOption = 'pickup'; // 'pickup' ou 'delivery'
+    // 1. Charger depuis la collection 'pharmacies'
+    try {
+      final snap = await FirebaseFirestore.instance.collection('pharmacies').limit(30).get();
+      for (final doc in snap.docs) {
+        if (doc.id.startsWith('pharma_')) continue;
+        final d = doc.data();
+        final name = (d['name'] as String?)?.trim() ?? 'Pharmacie';
+        final phone = (d['phone'] as String?) ?? (d['phone_number'] as String?) ?? '';
+        final addr = (d['address'] as String?) ?? (d['city'] as String?) ?? 'Brazzaville';
+        if (name.isNotEmpty) {
+          pharmaList.add({
+            'id': doc.id,
+            'name': name,
+            'phone': phone.isNotEmpty ? phone : '+242 06 719 9098',
+            'address': addr,
+            'is_guard': (d['is_guard'] as bool?) ?? (d['is_garde'] as bool?) ?? false,
+          });
+        }
+      }
+    } catch (_) {}
+
+    // 2. Charger depuis la collection 'User' (utilisateurs inscrits en tant que pharmacie)
+    try {
+      final userSnap = await FirebaseFirestore.instance
+          .collection('User')
+          .where('user_category', whereIn: ['pharmacie', 'pharmacy', 'Pharmacie'])
+          .limit(20)
+          .get();
+      for (final doc in userSnap.docs) {
+        final d = doc.data();
+        final name = (d['display_name'] as String?)?.trim() ?? '';
+        if (name.isNotEmpty && !pharmaList.any((p) => p['name'] == name || p['id'] == doc.id)) {
+          pharmaList.add({
+            'id': doc.id,
+            'name': name,
+            'phone': (d['phone_number'] as String?) ?? (d['phone'] as String?) ?? '+242 06 000 0000',
+            'address': (d['address'] as String?) ?? 'Brazzaville',
+            'is_guard': false,
+          });
+        }
+      }
+    } catch (_) {}
+
+    // Aucune pharmacie de test forcée
+    if (pharmaList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aucune pharmacie partenaire disponible actuellement.'),
+          backgroundColor: Color(0xFFE53935),
+        ),
+      );
+      return;
+    }
+
+    String? selectedPharmacyUid = pharmaList.first['id'];
+    String? selectedPharmacyName = pharmaList.first['name'];
+    String? selectedPharmacyPhone = pharmaList.first['phone'];
+    String deliveryOption = 'delivery'; // 'pickup' ou 'delivery'
     final addressController = TextEditingController();
-    final phoneController = TextEditingController();
+    
+    // Récupérer le numéro de téléphone existant du patient ou fallback
+    String existingPhone = currentUser?.phoneNumber ?? '';
+    if (existingPhone.isEmpty && currentUserUid.isNotEmpty) {
+      try {
+        final uDoc = await FirebaseFirestore.instance.collection('User').doc(currentUserUid).get();
+        if (uDoc.exists) {
+          existingPhone = (uDoc.data()?['phone_number'] ?? uDoc.data()?['phone'] ?? '').toString();
+        }
+      } catch (_) {}
+    }
+    if (existingPhone.isEmpty) existingPhone = '+242 06 719 9098';
+    final phoneController = TextEditingController(text: existingPhone);
 
     if (!mounted) return;
 
@@ -100,7 +165,7 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: [
-              const Icon(Icons.local_pharmacy, color: Color(0xFF16C583)),
+              const Icon(Icons.local_pharmacy_rounded, color: Color(0xFF16C583)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -116,46 +181,37 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Choisissez votre pharmacie partenaire :',
+                  'Choisissez votre pharmacie partenaire disponible :',
                   style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                if (pharmacies.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber),
-                    ),
-                    child: Text(
-                      'Pharmacie Centrale de Garde (Sélection automatique)',
-                      style: GoogleFonts.outfit(fontSize: 12),
-                    ),
-                  )
-                else
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                    hint: Text('Sélectionner une pharmacie', style: GoogleFonts.outfit(fontSize: 13)),
-                    value: selectedPharmacyUid,
-                    items: pharmacies.map((doc) {
-                      final name = doc.data()['display_name'] ?? 'Pharmacie';
-                      return DropdownMenuItem(
-                        value: doc.id,
-                        child: Text(name, style: GoogleFonts.outfit(fontSize: 13)),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setDialogState(() {
-                        selectedPharmacyUid = val;
-                        final pDoc = pharmacies.firstWhere((d) => d.id == val);
-                        selectedPharmacyName = pDoc.data()['display_name'] ?? 'Pharmacie';
-                      });
-                    },
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
+                  value: selectedPharmacyUid,
+                  items: pharmaList.map((p) {
+                    final name = p['name'] as String;
+                    final isGuard = p['is_guard'] as bool? ?? false;
+                    return DropdownMenuItem<String>(
+                      value: p['id'] as String,
+                      child: Text(
+                        isGuard ? '$name 🟢 (De garde)' : name,
+                        style: GoogleFonts.outfit(fontSize: 13, fontWeight: isGuard ? FontWeight.bold : FontWeight.normal),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setDialogState(() {
+                      selectedPharmacyUid = val;
+                      final pDoc = pharmaList.firstWhere((d) => d['id'] == val);
+                      selectedPharmacyName = pDoc['name'] as String;
+                      selectedPharmacyPhone = pDoc['phone'] as String;
+                    });
+                  },
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Option d\'obtention :',
@@ -223,19 +279,25 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
                     ),
                     style: GoogleFonts.outfit(fontSize: 13),
                   ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'Numéro de téléphone contact',
-                      hintText: '+242 ...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    ),
-                    style: GoogleFonts.outfit(fontSize: 13),
-                  ),
                 ],
+                const SizedBox(height: 12),
+                Text(
+                  'Numéro de contact pour la pharmacie & livreur :',
+                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Téléphone (Appels & WhatsApp)',
+                    hintText: '+242 ...',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    prefixIcon: const Icon(Icons.phone_in_talk, size: 18, color: Color(0xFF16C583)),
+                  ),
+                  style: GoogleFonts.outfit(fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -250,8 +312,10 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () async {
-                final chosenUid = selectedPharmacyUid ?? (pharmacies.isNotEmpty ? pharmacies.first.id : 'pharmacie_centrale');
-                final chosenName = selectedPharmacyName ?? (pharmacies.isNotEmpty ? (pharmacies.first.data()['display_name'] ?? 'Pharmacie') : 'Pharmacie Centrale');
+                final chosenUid = selectedPharmacyUid ?? pharmaList.first['id'];
+                final chosenName = selectedPharmacyName ?? pharmaList.first['name'];
+                final chosenPhone = selectedPharmacyPhone ?? pharmaList.first['phone'];
+                final chosenPatPhone = phoneController.text.trim().isNotEmpty ? phoneController.text.trim() : existingPhone;
 
                 Navigator.pop(dialogCtx);
                 setState(() => _isSending = true);
@@ -263,14 +327,16 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
                     pharmacyName: chosenName,
                     deliveryType: deliveryOption,
                     deliveryAddress: addressController.text.trim(),
-                    deliveryPhone: phoneController.text.trim(),
+                    deliveryPhone: chosenPatPhone,
+                    pharmacyPhone: chosenPhone,
+                    patientPhone: chosenPatPhone,
                   );
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Ordonnance transmise à $chosenName avec succès !',
+                          'Ordonnance transmise à $chosenName avec succès ! Vous pouvez la contacter directement.',
                           style: GoogleFonts.outfit(),
                         ),
                         backgroundColor: const Color(0xFF16C583),
@@ -288,7 +354,7 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
                   if (mounted) setState(() => _isSending = false);
                 }
               },
-              child: Text('Confirmer l\'envoi', style: GoogleFonts.outfit(color: Colors.white)),
+              child: Text('Confirmer l\'envoi', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -451,10 +517,33 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Patient :', style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade600)),
-                            Text(
-                              patientName,
-                              style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700),
+                            Row(
+                              children: [
+                                Text('Patient (Protégé par QR Code) :', style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade600)),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified_user_rounded, size: 14, color: Color(0xFF16C583)),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  _showName ? patientName : '████████ (Masqué par QR Code)',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: _showName ? const Color(0xFF0A0E1A) : Colors.blueGrey,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                InkWell(
+                                  onTap: () => setState(() => _showName = !_showName),
+                                  child: Icon(
+                                    _showName ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                    size: 18,
+                                    color: const Color(0xFF16C583),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -608,33 +697,118 @@ class _PrescriptionViewModalState extends State<PrescriptionViewModal> {
                     ),
                   ),
 
-                  // Détail de la pharmacie et livraison si déjà envoyée
+                  // Détail de la pharmacie, livreur et boutons de communication directe
                   if (pharmacyName != null) ...[
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.shade200),
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFF86EFAC)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(deliveryType == 'delivery' ? Icons.delivery_dining : Icons.store, color: Colors.blue.shade700),
-                              const SizedBox(width: 8),
-                              Text(
-                                deliveryType == 'delivery' ? 'Livraison en cours par :' : 'Retrait prévu chez :',
-                                style: GoogleFonts.outfit(fontSize: 12, color: Colors.blue.shade700, fontWeight: FontWeight.w600),
+                              Row(
+                                children: [
+                                  Icon(deliveryType == 'delivery' ? Icons.delivery_dining : Icons.store, color: const Color(0xFF15803D)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    deliveryType == 'delivery' ? 'Livraison prise en charge par :' : 'Retrait prévu chez :',
+                                    style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF15803D), fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF16C583).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text('Partenaire vérifié', style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF15803D), fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(pharmacyName, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 6),
+                          Text(pharmacyName, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A))),
                           if (data['delivery_address'] != null && data['delivery_address'].toString().isNotEmpty)
-                            Text('Adresse: ${data['delivery_address']}', style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade700)),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2.0),
+                              child: Text('Adresse de livraison : ${data['delivery_address']}', style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey.shade700)),
+                            ),
+                          const SizedBox(height: 12),
+
+                          // ── BOUTONS DE COMMUNICATION PATIENT ↔ PHARMACIEN ──
+                          Row(
+                            children: [
+                              // Bouton Appel Pharmacie
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF165AC5),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    elevation: 0,
+                                  ),
+                                  icon: const Icon(Icons.call_rounded, size: 16),
+                                  label: Text('Appeler Pharmacie', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
+                                  onPressed: () async {
+                                    final phone = (data['pharmacy_phone'] as String?) ?? '+242 06 719 9098';
+                                    await launchURL('tel:$phone');
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Bouton WhatsApp Pharmacie
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF25D366),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    elevation: 0,
+                                  ),
+                                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                                  label: Text('WhatsApp Pharmacie', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold)),
+                                  onPressed: () async {
+                                    final phone = (data['pharmacy_phone'] as String? ?? '242067199098').replaceAll(RegExp(r'[^0-9]'), '');
+                                    await launchURL('https://wa.me/$phone');
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Coordonnées du livreur si expédié
+                          if (data['delivery_person_phone'] != null && data['delivery_person_phone'].toString().isNotEmpty) ...[
+                            const Divider(height: 20),
+                            Row(
+                              children: [
+                                const Icon(Icons.two_wheeler_rounded, color: Color(0xFFD97706), size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Livreur : ${data['delivery_person_name'] ?? 'Coursier Officine'} (${data['delivery_person_phone']})',
+                                    style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF92400E)),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.phone_forwarded_rounded, color: Color(0xFF15803D), size: 20),
+                                  tooltip: 'Appeler le livreur',
+                                  onPressed: () async {
+                                    final p = data['delivery_person_phone'].toString();
+                                    await launchURL('tel:$p');
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),

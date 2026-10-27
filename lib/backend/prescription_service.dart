@@ -48,6 +48,7 @@ class PrescriptionService {
     required String notes,
     required bool isMandatory, // true: strict/non-substituable, false: équivalents autorisés
     required String doctorSignature, // Nom + date + empreinte certifiée
+    String? patientPhone,
   }) async {
     final now = DateTime.now();
     final prescriptionRef = _firestore.collection('prescriptions').doc();
@@ -61,6 +62,7 @@ class PrescriptionService {
       'patient_uid': patientUid,
       'patient_name': patientName,
       'patient_id': patientId,
+      'patient_phone': patientPhone,
       'doctor_ref': _firestore.collection('User').doc(doctorUid),
       'doctor_uid': doctorUid,
       'doctor_name': doctorName,
@@ -107,6 +109,8 @@ class PrescriptionService {
     required String deliveryType, // 'pickup' ou 'delivery'
     String? deliveryAddress,
     String? deliveryPhone,
+    String? pharmacyPhone,
+    String? patientPhone,
   }) async {
     final now = DateTime.now();
     final docRef = _firestore.collection('prescriptions').doc(prescriptionId);
@@ -115,6 +119,8 @@ class PrescriptionService {
       'pharmacy_ref': _firestore.collection('User').doc(pharmacyUid),
       'pharmacy_uid': pharmacyUid,
       'pharmacy_name': pharmacyName,
+      'pharmacy_phone': pharmacyPhone,
+      'patient_phone': patientPhone ?? deliveryPhone,
       'delivery_type': deliveryType,
       'delivery_address': deliveryAddress,
       'delivery_phone': deliveryPhone,
@@ -135,35 +141,69 @@ class PrescriptionService {
     });
   }
 
-  /// La pharmacie met à jour l'état de la commande
+  /// La pharmacie met à jour l'état de la commande (3 étapes : disponibilité, préparation, envoi livreur)
   static Future<void> updateOrderStatus({
     required String prescriptionId,
     required String newStatus, // 'in_preparation', 'ready', 'out_for_delivery', 'delivered'
     required String patientUid,
     String? messageForPatient,
+    List<String>? availableMedications,
+    String? deliveryPersonName,
+    String? deliveryPersonPhone,
+    String? pharmacyUid,
+    String? pharmacyName,
+    String? pharmacyPhone,
   }) async {
     final now = DateTime.now();
-    await _firestore.collection('prescriptions').doc(prescriptionId).update({
+    final updateData = <String, dynamic>{
       'status': newStatus,
       'updated_at': Timestamp.fromDate(now),
-    });
+    };
+
+    if (availableMedications != null) {
+      updateData['available_medications'] = availableMedications;
+    }
+    if (deliveryPersonName != null && deliveryPersonName.isNotEmpty) {
+      updateData['delivery_person_name'] = deliveryPersonName;
+    }
+    if (deliveryPersonPhone != null && deliveryPersonPhone.isNotEmpty) {
+      updateData['delivery_person_phone'] = deliveryPersonPhone;
+    }
+    if (pharmacyUid != null && pharmacyUid.isNotEmpty) {
+      updateData['pharmacy_uid'] = pharmacyUid;
+      updateData['pharmacy_ref'] = _firestore.collection('User').doc(pharmacyUid);
+    }
+    if (pharmacyName != null && pharmacyName.isNotEmpty) {
+      updateData['pharmacy_name'] = pharmacyName;
+    }
+    if (pharmacyPhone != null && pharmacyPhone.isNotEmpty) {
+      updateData['pharmacy_phone'] = pharmacyPhone;
+    }
+
+    await _firestore.collection('prescriptions').doc(prescriptionId).update(updateData);
 
     String statusText = 'mise à jour';
-    if (newStatus == 'in_preparation') statusText = 'est en cours de préparation';
+    if (newStatus == 'in_preparation') statusText = 'est en cours de préparation par la pharmacie';
     if (newStatus == 'ready') statusText = 'est prête pour le retrait en pharmacie';
-    if (newStatus == 'out_for_delivery') statusText = 'est en cours de livraison chez vous';
-    if (newStatus == 'delivered') statusText = 'a été livrée / retirée';
+    if (newStatus == 'out_for_delivery') {
+      statusText = deliveryPersonName != null && deliveryPersonName.isNotEmpty
+          ? 'est prise en charge par le livreur $deliveryPersonName ($deliveryPersonPhone)'
+          : 'est en cours de livraison chez vous';
+    }
+    if (newStatus == 'delivered') statusText = 'a été livrée / retirée avec succès';
 
     // Notification en temps réel pour le patient
-    await _firestore.collection('notifications').add({
-      'recipient_uid': patientUid,
-      'user_uid': patientUid,
-      'title': 'Mise à jour de votre ordonnance',
-      'message': 'Votre commande $statusText. ${messageForPatient ?? ''}',
-      'type': 'order_status',
-      'reference_id': prescriptionId,
-      'created_at': Timestamp.fromDate(now),
-      'is_read': false,
-    });
+    if (patientUid.isNotEmpty) {
+      await _firestore.collection('notifications').add({
+        'recipient_uid': patientUid,
+        'user_uid': patientUid,
+        'title': 'Mise à jour de votre ordonnance',
+        'message': 'Votre commande $statusText. ${messageForPatient ?? ''}',
+        'type': 'order_status',
+        'reference_id': prescriptionId,
+        'created_at': Timestamp.fromDate(now),
+        'is_read': false,
+      });
+    }
   }
 }

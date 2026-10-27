@@ -84,10 +84,10 @@ class _CarnetSanteWidgetState extends State<CarnetSanteWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
-                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-                'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200',
-                'https://images.unsplash.com/photo-1594824813511-133a886f4a86?w=200',
+                'https://ui-avatars.com/api/?name=Patient+A&background=1a6b3c&color=fff&size=200',
+                'https://ui-avatars.com/api/?name=Patient+B&background=0d47a1&color=fff&size=200',
+                'https://ui-avatars.com/api/?name=Patient+C&background=6a1b9a&color=fff&size=200',
+                'https://ui-avatars.com/api/?name=Patient+D&background=c62828&color=fff&size=200',
               ].map((url) => InkWell(
                 onTap: () {
                   controller.text = url;

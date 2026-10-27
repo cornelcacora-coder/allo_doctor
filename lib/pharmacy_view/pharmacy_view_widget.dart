@@ -103,7 +103,7 @@ class _PharmacyViewWidgetState extends State<PharmacyViewWidget> {
                                         fadeOutDuration:
                                             Duration(milliseconds: 0),
                                         imageUrl:
-                                            'https://images.unsplash.com/photo-1489278353717-f64c6ee8a4d2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxTbWlsZSUyMHxlbnwwfHx8fDE3ODMyODc5ODF8MA&ixlib=rb-4.1.0&q=80&w=1080',
+                                            'https://placehold.co/96x96/1a6b3c/ffffff?text=Ph',
                                         width: 96.0,
                                         height: 96.0,
                                         fit: BoxFit.cover,
@@ -118,7 +118,7 @@ class _PharmacyViewWidgetState extends State<PharmacyViewWidget> {
                                           CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                          '@alex_creates',
+                                          'Pharmacie',
                                           style: FlutterFlowTheme.of(context)
                                               .bodyLarge
                                               .override(
@@ -140,7 +140,7 @@ class _PharmacyViewWidgetState extends State<PharmacyViewWidget> {
                                               ),
                                         ),
                                         Text(
-                                          'Digital artist & motion designer 🎨',
+                                          'Informations pharmacie',
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
