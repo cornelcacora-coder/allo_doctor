@@ -386,40 +386,49 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                           children: [
                             Expanded(
                               flex: 1,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF1B5E20),
-                                  borderRadius: BorderRadius.circular(24.0),
-                                  shape: BoxShape.rectangle,
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: Container(
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () async {
+                                  context.pushNamed(PatientOrdersWidget.routeName);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF1B5E20),
+                                    borderRadius: BorderRadius.circular(24.0),
+                                    shape: BoxShape.rectangle,
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16.0),
                                     child: Container(
-                                      alignment: AlignmentDirectional(0.0, 0.0),
-                                      child: Text(
-                                        'Mes commandes',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.outfit(
+                                      child: Container(
+                                        alignment: AlignmentDirectional(0.0, 0.0),
+                                        child: Text(
+                                          'Mes commandes',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                font: GoogleFonts.outfit(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(context)
+                                                          .bodyMedium
+                                                          .fontStyle,
+                                                ),
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .onPrimary,
+                                                letterSpacing: 0.0,
                                                 fontWeight: FontWeight.w600,
                                                 fontStyle:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium
                                                         .fontStyle,
+                                                lineHeight: 1.5,
                                               ),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .onPrimary,
-                                              letterSpacing: 0.0,
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                              lineHeight: 1.5,
-                                            ),
+                                        ),
                                       ),
                                     ),
                                   ),

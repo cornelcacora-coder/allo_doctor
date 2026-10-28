@@ -16,6 +16,7 @@ import 'serialization_util.dart';
 
 import '/index.dart';
 import '/pharmacy/pharmacy_orders/pharmacy_orders_widget.dart';
+import '/patient/order/patient_orders_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -166,6 +167,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: PharmacyOrdersWidget.routeName,
           path: PharmacyOrdersWidget.routePath,
           builder: (context, params) => const PharmacyOrdersWidget(),
+        ),
+        FFRoute(
+          name: PatientOrdersWidget.routeName,
+          path: PatientOrdersWidget.routePath,
+          builder: (context, params) => const PatientOrdersWidget(),
         ),
         FFRoute(
           name: DoctorViewWidget.routeName,

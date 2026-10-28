@@ -1,4 +1,5 @@
 import '/components/emergency_call_widget.dart';
+import '/components/avatar_image_widget.dart';
 import '/components/log_out_widget.dart';
 import '/components/nav_bar_user_widget.dart';
 import '/components/service_card_widget.dart';
@@ -2395,29 +2396,26 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                                       topLeft: Radius.circular(12.0),
                                                       topRight: Radius.circular(12.0),
                                                     ),
-                                                    child: photoUrl.isNotEmpty
-                                                        ? CachedNetworkImage(
-                                                            fadeInDuration: Duration(milliseconds: 0),
-                                                            fadeOutDuration: Duration(milliseconds: 0),
-                                                            imageUrl: photoUrl,
-                                                            width: double.infinity,
-                                                            height: 85.0,
-                                                            fit: BoxFit.cover,
-                                                          )
-                                                        : Container(
-                                                            width: double.infinity,
-                                                            height: 85.0,
-                                                            color: FlutterFlowTheme.of(context).primary,
-                                                            alignment: Alignment.center,
-                                                            child: Text(
-                                                              docName.isNotEmpty ? docName[0].toUpperCase() : 'D',
-                                                              style: GoogleFonts.outfit(
-                                                                color: Colors.white,
-                                                                fontSize: 32.0,
-                                                                fontWeight: FontWeight.bold,
-                                                              ),
-                                                            ),
+                                                    child: AvatarImageWidget(
+                                                      imageUrl: photoUrl,
+                                                      width: double.infinity,
+                                                      height: 85.0,
+                                                      fit: BoxFit.cover,
+                                                      placeholder: Container(
+                                                        width: double.infinity,
+                                                        height: 85.0,
+                                                        color: FlutterFlowTheme.of(context).primary,
+                                                        alignment: Alignment.center,
+                                                        child: Text(
+                                                          docName.isNotEmpty ? docName[0].toUpperCase() : 'D',
+                                                          style: GoogleFonts.outfit(
+                                                            color: Colors.white,
+                                                            fontSize: 32.0,
+                                                            fontWeight: FontWeight.bold,
                                                           ),
+                                                        ),
+                                                      ),
+                                                    ),
                                                   ),
                                                   Positioned(
                                                     top: 6,
@@ -2668,23 +2666,24 @@ class _HomeHubWidgetState extends State<HomeHubWidget>
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                           ),
-                                          child: photoUrl.isNotEmpty
-                                              ? CachedNetworkImage(
-                                                  imageUrl: photoUrl,
-                                                  fit: BoxFit.cover,
-                                                )
-                                              : Container(
-                                                  color: FlutterFlowTheme.of(context).primary,
-                                                  alignment: Alignment.center,
-                                                  child: Text(
-                                                    docName.isNotEmpty ? docName[0].toUpperCase() : 'D',
-                                                    style: GoogleFonts.outfit(
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 18.0,
-                                                    ),
-                                                  ),
+                                          child: AvatarImageWidget(
+                                            imageUrl: photoUrl,
+                                            width: 40.0,
+                                            height: 40.0,
+                                            fit: BoxFit.cover,
+                                            placeholder: Container(
+                                              color: FlutterFlowTheme.of(context).primary,
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                docName.isNotEmpty ? docName[0].toUpperCase() : 'D',
+                                                style: GoogleFonts.outfit(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18.0,
                                                 ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                         Expanded(
                                           child: Padding(
