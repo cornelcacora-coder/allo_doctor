@@ -1,9 +1,12 @@
+import '/components/safe_product_image.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/main_components/show_notice/show_notice_widget.dart';
+import '/patient/order/order_placement_sheet.dart';
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +14,24 @@ import 'product_view_model.dart';
 export 'product_view_model.dart';
 
 class ProductViewWidget extends StatefulWidget {
-  const ProductViewWidget({super.key});
+  const ProductViewWidget({
+    super.key,
+    this.name,
+    this.price,
+    this.cover,
+    this.category,
+    this.pharmacyId,
+    this.pharmacyName,
+    this.description,
+  });
+
+  final String? name;
+  final String? price;
+  final String? cover;
+  final String? category;
+  final String? pharmacyId;
+  final String? pharmacyName;
+  final String? description;
 
   static String routeName = 'ProductView';
   static String routePath = '/productView';
@@ -22,6 +42,7 @@ class ProductViewWidget extends StatefulWidget {
 
 class _ProductViewWidgetState extends State<ProductViewWidget> {
   late ProductViewModel _model;
+  int _quantity = 1;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -88,8 +109,8 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                     decoration: BoxDecoration(),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(0.0),
-                      child: Image.network(
-                        'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
+                      child: SafeProductImage(
+                        imageUrl: widget.cover,
                         width: double.infinity,
                         height: 302.0,
                         fit: BoxFit.cover,
@@ -127,30 +148,34 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                0.0, 5.0, 0.0, 0.0),
-                            child: Text(
-                              'Doliprane 1000',
-                              style: FlutterFlowTheme.of(context)
-                                  .titleLarge
-                                  .override(
-                                    font: GoogleFonts.outfit(
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  0.0, 5.0, 0.0, 0.0),
+                              child: Text(
+                                widget.name?.isNotEmpty == true ? widget.name! : 'Médicament',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: FlutterFlowTheme.of(context)
+                                    .titleLarge
+                                    .override(
+                                      font: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.w600,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .titleLarge
+                                            .fontStyle,
+                                      ),
+                                      color: FlutterFlowTheme.of(context)
+                                          .secondaryBackground,
+                                      fontSize: 18.0,
+                                      letterSpacing: 0.0,
                                       fontWeight: FontWeight.w600,
                                       fontStyle: FlutterFlowTheme.of(context)
                                           .titleLarge
                                           .fontStyle,
+                                      lineHeight: 1.4,
                                     ),
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    fontSize: 18.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.w600,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleLarge
-                                        .fontStyle,
-                                    lineHeight: 1.4,
-                                  ),
+                              ),
                             ),
                           ),
                         ].divide(SizedBox(width: 10.0)),
@@ -160,8 +185,11 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                 ],
               ),
             ),
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0.0, 250.0, 0.0, 0.0),
+            Positioned(
+              top: 250.0,
+              left: 0.0,
+              right: 0.0,
+              bottom: 0.0,
               child: Container(
                 decoration: BoxDecoration(
                   color: FlutterFlowTheme.of(context).onPrimary,
@@ -173,120 +201,96 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                 ),
                 child: Padding(
                   padding:
-                      EdgeInsetsDirectional.fromSTEB(24.0, 16.0, 24.0, 32.0),
-                  child: Container(
-                    width: double.infinity,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              10.0, 10.0, 0.0, 0.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 14.0, 0.0),
-                                child: Icon(
-                                  Icons.toll_sharp,
-                                  color: FlutterFlowTheme.of(context).accent1,
-                                  size: 28.0,
+                      EdgeInsetsDirectional.fromSTEB(24.0, 16.0, 24.0, 0.0),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 90.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                10.0, 10.0, 0.0, 0.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0.0, 0.0, 10.0, 0.0),
+                                  child: Icon(
+                                    Icons.toll_sharp,
+                                    color: FlutterFlowTheme.of(context).accent1,
+                                    size: 26.0,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '2300',
-                                maxLines: 1,
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .override(
-                                      font: GoogleFonts.montserrat(
+                                Text(
+                                  widget.price?.isNotEmpty == true
+                                      ? widget.price!
+                                      : '1000',
+                                  maxLines: 1,
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        color: FlutterFlowTheme.of(context).accent1,
+                                        fontSize: 22.0,
                                         fontWeight: FontWeight.bold,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
                                       ),
-                                      color:
-                                          FlutterFlowTheme.of(context).accent1,
-                                      fontSize: 24.0,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                              ),
-                              Text(
-                                'F',
-                                maxLines: 1,
-                                style: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .override(
-                                      font: GoogleFonts.montserrat(
+                                ),
+                                Text(
+                                  ' F',
+                                  maxLines: 1,
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        font: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        color: FlutterFlowTheme.of(context).accent1,
+                                        fontSize: 18.0,
                                         fontWeight: FontWeight.bold,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .fontStyle,
                                       ),
-                                      color:
-                                          FlutterFlowTheme.of(context).accent1,
-                                      fontSize: 24.0,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                              ),
-                              Flexible(
-                                child: Align(
-                                  alignment: AlignmentDirectional(1.0, 0.0),
-                                  child: Container(
-                                    width: 40.0,
-                                    height: 40.0,
-                                    decoration: BoxDecoration(
-                                      color: Color(0x22FF00E9),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: AlignmentDirectional(1.0, 0.0),
-                                    child: Align(
-                                      alignment: AlignmentDirectional(0.0, 0.0),
+                                ),
+                                Spacer(),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 36.0,
+                                      height: 36.0,
+                                      decoration: BoxDecoration(
+                                        color: Color(0x22FF00E9),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
                                       child: Icon(
                                         Icons.sanitizer_sharp,
                                         color: Color(0xFFF215F2),
-                                        size: 24.0,
+                                        size: 20.0,
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: AlignmentDirectional(1.0, 0.0),
-                                child: Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      10.0, 0.0, 0.0, 0.0),
-                                  child: Container(
-                                    width: 40.0,
-                                    height: 40.0,
-                                    decoration: BoxDecoration(
-                                      color: Color(0x2200FFFD),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: AlignmentDirectional(1.0, 0.0),
-                                    child: Align(
-                                      alignment: AlignmentDirectional(0.0, 0.0),
+                                    SizedBox(width: 8.0),
+                                    Container(
+                                      width: 36.0,
+                                      height: 36.0,
+                                      decoration: BoxDecoration(
+                                        color: Color(0x2200FFFD),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
                                       child: Icon(
                                         Icons.medical_services_outlined,
                                         color: Color(0xFF00B5B8),
-                                        size: 24.0,
+                                        size: 20.0,
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.max,
@@ -296,7 +300,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                               padding: EdgeInsetsDirectional.fromSTEB(
                                   0.0, 5.0, 0.0, 0.0),
                               child: Text(
-                                'Doliprane 1000 est un antalgique de preier pallier qui soulage des maux de tete, les inflammation et la fièvre.',
+                                '${widget.description?.isNotEmpty == true ? widget.description : "${widget.name?.isNotEmpty == true ? widget.name : "Ce médicament"} est un médicament disponible dans notre catalogue."}',
                                 maxLines: 3,
                                 style: FlutterFlowTheme.of(context)
                                     .titleLarge
@@ -341,7 +345,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                       child: Padding(
                                         padding:
                                             MediaQuery.viewInsetsOf(context),
-                                        child: ShowNoticeWidget(),
+                                        child: ShowNoticeWidget(
+                                          productName: widget.name,
+                                        ),
                                       ),
                                     );
                                   },
@@ -435,7 +441,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                               ),
                             ),
                             child: Padding(
-                              padding: EdgeInsets.all(24.0),
+                              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                               child: Container(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -477,7 +483,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                                   CrossAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  'En Stock',
+                                                  widget.category?.isNotEmpty == true
+                                                      ? widget.category!
+                                                      : 'En Stock',
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .labelSmall
@@ -565,7 +573,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                       ],
                                     ),
                                     Text(
-                                      'Doliprane 1000',
+                                      widget.name?.isNotEmpty == true
+                                          ? widget.name!
+                                          : 'Médicament',
                                       style: FlutterFlowTheme.of(context)
                                           .headlineSmall
                                           .override(
@@ -594,7 +604,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                           CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                          '2300F',
+                                          '${widget.price?.isNotEmpty == true ? widget.price : "1000"} F',
                                           style: FlutterFlowTheme.of(context)
                                               .titleLarge
                                               .override(
@@ -638,11 +648,13 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                                 size: 24.0,
                                               ),
                                               onPressed: () {
-                                                print('IconButton pressed ...');
+                                                if (_quantity > 1) {
+                                                  setState(() => _quantity--);
+                                                }
                                               },
                                             ),
                                             Text(
-                                              '1',
+                                              '$_quantity',
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .titleMedium
@@ -678,10 +690,10 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                                 size: 24.0,
                                               ),
                                               onPressed: () {
-                                                print('IconButton pressed ...');
+                                                setState(() => _quantity++);
                                               },
                                             ),
-                                          ].divide(SizedBox(width: 16.0)),
+                                          ].divide(SizedBox(width: 8.0)),
                                         ),
                                       ],
                                     ),
@@ -697,31 +709,45 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                 ),
               ),
             ),
-            Align(
+          ),
+          Align(
               alignment: AlignmentDirectional(0.0, 1.0),
               child: Padding(
                 padding: EdgeInsets.all(16.0),
-                child: Container(
-                  width: double.infinity,
-                  height: 50.0,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        FlutterFlowTheme.of(context).primary,
-                        Color(0xFF16C583)
-                      ],
-                      stops: [0.0, 1.0],
-                      begin: AlignmentDirectional(1.0, -1.0),
-                      end: AlignmentDirectional(-1.0, 1.0),
+                child: InkWell(
+                  onTap: () async {
+                    await showOrderPlacementSheet(
+                      context,
+                      productName: widget.name ?? 'Medicament',
+                      price: widget.price ?? '0',
+                      cover: widget.cover ?? '',
+                      category: widget.category ?? '',
+                      medicineId: widget.name ?? '',
+                      pharmacyId: widget.pharmacyId,
+                      pharmacyName: widget.pharmacyName,
+                    );
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 50.0,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          FlutterFlowTheme.of(context).primary,
+                          Color(0xFF16C583)
+                        ],
+                        stops: [0.0, 1.0],
+                        begin: AlignmentDirectional(1.0, -1.0),
+                        end: AlignmentDirectional(-1.0, 1.0),
+                      ),
+                      borderRadius: BorderRadius.circular(24.0),
                     ),
-                    borderRadius: BorderRadius.circular(24.0),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Acheter Maintenant',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Acheter Maintenant',
                         style: FlutterFlowTheme.of(context).labelSmall.override(
                               font: GoogleFonts.outfit(
                                 fontWeight: FontWeight.w600,
@@ -745,7 +771,8 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                 ),
               ),
             ),
-          ],
+          ),
+        ],
         ),
       ),
     );

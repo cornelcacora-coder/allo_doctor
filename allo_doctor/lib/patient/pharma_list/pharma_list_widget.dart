@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'pharma_list_model.dart';
+import '/backend/pharmacy_directory_service.dart';
 export 'pharma_list_model.dart';
 
 class PharmaListWidget extends StatefulWidget {
@@ -29,6 +30,7 @@ class _PharmaListWidgetState extends State<PharmaListWidget> {
   @override
   void initState() {
     super.initState();
+    // No mock seed
     _model = createModel(context, () => PharmaListModel());
 
     _model.textController ??= TextEditingController();
@@ -334,210 +336,218 @@ class _PharmaListWidgetState extends State<PharmaListWidget> {
                                         ),
                                   ),
                                   StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                                    stream: FirebaseFirestore.instance.collection('pharmacies').snapshots(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasError) {
-                                        return Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.local_pharmacy_outlined, size: 56.0, color: Color(0xFF19BF82)),
-                                                SizedBox(height: 12.0),
-                                                Text(
-                                                  'Aucune pharmacie disponible',
-                                                  textAlign: TextAlign.center,
-                                                  style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                    font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                                                  ),
-                                                ),
-                                                SizedBox(height: 6.0),
-                                                Text(
-                                                  'Les pharmacies enregistrées apparaîtront ici dès leur configuration.',
-                                                  textAlign: TextAlign.center,
-                                                  style: FlutterFlowTheme.of(context).labelMedium,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      if (!snapshot.hasData) {
-                                        return Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.all(20.0),
-                                            child: CircularProgressIndicator(
-                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF19BF82)),
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      final docs = snapshot.data!.docs;
-                                      final searchText = _model.textController?.text.trim().toLowerCase() ?? '';
-                                      final filteredDocs = searchText.isEmpty
-                                          ? docs
-                                          : docs.where((d) {
-                                              final name = (d.data()['name'] as String? ?? '').toLowerCase();
-                                              final city = (d.data()['city'] as String? ?? '').toLowerCase();
-                                              final address = (d.data()['address'] as String? ?? '').toLowerCase();
-                                              return name.contains(searchText) || city.contains(searchText) || address.contains(searchText);
-                                            }).toList();
+                                      stream: FirebaseFirestore.instance.collection('pharmacies').snapshots(),
+                                      builder: (context, snapshot) {
+                                        final List<Map<String, dynamic>> allPharmacies = [];
+                                        if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                                          for (final doc in snapshot.data!.docs) {
+                                            // Ignorer les exemples de démonstration
+                                            if (doc.id.startsWith('pharma_')) continue;
+                                            final d = doc.data();
+                                            final item = Map<String, dynamic>.from(d);
+                                            item['id'] = doc.id;
+                                            allPharmacies.add(item);
+                                          }
+                                        }
 
-                                      if (filteredDocs.isEmpty) {
-                                        return Center(
-                                          child: Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.local_pharmacy_outlined, size: 56.0, color: Color(0xFF19BF82)),
-                                                SizedBox(height: 12.0),
-                                                Text(
-                                                  'Aucune pharmacie disponible',
-                                                  textAlign: TextAlign.center,
-                                                  style: FlutterFlowTheme.of(context).titleMedium.override(
-                                                    font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                                                  ),
-                                                ),
-                                                SizedBox(height: 6.0),
-                                                Text(
-                                                  'Les pharmacies enregistrées apparaîtront ici dès leur configuration.',
-                                                  textAlign: TextAlign.center,
-                                                  style: FlutterFlowTheme.of(context).labelMedium,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }
+                                        final searchText = _model.textController?.text.trim().toLowerCase() ?? '';
+                                       final filteredDocs = searchText.isEmpty
+                                           ? allPharmacies
+                                           : allPharmacies.where((p) {
+                                               final name = (p['name'] as String? ?? '').toLowerCase();
+                                               final city = (p['city'] as String? ?? '').toLowerCase();
+                                               final address = (p['address'] as String? ?? '').toLowerCase();
+                                               return name.contains(searchText) || city.contains(searchText) || address.contains(searchText);
+                                             }).toList();
 
-                                      return Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: filteredDocs.map((doc) {
-                                          final data = doc.data();
-                                          final name = (data['name'] as String?)?.trim() ?? 'Pharmacie';
-                                          final address = (data['address'] as String?) ?? (data['city'] as String?) ?? 'Brazzaville';
-                                          final hours = (data['guard_hours'] as String?) ?? (data['hours'] as String?) ?? '08h - 20h';
-                                          final isGuard = (data['is_guard'] as bool?) ?? false;
-                                          final photoUrl = (data['photo_url'] as String?) ?? (data['cover'] as String?) ?? '';
-                                          final phone = (data['phone_number'] as String?) ?? (data['phone'] as String?) ?? '';
+                                       if (filteredDocs.isEmpty) {
+                                         return Center(
+                                           child: Padding(
+                                             padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+                                             child: Column(
+                                               mainAxisSize: MainAxisSize.min,
+                                               children: [
+                                                 Icon(Icons.search_off_rounded, size: 56.0, color: Color(0xFF19BF82)),
+                                                 SizedBox(height: 12.0),
+                                                 Text(
+                                                   'Aucune pharmacie trouvée pour "' + searchText + '"',
+                                                   textAlign: TextAlign.center,
+                                                   style: FlutterFlowTheme.of(context).titleMedium.override(
+                                                     font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                                                   ),
+                                                 ),
+                                                 SizedBox(height: 6.0),
+                                                 Text(
+                                                   'Essayez un autre mot-clé ou réinitialisez la recherche.',
+                                                   textAlign: TextAlign.center,
+                                                   style: FlutterFlowTheme.of(context).labelMedium,
+                                                 ),
+                                               ],
+                                             ),
+                                           ),
+                                         );
+                                       }
 
-                                          return Align(
-                                            alignment: AlignmentDirectional(0.0, -1.0),
-                                            child: InkWell(
-                                              splashColor: Colors.transparent,
-                                              focusColor: Colors.transparent,
-                                              hoverColor: Colors.transparent,
-                                              highlightColor: Colors.transparent,
-                                              onTap: () async {
-                                                context.pushNamed(PharmaViewWidget.routeName);
-                                              },
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                elevation: 2.0,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12.0),
-                                                ),
-                                                child: Container(
-                                                  width: double.infinity,
-                                                  height: 80.0,
-                                                  decoration: BoxDecoration(
-                                                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                    borderRadius: BorderRadius.circular(12.0),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: EdgeInsets.all(10.0),
-                                                    child: Row(
-                                                      children: [
-                                                        Container(
-                                                          width: 50.0,
-                                                          height: 50.0,
-                                                          decoration: BoxDecoration(
-                                                            color: Color(0x22FFE500),
-                                                            borderRadius: BorderRadius.circular(12.0),
-                                                          ),
-                                                          child: photoUrl.isNotEmpty
-                                                              ? ClipRRect(
-                                                                  borderRadius: BorderRadius.circular(12.0),
-                                                                  child: Image.network(photoUrl, fit: BoxFit.cover),
-                                                                )
-                                                              : Icon(Icons.local_pharmacy_rounded, color: Color(0xFF19BF82), size: 28.0),
-                                                        ),
-                                                        SizedBox(width: 12.0),
-                                                        Expanded(
-                                                          child: Column(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Row(
-                                                                children: [
-                                                                  Expanded(
-                                                                    child: Text(
-                                                                      name,
-                                                                      maxLines: 1,
-                                                                      overflow: TextOverflow.ellipsis,
-                                                                      style: FlutterFlowTheme.of(context).labelLarge.override(
-                                                                        font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                                                                        color: FlutterFlowTheme.of(context).primaryText,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  Icon(Icons.verified_rounded, color: Color(0xFF19BF82), size: 16.0),
-                                                                ],
-                                                              ),
-                                                              SizedBox(height: 4.0),
-                                                              Row(
-                                                                children: [
-                                                                  Container(
-                                                                    decoration: BoxDecoration(
-                                                                      color: isGuard ? Color(0x2319BF82) : Color(0x23D2BB39),
-                                                                      borderRadius: BorderRadius.circular(6.0),
-                                                                    ),
-                                                                    padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                                                                    child: Text(
-                                                                      isGuard ? 'De Garde' : address,
-                                                                      style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                        font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                                                                        color: isGuard ? Color(0xFF19BF82) : Color(0xFFB8A600),
-                                                                        fontSize: 10.0,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                  SizedBox(width: 8.0),
-                                                                  Text('•', style: TextStyle(color: FlutterFlowTheme.of(context).secondaryText)),
-                                                                  SizedBox(width: 8.0),
-                                                                  Text(
-                                                                    hours,
-                                                                    style: FlutterFlowTheme.of(context).bodySmall.override(
-                                                                      font: GoogleFonts.outfit(),
-                                                                      color: FlutterFlowTheme.of(context).secondaryText,
-                                                                      fontSize: 11.0,
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                        if (phone.isNotEmpty)
-                                                          IconButton(
-                                                            icon: Icon(Icons.phone_outlined, color: Color(0xFF19BF82), size: 20.0),
-                                                            onPressed: () async {
-                                                              await launchURL('tel:' + phone);
-                                                            },
-                                                          ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        }).toList().divide(SizedBox(height: 16.0)),
-                                      );
-                                    },
-                                  ),
+                                       return Column(
+                                         mainAxisSize: MainAxisSize.min,
+                                         children: filteredDocs.map((p) {
+                                           final docId = (p['id'] as String?) ?? 'pharma_centrale';
+                                           final name = (p['name'] as String?)?.trim() ?? 'Pharmacie';
+                                           final address = (p['address'] as String?) ?? (p['city'] as String?) ?? 'Brazzaville';
+                                           final hours = (p['guard_hours'] as String?) ?? (p['hours'] as String?) ?? '08h - 20h';
+                                           final isGuard = (p['is_guard'] as bool?) ?? false;
+                                           final photoUrl = (p['photo_url'] as String?) ?? (p['cover'] as String?) ?? '';
+                                           final phone = (p['phone_number'] as String?) ?? (p['phone'] as String?) ?? '+242 06 719 9098';
+
+                                           return Align(
+                                             alignment: AlignmentDirectional(0.0, -1.0),
+                                             child: InkWell(
+                                               splashColor: Colors.transparent,
+                                               focusColor: Colors.transparent,
+                                               hoverColor: Colors.transparent,
+                                               highlightColor: Colors.transparent,
+                                               onTap: () async {
+                                                 context.pushNamed(
+                                                   PharmaViewWidget.routeName,
+                                                   queryParameters: {
+                                                     'pharmacyId': docId,
+                                                     'name': name,
+                                                     'address': address,
+                                                     'phone': phone,
+                                                     'hours': hours,
+                                                     'isGuard': isGuard.toString(),
+                                                     'photoUrl': photoUrl,
+                                                   },
+                                                 );
+                                               },
+                                               child: Material(
+                                                 color: Colors.transparent,
+                                                 elevation: 2.0,
+                                                 shape: RoundedRectangleBorder(
+                                                   borderRadius: BorderRadius.circular(12.0),
+                                                 ),
+                                                 child: Container(
+                                                   width: double.infinity,
+                                                   height: 84.0,
+                                                   decoration: BoxDecoration(
+                                                     color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                     borderRadius: BorderRadius.circular(12.0),
+                                                     border: Border.all(
+                                                       color: isGuard ? Color(0xFF19BF82).withOpacity(0.3) : FlutterFlowTheme.of(context).alternate,
+                                                       width: isGuard ? 1.5 : 1.0,
+                                                     ),
+                                                   ),
+                                                   child: Padding(
+                                                     padding: EdgeInsets.all(10.0),
+                                                     child: Row(
+                                                       children: [
+                                                         Container(
+                                                           width: 52.0,
+                                                           height: 52.0,
+                                                           decoration: BoxDecoration(
+                                                             color: Color(0x2219BF82),
+                                                             borderRadius: BorderRadius.circular(12.0),
+                                                           ),
+                                                           child: photoUrl.isNotEmpty
+                                                               ? ClipRRect(
+                                                                   borderRadius: BorderRadius.circular(12.0),
+                                                                   child: Image.network(
+                                                                     photoUrl,
+                                                                     fit: BoxFit.cover,
+                                                                     errorBuilder: (ctx, err, stack) => Icon(Icons.local_pharmacy_rounded, color: Color(0xFF19BF82), size: 28.0),
+                                                                   ),
+                                                                 )
+                                                               : Icon(Icons.local_pharmacy_rounded, color: Color(0xFF19BF82), size: 28.0),
+                                                         ),
+                                                         SizedBox(width: 12.0),
+                                                         Expanded(
+                                                           child: Column(
+                                                             mainAxisAlignment: MainAxisAlignment.center,
+                                                             crossAxisAlignment: CrossAxisAlignment.start,
+                                                             children: [
+                                                               Row(
+                                                                 children: [
+                                                                   Expanded(
+                                                                     child: Text(
+                                                                       name,
+                                                                       maxLines: 1,
+                                                                       overflow: TextOverflow.ellipsis,
+                                                                       style: FlutterFlowTheme.of(context).labelLarge.override(
+                                                                         font: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                                                                         color: FlutterFlowTheme.of(context).primaryText,
+                                                                         fontSize: 14.0,
+                                                                       ),
+                                                                     ),
+                                                                   ),
+                                                                   Icon(Icons.verified_rounded, color: Color(0xFF19BF82), size: 16.0),
+                                                                 ],
+                                                               ),
+                                                               SizedBox(height: 4.0),
+                                                               Row(
+                                                                 children: [
+                                                                   Container(
+                                                                     decoration: BoxDecoration(
+                                                                       color: isGuard ? Color(0x2319BF82) : Color(0x23D2BB39),
+                                                                       borderRadius: BorderRadius.circular(6.0),
+                                                                     ),
+                                                                     padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                                                                     child: Text(
+                                                                       isGuard ? '🟢 De Garde 24h' : address,
+                                                                       style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                         font: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                                                                         color: isGuard ? Color(0xFF19BF82) : Color(0xFFB8A600),
+                                                                         fontSize: 10.0,
+                                                                       ),
+                                                                     ),
+                                                                   ),
+                                                                   SizedBox(width: 6.0),
+                                                                   Text('•', style: TextStyle(color: FlutterFlowTheme.of(context).secondaryText)),
+                                                                   SizedBox(width: 6.0),
+                                                                   Expanded(
+                                                                     child: Text(
+                                                                       hours,
+                                                                       maxLines: 1,
+                                                                       overflow: TextOverflow.ellipsis,
+                                                                       style: FlutterFlowTheme.of(context).bodySmall.override(
+                                                                         font: GoogleFonts.outfit(),
+                                                                         color: FlutterFlowTheme.of(context).secondaryText,
+                                                                         fontSize: 11.0,
+                                                                       ),
+                                                                     ),
+                                                                   ),
+                                                                 ],
+                                                               ),
+                                                             ],
+                                                           ),
+                                                         ),
+                                                         // Bouton d'appel rapide
+                                                         IconButton(
+                                                           icon: Icon(Icons.phone_rounded, color: Color(0xFF165AC5), size: 20.0),
+                                                           tooltip: 'Appeler',
+                                                           onPressed: () async {
+                                                             await launchURL('tel:' + phone);
+                                                           },
+                                                         ),
+                                                         // Bouton WhatsApp rapide
+                                                         IconButton(
+                                                           icon: Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF25D366), size: 20.0),
+                                                           tooltip: 'WhatsApp',
+                                                           onPressed: () async {
+                                                             final clean = phone.replaceAll(RegExp(r'[^0-9]'), '');
+                                                             await launchURL('https://wa.me/' + clean);
+                                                           },
+                                                         ),
+                                                       ],
+                                                     ),
+                                                   ),
+                                                 ),
+                                               ),
+                                             ),
+                                           );
+                                         }).toList().divide(SizedBox(height: 14.0)),
+                                       );
+                                     },
+                                   ),
                                 ].divide(SizedBox(height: 24.0)),
                               ),
                             ),

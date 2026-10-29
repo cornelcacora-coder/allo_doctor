@@ -214,11 +214,11 @@ class _DmpWidgetState extends State<DmpWidget> with TickerProviderStateMixin {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-                  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                  'https://ui-avatars.com/api/?name=Dr+A&background=1a6b3c&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Dr+B&background=0d47a1&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Dr+C&background=6a1b9a&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Dr+D&background=c62828&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Dr+E&background=e65100&color=fff&size=150',
                 ].map((url) => InkWell(
                   onTap: () => Navigator.pop(dialogCtx, url),
                   child: ClipOval(

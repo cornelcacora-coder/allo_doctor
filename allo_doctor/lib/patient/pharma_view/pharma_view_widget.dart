@@ -1,5 +1,6 @@
-import '/components/product_card_widget.dart';
+﻿import '/components/product_card_widget.dart';
 import '/components/stateitem_widget.dart';
+import '/components/pharmacy_chat_sheet.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -14,10 +15,29 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'pharma_view_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 export 'pharma_view_model.dart';
 
 class PharmaViewWidget extends StatefulWidget {
-  const PharmaViewWidget({super.key});
+  const PharmaViewWidget({
+    super.key,
+    this.pharmacyId,
+    this.name,
+    this.address,
+    this.phone,
+    this.hours,
+    this.isGuard = false,
+    this.photoUrl,
+  });
+
+  final String? pharmacyId;
+  final String? name;
+  final String? address;
+  final String? phone;
+  final String? hours;
+  final bool isGuard;
+  final String? photoUrl;
 
   static String routeName = 'PharmaView';
   static String routePath = '/pharmaView';
@@ -85,7 +105,7 @@ class _PharmaViewWidgetState extends State<PharmaViewWidget> {
                     ),
                   ),
                   Text(
-                    'DJAGGER',
+                    widget.name ?? 'Pharmacie',
                     style: FlutterFlowTheme.of(context).titleLarge.override(
                           font: GoogleFonts.outfit(
                             fontWeight: FontWeight.w500,
@@ -214,7 +234,7 @@ class _PharmaViewWidgetState extends State<PharmaViewWidget> {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              'DJAGGER',
+                              widget.name ?? 'Pharmacie Partenaire',
                               style: FlutterFlowTheme.of(context)
                                   .headlineSmall
                                   .override(
@@ -335,66 +355,112 @@ class _PharmaViewWidgetState extends State<PharmaViewWidget> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Container(
-                                  width: 150.0,
-                                  height: 40.0,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        FlutterFlowTheme.of(context).primary,
-                                        Color(0xFF16C583)
-                                      ],
-                                      stops: [0.0, 1.0],
-                                      begin: AlignmentDirectional(1.0, -1.0),
-                                      end: AlignmentDirectional(-1.0, 1.0),
-                                    ),
-                                    borderRadius: BorderRadius.circular(5.0),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Contacter',
-                                        style: FlutterFlowTheme.of(context)
-                                            .labelSmall
-                                            .override(
-                                              font: GoogleFonts.outfit(
-                                                fontWeight: FontWeight.w600,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelSmall
-                                                        .fontStyle,
-                                              ),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryBackground,
-                                              fontSize: 12.0,
-                                              letterSpacing: 0.0,
-                                              fontWeight: FontWeight.w600,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelSmall
-                                                      .fontStyle,
-                                              lineHeight: 1.3,
-                                            ),
+                                InkWell(
+                                  onTap: () async {
+                                    final p = (widget.phone ?? '').replaceAll(' ', '');
+                                    if (p.isNotEmpty) {
+                                      final uri = Uri.parse('tel:$p');
+                                      if (await canLaunchUrl(uri)) await launchUrl(uri);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                        content: Text('Numéro de téléphone non renseigné pour cette pharmacie'),
+                                      ));
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 150.0,
+                                    height: 40.0,
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          FlutterFlowTheme.of(context).primary,
+                                          Color(0xFF16C583)
+                                        ],
+                                        stops: [0.0, 1.0],
+                                        begin: AlignmentDirectional(1.0, -1.0),
+                                        end: AlignmentDirectional(-1.0, 1.0),
                                       ),
-                                    ].divide(SizedBox(width: 10.0)),
+                                      borderRadius: BorderRadius.circular(5.0),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.phone_in_talk, color: Colors.white, size: 16.0),
+                                        SizedBox(width: 6.0),
+                                        Text(
+                                          'Appeler',
+                                          style: FlutterFlowTheme.of(context)
+                                              .labelSmall
+                                              .override(
+                                                font: GoogleFonts.outfit(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontStyle: FlutterFlowTheme.of(context).labelSmall.fontStyle,
+                                                ),
+                                                color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                fontSize: 12.0,
+                                                letterSpacing: 0.0,
+                                                fontWeight: FontWeight.w600,
+                                                lineHeight: 1.3,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 FlutterFlowIconButton(
                                   borderRadius: 8.0,
                                   buttonSize: 40.0,
-                                  fillColor: Colors.transparent,
+                                  fillColor: Color(0xFF25D366).withOpacity(0.12),
                                   icon: FaIcon(
                                     FontAwesomeIcons.whatsapp,
+                                    color: Color(0xFF25D366),
                                     size: 26.0,
                                   ),
-                                  onPressed: () {
-                                    print('IconButton pressed ...');
+                                  onPressed: () async {
+                                    final p = (widget.phone ?? '').replaceAll(' ', '').replaceAll('+', '');
+                                    if (p.isNotEmpty) {
+                                      final uri = Uri.parse('https://wa.me/$p?text=Bonjour%20${Uri.encodeComponent(widget.name ?? "Pharmacie")}%20je%20souhaite%20des%20informations%20sur%20un%20médicament');
+                                      if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                        content: Text('Numéro WhatsApp non renseigné pour cette pharmacie'),
+                                      ));
+                                    }
                                   },
                                 ),
-                              ].divide(SizedBox(width: 16.0)),
+                                // Bouton messagerie interne patient vs pharmacien
+                                FlutterFlowIconButton(
+                                  borderRadius: 8.0,
+                                  buttonSize: 40.0,
+                                  fillColor: Color(0xFF14563C).withOpacity(0.10),
+                                  icon: Icon(
+                                    Icons.chat_rounded,
+                                    color: Color(0xFF14563C),
+                                    size: 22.0,
+                                  ),
+                                  onPressed: () async {
+                                    final pharmId = widget.pharmacyId ?? '';
+                                    if (pharmId.isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                        content: Text('Identifiant pharmacie introuvable.'),
+                                      ));
+                                      return;
+                                    }
+                                    await showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (ctx) => Padding(
+                                        padding: MediaQuery.viewInsetsOf(ctx),
+                                        child: PharmacyChatSheet(
+                                          pharmacyId: pharmId,
+                                          pharmacyName: widget.name ?? 'Pharmacie',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),                              ].divide(SizedBox(width: 16.0)),
                             ),
                           ),
                         ),
@@ -565,7 +631,38 @@ class _PharmaViewWidgetState extends State<PharmaViewWidget> {
                                     ),
                                   ),
                                 ),
-                              ].divide(SizedBox(width: 16.0)),
+                                // Bouton messagerie interne patient vs pharmacien
+                                FlutterFlowIconButton(
+                                  borderRadius: 8.0,
+                                  buttonSize: 40.0,
+                                  fillColor: Color(0xFF14563C).withOpacity(0.10),
+                                  icon: Icon(
+                                    Icons.chat_rounded,
+                                    color: Color(0xFF14563C),
+                                    size: 22.0,
+                                  ),
+                                  onPressed: () async {
+                                    final pharmId = widget.pharmacyId ?? '';
+                                    if (pharmId.isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                        content: Text('Identifiant pharmacie introuvable.'),
+                                      ));
+                                      return;
+                                    }
+                                    await showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (ctx) => Padding(
+                                        padding: MediaQuery.viewInsetsOf(ctx),
+                                        child: PharmacyChatSheet(
+                                          pharmacyId: pharmId,
+                                          pharmacyName: widget.name ?? 'Pharmacie',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),                              ].divide(SizedBox(width: 16.0)),
                             ),
                           ),
                         ),
@@ -653,107 +750,119 @@ class _PharmaViewWidgetState extends State<PharmaViewWidget> {
                         wrapped: true,
                       ),
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: GridView(
-                          padding: EdgeInsets.zero,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 10.0,
-                            mainAxisSpacing: 10.0,
-                            childAspectRatio: 0.8,
-                          ),
-                          shrinkWrap: true,
-                          scrollDirection: Axis.vertical,
-                          children: [
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel1,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
+                    // Grille des produits réels de la pharmacie
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+                      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('pharmacies')
+                            .doc(widget.pharmacyId ?? '')
+                            .collection('products')
+                            .snapshots(),
+                        builder: (context, snap) {
+                          final docs = snap.data?.docs ?? [];
+                          final searchText = _model.textController?.text.trim().toLowerCase() ?? '';
+                          final filtered = searchText.isEmpty
+                              ? docs
+                              : docs.where((d) {
+                                  final n = (d.data()['name'] as String? ?? '').toLowerCase();
+                                  final c = (d.data()['category'] as String? ?? '').toLowerCase();
+                                  return n.contains(searchText) || c.contains(searchText);
+                                }).toList();
+
+                          if (snap.connectionState == ConnectionState.waiting) {
+                            return Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(32.0),
+                                child: CircularProgressIndicator(
+                                  color: FlutterFlowTheme.of(context).primary,
                                 ),
                               ),
-                            ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel2,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
+                            );
+                          }
+
+                          if (filtered.isEmpty) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(vertical: 32.0),
+                              child: Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.medication_outlined, size: 56, color: Color(0xFF19BF82).withOpacity(0.4)),
+                                    SizedBox(height: 12.0),
+                                    Text(
+                                      searchText.isEmpty
+                                          ? 'Aucun produit disponible pour le moment'
+                                          : 'Aucun résultat pour "$searchText"',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.outfit(
+                                        color: FlutterFlowTheme.of(context).secondaryText,
+                                        fontSize: 14.0,
+                                      ),
+                                    ),
+                                    SizedBox(height: 6.0),
+                                    Text(
+                                      "Contactez la pharmacie pour vérifier la disponibilité d'un médicament.",
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.outfit(
+                                        color: FlutterFlowTheme.of(context).secondaryText,
+                                        fontSize: 12.0,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            );
+                          }
+
+                          return GridView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10.0,
+                              mainAxisSpacing: 10.0,
+                              childAspectRatio: 0.8,
                             ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel3,
-                                updateCallback: () => safeSetState(() {}),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, i) {
+                              final data = filtered[i].data();
+                              final pName = (data['name'] as String?) ?? 'Produit';
+                              final pPrice = (data['price'] ?? data['prix'] ?? '0').toString();
+                              final pCover = (data['image_url'] as String?) ?? (data['cover'] as String?) ?? '';
+                              final pCategory = (data['category'] as String?) ?? (data['categorie'] as String?) ?? 'Pharmacie';
+                              final pDescription = (data['description'] as String?) ?? (data['notice'] as String?) ?? '';
+                              final pId = filtered[i].id;
+                              return InkWell(
+                                splashColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () {
+                                  context.pushNamed(
+                                    ProductViewWidget.routeName,
+                                    queryParameters: {
+                                      'productId': pId,
+                                      'pharmacyId': widget.pharmacyId ?? '',
+                                      'name': pName,
+                                      'price': pPrice,
+                                      'cover': pCover,
+                                      'category': pCategory,
+                                    },
+                                  );
+                                },
                                 child: ProductCardWidget(
                                   isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
+                                  category: pCategory,
+                                  name: pName,
+                                  price: pPrice,
+                                  cover: pCover,
                                 ),
-                              ),
-                            ),
-                            InkWell(
-                              splashColor: Colors.transparent,
-                              focusColor: Colors.transparent,
-                              hoverColor: Colors.transparent,
-                              highlightColor: Colors.transparent,
-                              onTap: () async {
-                                context.pushNamed(ProductViewWidget.routeName);
-                              },
-                              child: wrapWithModel(
-                                model: _model.productCardModel4,
-                                updateCallback: () => safeSetState(() {}),
-                                child: ProductCardWidget(
-                                  isFavorite: false,
-                                  category: 'En Stock',
-                                  name: 'Doliprane 1000',
-                                  price: '2300',
-                                  cover:
-                                      'https://storage.googleapis.com/flutterflow-io-6f20.appspot.com/projects/trendify-fashion-app-template-3i937k/assets/3ncc7ekh1vlh/images.jpg',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
                     Container(

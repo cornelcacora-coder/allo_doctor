@@ -1,4 +1,4 @@
-import '/components/patient_card_widget.dart';
+﻿import '/components/patient_card_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -60,7 +60,7 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).warning,
+          backgroundColor: const Color(0xFF0F766E),
           automaticallyImplyLeading: false,
           title: Column(
             mainAxisSize: MainAxisSize.max,
@@ -176,9 +176,8 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
                       final data = doc.data();
                       final clinicId = data['clinic_uid'] as String?;
                       final doctorId = data['doctor_uid'] as String?;
-                      return clinicId == currentUserUid ||
-                          doctorId == currentUserUid ||
-                          (clinicId == null && doctorId == null);
+                      return (clinicId != null && clinicId == currentUserUid) ||
+                          (doctorId != null && doctorId == currentUserUid);
                     }).toList() ?? [];
                     final displayedDocs = _searchQuery.isEmpty ? docs : docs.where((doc) {
                       final data = doc.data();
@@ -267,6 +266,7 @@ class _ClinicPatientsWidgetState extends State<ClinicPatientsWidget> {
                   },
                 ),
               ),
+              const SizedBox(height: 32.0),
             ],
           ),
         ),

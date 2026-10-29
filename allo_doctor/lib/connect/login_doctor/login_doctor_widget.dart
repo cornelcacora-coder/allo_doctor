@@ -60,7 +60,7 @@ class _LoginDoctorWidgetState extends State<LoginDoctorWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: Color(0xFF14563C),
+        backgroundColor: Color(0xFF0F766E),
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).primary,
           automaticallyImplyLeading: false,
@@ -127,28 +127,24 @@ class _LoginDoctorWidgetState extends State<LoginDoctorWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(32.0),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(
-                              sigmaX: 10.0,
-                              sigmaY: 10.0,
-                            ),
-                            child: Container(
-                              width: 100.0,
-                              height: 100.0,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: Image.asset(
-                                    'assets/images/Logo_Mini-removebg-preview.png',
-                                  ).image,
-                                ),
-                                borderRadius: BorderRadius.circular(32.0),
-                                shape: BoxShape.rectangle,
+                        Container(
+                          width: 80.0,
+                          height: 80.0,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 14.0,
+                                offset: const Offset(0, 4),
                               ),
-                              alignment: AlignmentDirectional(0.0, 0.0),
-                            ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(12.0),
+                          child: Image.asset(
+                            'assets/images/Logo_Mini-removebg-preview.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                         Column(
@@ -295,7 +291,7 @@ class _LoginDoctorWidgetState extends State<LoginDoctorWidget> {
                                                               .bodyMedium
                                                               .fontStyle,
                                                     ),
-                                                    color: Color(0xFF14563C),
+                                                    color: Color(0xFF0F766E),
                                                     letterSpacing: 0.0,
                                                     fontWeight: FontWeight.bold,
                                                     fontStyle:
@@ -374,7 +370,7 @@ class _LoginDoctorWidgetState extends State<LoginDoctorWidget> {
                           ),
                         ),
                         Text(
-                          'Se connecter · Particulier',
+                          'Se connecter · Médecin',
                           textAlign: TextAlign.start,
                           style: FlutterFlowTheme.of(context)
                               .titleMedium

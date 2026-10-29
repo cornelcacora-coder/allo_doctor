@@ -117,32 +117,41 @@ class _PatientPrescriptionsWidgetState extends State<PatientPrescriptionsWidget>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF16C583).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(10),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF16C583).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.qr_code_2_rounded, color: Color(0xFF16C583), size: 22),
                     ),
-                    child: const Icon(Icons.qr_code_2_rounded, color: Color(0xFF16C583), size: 22),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Mes Ordonnances & Documents',
-                        style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Mes Ordonnances & Documents',
+                            style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Classées & sécurisées par QR Code',
+                            style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey.shade600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Classées & sécurisées par QR Code',
-                        style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey.shade600),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () => _showPatientQrDialog(context),
                 borderRadius: BorderRadius.circular(8),
@@ -298,14 +307,21 @@ class _PatientPrescriptionsWidgetState extends State<PatientPrescriptionsWidget>
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        'Dr. $doctorName',
-                                        style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold),
+                                      Expanded(
+                                        child: Text(
+                                          'Dr. $doctorName',
+                                          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                       if (dateStr.isNotEmpty)
-                                        Text(
-                                          dateStr,
-                                          style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey.shade500),
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 8),
+                                          child: Text(
+                                            dateStr,
+                                            style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey.shade500),
+                                          ),
                                         ),
                                     ],
                                   ),

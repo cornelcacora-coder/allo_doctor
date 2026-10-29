@@ -1,3 +1,4 @@
+import 'safe_product_image.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -86,16 +87,11 @@ class _ProductCardWidgetState extends State<ProductCardWidget> {
               child: Stack(
                 alignment: AlignmentDirectional(-1.0, -1.0),
                 children: [
-                  CachedNetworkImage(
-                    fadeInDuration: Duration(milliseconds: 0),
-                    fadeOutDuration: Duration(milliseconds: 0),
-                    imageUrl: valueOrDefault<String>(
-                      widget!.cover,
-                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-LQ2__WBYR4lmrQJSShFy0IdkTc_QyeR1cVP4GuOPcTjSJ5aI2sHD2HI&s=10',
-                    ),
+                  SafeProductImage(
+                    imageUrl: widget?.cover,
+                    width: double.infinity,
                     height: 140.0,
                     fit: BoxFit.cover,
-                    alignment: Alignment(0.0, 0.0),
                   ),
                   Align(
                     alignment: AlignmentDirectional(1.0, -1.0),

@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 class SignUpModel extends FlutterFlowModel<SignUpWidget> {
   ///  State fields for stateful widgets in this page.
 
-  // NOM COMPLET
+  // NOM COMPLET / NOM ETABLISSEMENT / NOM OFFICINE
   FocusNode? textFieldFocusNode1;
   TextEditingController? textController1;
   String? Function(BuildContext, String?)? textController1Validator;
@@ -35,22 +35,38 @@ class SignUpModel extends FlutterFlowModel<SignUpWidget> {
   TextEditingController? textController2;
   String? Function(BuildContext, String?)? textController2Validator;
 
-  // VILLE
+  // VILLE / ADRESSE
   FocusNode? textFieldFocusNode3;
   TextEditingController? textController3;
   String? Function(BuildContext, String?)? textController3Validator;
 
-  // SPECIALITE (praticiens uniquement : medecin, pharmacie, clinique)
+  // SPECIALITE (Médecin) ou TYPE D'ETABLISSEMENT (Clinique) ou TYPE DE SERVICE (Pharmacie)
   FocusNode? specialtyFocusNode;
   TextEditingController? specialtyController;
   String? Function(BuildContext, String?)? specialtyControllerValidator;
 
-  // NUMERO D'ORDRE / LICENCE (praticiens uniquement)
+  // NUMERO D'ORDRE (CNOM, CNOP) ou NUMERO D'AUTORISATION / RCCM (Clinique)
   FocusNode? docNumberFocusNode;
   TextEditingController? docNumberController;
   String? Function(BuildContext, String?)? docNumberControllerValidator;
 
-  // SEXE
+  // MEDECIN : LIEU D'EXERCICE / HOPITAL DE RATTACHEMENT
+  FocusNode? workplaceFocusNode;
+  TextEditingController? workplaceController;
+
+  // CLINIQUE / PHARMACIE : DIRECTEUR MEDICAL / MEDECIN CHEF / PHARMACIEN TITULAIRE
+  FocusNode? directorFocusNode;
+  TextEditingController? directorController;
+
+  // CLINIQUE : SERVICES PRINCIPAUX
+  FocusNode? servicesFocusNode;
+  TextEditingController? servicesController;
+
+  // CLINIQUE : CAPACITE EN LITS
+  FocusNode? bedsCountFocusNode;
+  TextEditingController? bedsCountController;
+
+  // SEXE (Patients et Médecins uniquement)
   FormFieldController<String>? radioButtonValueController;
 
   @override
@@ -80,6 +96,18 @@ class SignUpModel extends FlutterFlowModel<SignUpWidget> {
 
     docNumberFocusNode?.dispose();
     docNumberController?.dispose();
+
+    workplaceFocusNode?.dispose();
+    workplaceController?.dispose();
+
+    directorFocusNode?.dispose();
+    directorController?.dispose();
+
+    servicesFocusNode?.dispose();
+    servicesController?.dispose();
+
+    bedsCountFocusNode?.dispose();
+    bedsCountController?.dispose();
   }
 
   /// Additional helper methods.

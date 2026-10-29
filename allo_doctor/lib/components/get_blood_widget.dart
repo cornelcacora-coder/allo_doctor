@@ -405,25 +405,42 @@ class _GetBloodWidgetState extends State<GetBloodWidget> {
                     hoverColor: Colors.transparent,
                     highlightColor: Colors.transparent,
                     onTap: () async {
+                      // Vérification : groupe sanguin sélectionné ?
+                      if (_model.choiceChipsValue == null || _model.choiceChipsValue!.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Veuillez sélectionner un groupe sanguin.'),
+                            backgroundColor: Color(0xFFCC0F0F),
+                          ),
+                        );
+                        return;
+                      }
+                      // Paiement mobile — fonctionnalité à venir
                       await showDialog(
                         context: context,
                         builder: (alertDialogContext) {
                           return AlertDialog(
-                            title: Text('Confirmer le paiement '),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            title: Row(
+                              children: [
+                                Icon(Icons.info_outline_rounded, color: Color(0xFFCC0F0F)),
+                                SizedBox(width: 8),
+                                Text('Bientôt disponible'),
+                              ],
+                            ),
                             content: Text(
-                                'Confirmez le paiement dans votre téléphone afin de terminer la reservation.'),
+                              'Le paiement Mobile Money sera disponible très prochainement.\n\n'
+                              'En attendant, contactez directement la banque de sang via WhatsApp pour finaliser votre réservation.',
+                            ),
                             actions: [
                               TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(alertDialogContext),
-                                child: Text('Ok'),
+                                onPressed: () => Navigator.pop(alertDialogContext),
+                                child: Text('Compris', style: TextStyle(color: Color(0xFFCC0F0F))),
                               ),
                             ],
                           );
                         },
                       );
-
-                      context.pushNamed(HomeHubWidget.routeName);
                     },
                     child: Container(
                       width: double.infinity,

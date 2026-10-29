@@ -1,4 +1,4 @@
-import '/flutter_flow/flutter_flow_button_tabbar.dart';
+﻿import '/flutter_flow/flutter_flow_button_tabbar.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -127,7 +127,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: FlutterFlowTheme.of(context).warning,
+              backgroundColor: const Color(0xFF0F766E),
             ),
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
             child: const Text('Ajouter', style: TextStyle(color: Colors.white)),
@@ -214,11 +214,11 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-                  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-                  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                  'https://ui-avatars.com/api/?name=Cl+A&background=1a6b3c&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Cl+B&background=0d47a1&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Cl+C&background=6a1b9a&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Cl+D&background=c62828&color=fff&size=150',
+                  'https://ui-avatars.com/api/?name=Cl+E&background=e65100&color=fff&size=150',
                 ].map((url) => InkWell(
                   onTap: () => Navigator.pop(dialogCtx, url),
                   child: ClipOval(
@@ -241,7 +241,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: FlutterFlowTheme.of(context).warning,
+              backgroundColor: const Color(0xFF0F766E),
             ),
             onPressed: () => Navigator.pop(dialogCtx, controller.text.trim()),
             child: const Text("Enregistrer", style: TextStyle(color: Colors.white)),
@@ -454,7 +454,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
             key: scaffoldKey,
             backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
             appBar: AppBar(
-              backgroundColor: FlutterFlowTheme.of(context).warning,
+              backgroundColor: const Color(0xFF0F766E),
               automaticallyImplyLeading: false,
               title: Column(
                 mainAxisSize: MainAxisSize.max,
@@ -537,7 +537,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                         shape: BoxShape.circle,
                                         color: const Color(0x34D2C239),
                                         border: Border.all(
-                                          color: FlutterFlowTheme.of(context).warning,
+                                          color: const Color(0xFF0F766E),
                                           width: 1.5,
                                         ),
                                       ),
@@ -550,7 +550,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                           placeholder: Container(
                                             width: 55.0,
                                             height: 55.0,
-                                            color: FlutterFlowTheme.of(context).warning,
+                                            color: const Color(0xFF0F766E),
                                             alignment: Alignment.center,
                                             child: Text(
                                               currentPatientName.trim().isNotEmpty
@@ -572,7 +572,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                         width: 22.0,
                                         height: 22.0,
                                         decoration: BoxDecoration(
-                                          color: FlutterFlowTheme.of(context).warning,
+                                          color: const Color(0xFF0F766E),
                                           shape: BoxShape.circle,
                                           border: Border.all(
                                             color: FlutterFlowTheme.of(context).secondaryBackground,
@@ -787,7 +787,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                             children: [
                                               Icon(
                                                 Icons.verified_user_outlined,
-                                                color: FlutterFlowTheme.of(context).warning,
+                                                color: const Color(0xFF0F766E),
                                                 size: 18.0,
                                               ),
                                               Column(
@@ -907,7 +907,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                                         ),
                                                     enabledBorder: UnderlineInputBorder(
                                                       borderSide: BorderSide(
-                                                        color: FlutterFlowTheme.of(context).warning,
+                                                        color: const Color(0xFF0F766E),
                                                         width: 1.0,
                                                       ),
                                                     ),
@@ -936,7 +936,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                                         ),
                                                     enabledBorder: UnderlineInputBorder(
                                                       borderSide: BorderSide(
-                                                        color: FlutterFlowTheme.of(context).warning,
+                                                        color: const Color(0xFF0F766E),
                                                         width: 1.0,
                                                       ),
                                                     ),
@@ -965,7 +965,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                                         ),
                                                     enabledBorder: UnderlineInputBorder(
                                                       borderSide: BorderSide(
-                                                        color: FlutterFlowTheme.of(context).warning,
+                                                        color: const Color(0xFF0F766E),
                                                         width: 1.0,
                                                       ),
                                                     ),
@@ -994,7 +994,7 @@ class _ClinicDMPWidgetState extends State<ClinicDMPWidget> with TickerProviderSt
                                                         ),
                                                     enabledBorder: UnderlineInputBorder(
                                                       borderSide: BorderSide(
-                                                        color: FlutterFlowTheme.of(context).warning,
+                                                        color: const Color(0xFF0F766E),
                                                         width: 1.0,
                                                       ),
                                                     ),

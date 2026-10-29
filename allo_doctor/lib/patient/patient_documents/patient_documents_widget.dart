@@ -452,6 +452,76 @@ class _PatientDocumentsWidgetState extends State<PatientDocumentsWidget>
                               style: GoogleFonts.outfit(fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
                             ),
 
+                          if (data['pharmacy_name'] != null) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFF86EFAC)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.local_pharmacy_rounded, color: Color(0xFF15803D), size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Pharmacie : ${data['pharmacy_name']}',
+                                          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: const Color(0xFF0F172A)),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          status == 'in_preparation'
+                                              ? 'Préparation en cours...'
+                                              : (status == 'out_for_delivery'
+                                                  ? 'Livreur en route 🛵'
+                                                  : (status == 'ready' ? 'Prêt en officine 🏪' : 'Transmise à la pharmacie')),
+                                          style: GoogleFonts.outfit(fontSize: 11, color: const Color(0xFF15803D)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Quick Call button
+                                  InkWell(
+                                    onTap: () async {
+                                      final phone = (data['pharmacy_phone'] as String?) ?? '+242 06 719 9098';
+                                      await launchURL('tel:$phone');
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF165AC5),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(Icons.phone, size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  // Quick WhatsApp button
+                                  InkWell(
+                                    onTap: () async {
+                                      final phone = (data['pharmacy_phone'] as String? ?? '242067199098').replaceAll(RegExp(r'[^0-9]'), '');
+                                      await launchURL('https://wa.me/$phone');
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF25D366),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Icon(Icons.chat_bubble_outline, size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
                           const SizedBox(height: 14),
                           // Bouton d'action
                           SizedBox(

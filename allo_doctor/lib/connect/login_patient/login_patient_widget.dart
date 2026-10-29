@@ -143,31 +143,30 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
-                        Color(0xFF09392D),
-                        Color(0xFF0C5241),
-                        Color(0xFF107058),
+                        Color(0xFF0F766E),
+                        Color(0xFF14B8A6),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(32.0),
                       bottomRight: Radius.circular(32.0),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Color(0xFF09392D).withOpacity(0.20),
+                        color: const Color(0xFF0F766E).withOpacity(0.25),
                         blurRadius: 16.0,
-                        offset: Offset(0, 6),
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 24.0),
+                      padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -179,16 +178,16 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
                                 onTap: () => context.safePop(),
                                 borderRadius: BorderRadius.circular(12.0),
                                 child: Container(
-                                  padding: EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.all(8.0),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.12),
+                                    color: Colors.white.withOpacity(0.18),
                                     borderRadius: BorderRadius.circular(12.0),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.20),
+                                      color: Colors.white.withOpacity(0.25),
                                       width: 1.0,
                                     ),
                                   ),
-                                  child: Icon(
+                                  child: const Icon(
                                     Icons.arrow_back_rounded,
                                     color: Colors.white,
                                     size: 20.0,
@@ -196,20 +195,20 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
                                 ),
                               ),
                               Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFF10B981).withOpacity(0.25),
+                                  color: Colors.white.withOpacity(0.20),
                                   borderRadius: BorderRadius.circular(20.0),
                                   border: Border.all(
-                                    color: Color(0xFF10B981).withOpacity(0.50),
+                                    color: Colors.white.withOpacity(0.30),
                                     width: 1.0,
                                   ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.person_rounded, color: Colors.white, size: 14.0),
-                                    SizedBox(width: 4.0),
+                                    const Icon(Icons.person_rounded, color: Colors.white, size: 14.0),
+                                    const SizedBox(width: 4.0),
                                     Text(
                                       'Espace Patient',
                                       style: GoogleFonts.outfit(
@@ -223,34 +222,35 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 16.0),
+                          const SizedBox(height: 14.0),
 
-                          // Logo miniature & titre
+                          // Médaillon Logo Blanc lumineux
                           Container(
-                            width: 62.0,
-                            height: 62.0,
+                            width: 72.0,
+                            height: 72.0,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(18.0),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.20),
-                                width: 1.2,
-                              ),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Image.asset(
-                                'assets/images/Logo_Mini-removebg-preview.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.medical_services_rounded,
-                                  color: Colors.white,
-                                  size: 30.0,
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.14),
+                                  blurRadius: 12.0,
+                                  offset: const Offset(0, 4),
                                 ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(10.0),
+                            child: Image.asset(
+                              'assets/images/Logo_Mini-removebg-preview.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.medical_services_rounded,
+                                color: Color(0xFF0F766E),
+                                size: 32.0,
                               ),
                             ),
                           ),
-                          SizedBox(height: 10.0),
+                          const SizedBox(height: 10.0),
                           Text(
                             'Bon retour parmi nous',
                             style: GoogleFonts.outfit(
@@ -260,14 +260,14 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
                               letterSpacing: -0.3,
                             ),
                           ),
-                          SizedBox(height: 3.0),
+                          const SizedBox(height: 3.0),
                           Text(
                             'Connectez-vous pour gérer vos consultations et soins',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.outfit(
                               fontSize: 13.0,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withOpacity(0.92),
                             ),
                           ),
                         ],

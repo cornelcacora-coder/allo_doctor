@@ -8,7 +8,7 @@ import {
   CheckCircle,
   Cloud
 } from 'lucide-react';
-import { collection, onSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { useAuth } from '../../context/AuthContext';
 import { normalizePractitioner, normalizeTicket, normalizeUser } from '../../utils/normalize';
@@ -96,27 +96,29 @@ export const AdminView = ({ subTab = 'admin_home', setSubTab }) => {
 
   // Actions d'agrément (Synchronisées en temps réel avec Firestore)
   const handleValidatePractitioner = async (id, name) => {
-    setPractitioners(prev => prev.map(p => p.id === id ? { ...p, status: 'validé' } : p));
+    setPractitioners(prev => prev.map(p => p.id === id ? { ...p, status: 'validé', isValidated: true } : p));
     showToast(`✓ Le dossier de ${name} a été certifié et activé sur le réseau !`);
     try {
       await updateDoc(doc(db, 'practitioners', id), { 
         status: 'validé',
+        isValidated: true,
         validatedAt: new Date().toISOString()
       });
     } catch (err) {
       console.log('Action enregistrée localement (Firestore initialisé):', err.message);
     }
-    // L'agrément validé active l'espace métier du praticien : le role du
+    // L'agrément validé active l'espace métier du praticien : le role et le statut du
     // compte lie au dossier (id = uid pour les inscriptions depuis l'app).
     await syncPractitionerRole(id, 'validé');
   };
 
   const handleRejectPractitioner = async (id, name, reason) => {
-    setPractitioners(prev => prev.map(p => p.id === id ? { ...p, status: 'rejeté', rejectionReason: reason } : p));
+    setPractitioners(prev => prev.map(p => p.id === id ? { ...p, status: 'rejeté', isValidated: false, rejectionReason: reason } : p));
     showToast(`✕ Demande de ${name} rejetée : ${reason || 'Non-conformité réglementaire'}`);
     try {
       await updateDoc(doc(db, 'practitioners', id), { 
         status: 'rejeté', 
+        isValidated: false,
         rejectionReason: reason || 'Non-conformité réglementaire',
         rejectedAt: new Date().toISOString()
       });
@@ -128,10 +130,9 @@ export const AdminView = ({ subTab = 'admin_home', setSubTab }) => {
   };
 
   /**
-   * Aligne le role du compte lie au dossier d'agrement.
-   * - validation  -> role = type du dossier (medecin / pharmacie / clinique)
-   * - rejet       -> retour au role patient
-   * Les dossiers de demonstration (ids non liés a un compte) sont ignores.
+   * Aligne le role et le statut du compte lie au dossier d'agrement.
+   * - validation  -> role = type du dossier (medecin / pharmacie / clinique), status = 'validé', isValidated = true
+   * - rejet       -> retour au role patient, status = 'rejeté', isValidated = false
    */
   const syncPractitionerRole = async (practitionerId, action) => {
     try {
@@ -140,15 +141,51 @@ export const AdminView = ({ subTab = 'admin_home', setSubTab }) => {
       const dossier = dossierSnap.data();
       const type = dossier?.type;
       if (!type || type === 'patient') return;
-      const userSnap = await getDoc(doc(db, 'users', practitionerId));
-      if (!userSnap.exists()) return; // dossier sans compte lie
-      const nextRole = action === 'validé' ? type : 'patient';
-      await updateDoc(doc(db, 'users', practitionerId), {
+
+      const isVal = action === 'validé';
+      const nextRole = isVal ? type : 'patient';
+      const updateData = {
         role: nextRole,
         userCategory: nextRole,
-      });
+        status: isVal ? 'validé' : 'rejeté',
+        isValidated: isVal,
+        is_validated: isVal,
+        validatedAt: isVal ? new Date().toISOString() : null,
+      };
+
+      // Mettre à jour 'users' (collection principale)
+      const userRef = doc(db, 'users', practitionerId);
+      await setDoc(userRef, updateData, { merge: true });
+
+      // Mettre à jour 'User' (collection FlutterFlow si existante)
+      try {
+        await setDoc(doc(db, 'User', practitionerId), updateData, { merge: true });
+      } catch (_) {}
+
+      // Si c'est une pharmacie validée, créer/mettre à jour dans 'pharmacies'
+      if (type === 'pharmacie') {
+        try {
+          await setDoc(doc(db, 'pharmacies', practitionerId), {
+            id: practitionerId,
+            uid: practitionerId,
+            name: dossier.name || 'Pharmacie',
+            phone: dossier.phone || '',
+            city: dossier.city || 'Brazzaville',
+            address: dossier.address || dossier.city || 'Brazzaville',
+            status: isVal ? 'validé' : 'en_attente',
+            isValidated: isVal,
+            is_guard: false,
+            hours: '08h - 20h',
+            photo_url: dossier.photoUrl || dossier.photo_url || '',
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+        } catch (e) {
+          console.warn('Erreur synchro collection pharmacies:', e);
+        }
+      }
+
       setUsersList(prev =>
-        prev.map(u => (u.id === practitionerId ? { ...u, role: nextRole } : u))
+        prev.map(u => (u.id === practitionerId ? { ...u, role: nextRole, status: isVal ? 'validé' : 'rejeté', isValidated: isVal } : u))
       );
     } catch (err) {
       console.log('Rôle du praticien non synchronisé:', err.message);

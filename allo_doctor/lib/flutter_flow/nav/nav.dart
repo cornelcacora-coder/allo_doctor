@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +15,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import 'serialization_util.dart';
 
 import '/index.dart';
+import '/pharmacy/pharmacy_orders/pharmacy_orders_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -139,12 +140,38 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: PharmaViewWidget.routeName,
           path: PharmaViewWidget.routePath,
-          builder: (context, params) => PharmaViewWidget(),
+          builder: (context, params) => PharmaViewWidget(
+            pharmacyId: params.getParam('pharmacyId', ParamType.String),
+            name: params.getParam('name', ParamType.String),
+            address: params.getParam('address', ParamType.String),
+            phone: params.getParam('phone', ParamType.String),
+            hours: params.getParam('hours', ParamType.String),
+            isGuard: params.getParam('isGuard', ParamType.String) == 'true',
+            photoUrl: params.getParam('photoUrl', ParamType.String),
+          ),
         ),
         FFRoute(
           name: ProductViewWidget.routeName,
           path: ProductViewWidget.routePath,
-          builder: (context, params) => ProductViewWidget(),
+          builder: (context, params) => ProductViewWidget(
+            name: params.getParam('name', ParamType.String),
+            price: params.getParam('price', ParamType.String),
+            cover: params.getParam('cover', ParamType.String),
+            category: params.getParam('category', ParamType.String),
+            pharmacyId: params.getParam('pharmacyId', ParamType.String),
+            pharmacyName: params.getParam('pharmacyName', ParamType.String),
+            description: params.getParam('description', ParamType.String),
+          ),
+        ),
+        FFRoute(
+          name: PharmacyOrdersWidget.routeName,
+          path: PharmacyOrdersWidget.routePath,
+          builder: (context, params) => const PharmacyOrdersWidget(),
+        ),
+        FFRoute(
+          name: PatientOrdersWidget.routeName,
+          path: PatientOrdersWidget.routePath,
+          builder: (context, params) => const PatientOrdersWidget(),
         ),
         FFRoute(
           name: DoctorViewWidget.routeName,
@@ -362,7 +389,34 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: IntroCopyWidget.routeName,
           path: IntroCopyWidget.routePath,
           builder: (context, params) => IntroCopyWidget(),
-        )
+        ),
+        FFRoute(
+          name: HomeLivreurWidget.routeName,
+          path: HomeLivreurWidget.routePath,
+          builder: (context, params) => const HomeLivreurWidget(),
+        ),
+        FFRoute(
+          name: LoginLivreurWidget.routeName,
+          path: LoginLivreurWidget.routePath,
+          builder: (context, params) => const LoginLivreurWidget(),
+        ),
+        FFRoute(
+          name: DeliveryTrackingWidget.routeName,
+          path: DeliveryTrackingWidget.routePath,
+          builder: (context, params) => DeliveryTrackingWidget(
+            deliveryId: params.getParam('deliveryId', ParamType.String) ?? '',
+          ),
+        ),
+        FFRoute(
+          name: PatientDeliveryTrackingWidget.routeName,
+          path: PatientDeliveryTrackingWidget.routePath,
+          builder: (context, params) => const PatientDeliveryTrackingWidget(),
+        ),
+        FFRoute(
+          name: AssignDeliveryWidget.routeName,
+          path: AssignDeliveryWidget.routePath,
+          builder: (context, params) => const AssignDeliveryWidget(),
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 

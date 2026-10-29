@@ -7,7 +7,7 @@ import '/index.dart';
 
 /// Roles applicatifs de l'app mobile.
 /// Le role 'admin' n'existe que dans la console web.
-const kAppRoles = ['patient', 'medecin', 'pharmacie', 'clinique'];
+const kAppRoles = ['patient', 'medecin', 'pharmacie', 'clinique', 'livreur'];
 
 /// Route d'accueil correspondant a un role.
 String homeRouteForRole(String? role) {
@@ -18,6 +18,8 @@ String homeRouteForRole(String? role) {
       return HomePharmacyWidget.routeName;
     case 'clinique':
       return HomeCliniqueWidget.routeName;
+    case 'livreur':
+      return 'HomeLivreur';
     default:
       return HomeHubWidget.routeName;
   }
@@ -32,6 +34,8 @@ String roleLabel(String? role) {
       return 'pharmacie';
     case 'clinique':
       return 'clinique';
+    case 'livreur':
+      return 'livreur';
     default:
       return 'patient';
   }
@@ -113,6 +117,8 @@ Future<bool> guardRole(BuildContext context, String expectedRole) async {
         context.goNamed(LoginPharmacyWidget.routeName);
       } else if (expectedRole == 'clinique') {
         context.goNamed(LoginClinicWidget.routeName);
+      } else if (expectedRole == 'livreur') {
+        context.goNamed('LoginLivreur');
       } else {
         context.goNamed(WelcomeWidget.routeName);
       }

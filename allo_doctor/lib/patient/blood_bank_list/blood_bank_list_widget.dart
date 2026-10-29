@@ -424,12 +424,17 @@ class _BloodBankListWidgetState extends State<BloodBankListWidget> {
                                           final distance = (data['distance'] as String?) ?? '';
                                           final cover = (data['cover'] as String?) ?? (data['photo_url'] as String?);
                                           final phone = (data['phone'] as String?) ?? (data['phoneNumber'] as String?) ?? '';
+                                          // ─── Groupes sanguins depuis Firestore ───
+                                          final groups = (data['groups'] as List<dynamic>?)
+                                                ?.map((e) => e.toString())
+                                                .toList() ?? [];
 
                                           return ClinicBloodCardWidget(
                                             name: name,
                                             location: location,
                                             distance: distance,
                                             cover: cover,
+                                            groups: groups,
                                             buyBlood: () async {
                                               await showModalBottomSheet(
                                                 isScrollControlled: true,

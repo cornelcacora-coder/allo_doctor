@@ -1,7 +1,8 @@
+﻿import '/auth/firebase_auth/auth_util.dart';
+import '/auth/role_guard.dart';
 import '/components/clinic_member_card_widget.dart';
 import '/components/log_out_widget.dart';
 import '/components/nav_bar_clinic_widget.dart';
-import '/components/stateitem_widget.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -10,14 +11,12 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
 import '/index.dart';
-import '/auth/role_guard.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'home_clinique_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '/auth/firebase_auth/auth_util.dart';
 export 'home_clinique_model.dart';
 
 class HomeCliniqueWidget extends StatefulWidget {
@@ -45,7 +44,6 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       safeSetState(() {});
-      // Garde-fou : cet espace est reserve aux comptes cliniques.
       await guardRole(context, 'clinique');
     });
   }
@@ -53,8 +51,139 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
+  }
+
+  /// Boîte de dialogue pour ajouter un membre au personnel
+  Future<void> _showAddStaffDialog(BuildContext context) async {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    String selectedSpec = 'Médecine générale';
+    final specs = [
+      'Médecine générale',
+      'Cardiologie',
+      'Pédiatrie',
+      'Gynécologie',
+      'Urgence',
+      'Chirurgie',
+      'Ophtalmologie',
+      'Biologie / Labo',
+      'Radiologie',
+      'Administration',
+    ];
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).warning.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person_add_alt_1, color: FlutterFlowTheme.of(context).warning, size: 22),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Nouveau Collaborateur',
+                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Nom et Prénom *',
+                    hintText: 'Dr. Jean Dupont',
+                    prefixIcon: const Icon(Icons.badge_outlined),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedSpec,
+                  decoration: InputDecoration(
+                    labelText: 'Spécialité *',
+                    prefixIcon: const Icon(Icons.medical_services_outlined),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  items: specs.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedSpec = val);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Téléphone (optionnel)',
+                    hintText: '+242 06 ...',
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Annuler', style: GoogleFonts.outfit(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F766E),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              ),
+              onPressed: () async {
+                final name = nameCtrl.text.trim();
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez renseigner le nom du praticien.')),
+                  );
+                  return;
+                }
+                final uid = currentUserUid.isNotEmpty ? currentUserUid : 'current_clinic';
+                final clinicName = currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Clinique';
+
+                await FirebaseFirestore.instance
+                    .collection('clinics')
+                    .doc(uid)
+                    .collection('staff')
+                    .add({
+                  'name': name,
+                  'specialty': selectedSpec,
+                  'phone': phoneCtrl.text.trim(),
+                  'clinic_uid': uid,
+                  'clinic_name': clinicName,
+                  'is_active': true,
+                  'created_at': FieldValue.serverTimestamp(),
+                });
+
+                if (ctx.mounted) {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('$name ajouté avec succès au personnel ✓'),
+                    backgroundColor: const Color(0xFF16CB83),
+                  ));
+                }
+              },
+              child: Text('Enregistrer', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -66,747 +195,785 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: Color(0xFFF8F9FA),
+        backgroundColor: const Color(0xFFF7F9FA),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).warning,
+          backgroundColor: const Color(0xFF0F766E),
           automaticallyImplyLeading: false,
-          title: Column(
+          elevation: 2.0,
+          title: Row(
             mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // ─── LOGO OFFICIEL DE L'APPLICATION + NOM ───
               Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 45.0,
-                        height: 45.0,
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).surface15,
-                          borderRadius: BorderRadius.circular(12.0),
-                          shape: BoxShape.rectangle,
+                  Container(
+                    width: 44.0,
+                    height: 44.0,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 6.0,
+                          offset: const Offset(0, 2),
                         ),
-                        child: Stack(
-                          children: [
-                            Align(
-                              alignment: AlignmentDirectional(0.0, 0.0),
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 5.0, 0.0, 0.0),
-                                child: Container(
-                                  width: 25.0,
-                                  height: 25.0,
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  0.0, 0.0, 0.0, 2.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(0.0),
-                                child: Image.asset(
-                                  'assets/images/Logo_Mini-removebg-preview.png',
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(4.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22.0),
+                      child: Image.asset(
+                        'assets/images/Logo_Mini-removebg-preview.png',
+                        width: 36.0,
+                        height: 36.0,
+                        fit: BoxFit.contain,
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 12.0),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
                         'Allô Docteur',
-                        style: FlutterFlowTheme.of(context).titleLarge.override(
-                              font: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .titleLarge
-                                    .fontStyle,
-                              ),
-                              color: Colors.white,
-                              fontSize: 18.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.bold,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .titleLarge
-                                  .fontStyle,
-                              lineHeight: 1.4,
-                            ),
-                      ),
-                    ].divide(SizedBox(width: 10.0)),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      FlutterFlowIconButton(
-                        borderRadius: 10.0,
-                        buttonSize: 40.0,
-                        fillColor: FlutterFlowTheme.of(context).surface15,
-                        icon: Icon(
-                          Icons.settings_outlined,
-                          color: FlutterFlowTheme.of(context).onPrimary,
-                          size: 24.0,
+                        style: GoogleFonts.outfit(
+                          fontSize: 19.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
                         ),
-                        onPressed: () async {
-                          context.pushNamed(SettingsWidget.routeName);
-                        },
                       ),
-                      FlutterFlowIconButton(
-                        borderRadius: 10.0,
-                        buttonSize: 40.0,
-                        fillColor: FlutterFlowTheme.of(context).surface15,
-                        icon: Icon(
-                          Icons.logout_rounded,
-                          color: FlutterFlowTheme.of(context).onPrimary,
-                          size: 24.0,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(4.0),
                         ),
-                        onPressed: () async {
-                          await showModalBottomSheet(
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            enableDrag: false,
-                            context: context,
-                            builder: (context) {
-                              return GestureDetector(
-                                onTap: () {
-                                  FocusScope.of(context).unfocus();
-                                  FocusManager.instance.primaryFocus?.unfocus();
-                                },
-                                child: Padding(
-                                  padding: MediaQuery.viewInsetsOf(context),
-                                  child: LogOutWidget(),
-                                ),
-                              );
-                            },
-                          ).then((value) => safeSetState(() {}));
-                        },
+                        child: Text(
+                          'ESPACE CLINIQUE',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10.0,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                       ),
-                    ].divide(SizedBox(width: 8.0)),
+                    ],
                   ),
                 ],
               ),
-            ].divide(SizedBox(height: 10.0)),
-          ),
-          actions: [],
-          centerTitle: false,
-          elevation: 4.0,
-        ),
-        body: Container(
-          height: double.infinity,
-          child: Stack(
-            alignment: AlignmentDirectional(0.0, -1.0),
-            children: [
-              SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                      stream: currentUserUid.isNotEmpty
-                          ? FirebaseFirestore.instance.collection('users').doc(currentUserUid).snapshots()
-                          : null,
-                      builder: (context, snapshot) {
-                        final data = snapshot.data?.data();
-                        final displayName = (data?['displayName'] as String?)?.trim().isNotEmpty == true
-                            ? data!['displayName'] as String
-                            : (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Clinique Partenaire');
-                        final photoUrl = (data?['photoUrl'] as String?) ?? currentUserPhoto;
-                        final status = (data?['status'] as String?) ?? 'en_attente';
-                        final isValidated = status == 'validé' || status == 'active';
 
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
+              // ─── BOUTONS ACTIONS (PARAMÈTRES & DÉCONNEXION) ───
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: () => context.pushNamed(SettingsWidget.routeName),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 38.0,
+                      height: 38.0,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: const Icon(Icons.settings_outlined, color: Colors.white, size: 21.0),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  InkWell(
+                    onTap: () async {
+                      await showModalBottomSheet(
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        enableDrag: false,
+                        context: context,
+                        builder: (context) {
+                          return Padding(
+                            padding: MediaQuery.viewInsetsOf(context),
+                            child: LogOutWidget(),
+                          );
+                        },
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 38.0,
+                      height: 38.0,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: const Icon(Icons.logout_rounded, color: Colors.white, size: 21.0),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        body: Stack(
+          alignment: AlignmentDirectional.topCenter,
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  // ─── HERO BANNER CLINIQUE (Design Médical Moderne) ───
+                  StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    stream: currentUserUid.isNotEmpty
+                        ? FirebaseFirestore.instance.collection('users').doc(currentUserUid).snapshots()
+                        : null,
+                    builder: (context, userSnapshot) {
+                      return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        stream: currentUserUid.isNotEmpty
+                            ? FirebaseFirestore.instance.collection('practitioners').doc(currentUserUid).snapshots()
+                            : null,
+                        builder: (context, practSnapshot) {
+                          final userData = userSnapshot.data?.data();
+                          final practData = practSnapshot.data?.data();
+
+                          final userStatus = ((userData?['status'] as String?) ?? '').toLowerCase().trim();
+                          final practStatus = ((practData?['status'] as String?) ?? '').toLowerCase().trim();
+
+                          final isValidated = userStatus == 'validé' ||
+                              userStatus == 'valide' ||
+                              userStatus == 'active' ||
+                              userData?['isValidated'] == true ||
+                              userData?['is_validated'] == true ||
+                              practStatus == 'validé' ||
+                              practStatus == 'valide' ||
+                              practStatus == 'active' ||
+                              practData?['isValidated'] == true ||
+                              practData?['is_validated'] == true;
+
+                          final rawName = (practData?['name'] as String?) ??
+                              (userData?['displayName'] as String?) ??
+                              (userData?['name'] as String?) ??
+                              (currentUserDisplayName.isNotEmpty ? currentUserDisplayName : 'Clinique Partenaire');
+                          final displayName = rawName.trim().isNotEmpty ? rawName.trim() : 'Clinique Partenaire';
+
+                          final photoUrl = (practData?['photo_url'] as String?) ??
+                              (userData?['photoUrl'] as String?) ??
+                              (userData?['photo_url'] as String?) ??
+                              currentUserPhoto;
+
+                          return Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  FlutterFlowTheme.of(context).primary,
+                                  const Color(0xFF1E6B52),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24.0)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.fromLTRB(20.0, 22.0, 20.0, 24.0),
+                            child: Row(
+                              children: [
+                                // Avatar / Logo de la clinique
+                                Container(
+                                  width: 60.0,
+                                  height: 60.0,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.15),
+                                        blurRadius: 8.0,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    child: photoUrl.isNotEmpty
+                                        ? CachedNetworkImage(
+                                            imageUrl: photoUrl,
+                                            width: 60.0,
+                                            height: 60.0,
+                                            fit: BoxFit.cover,
+                                            errorWidget: (context, url, error) => const Icon(
+                                              Icons.local_hospital_rounded,
+                                              color: Color(0xFF165C40),
+                                              size: 32,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.local_hospital_rounded,
+                                            color: Color(0xFF165C40),
+                                            size: 32,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16.0),
+                                // Nom et Statut
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        displayName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 18.0,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6.0),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                                        decoration: BoxDecoration(
+                                          color: isValidated
+                                              ? const Color(0xFF16CB83).withOpacity(0.22)
+                                              : Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12.0),
+                                          border: Border.all(
+                                            color: isValidated ? const Color(0xFF16CB83) : Colors.white70,
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              isValidated ? Icons.verified_rounded : Icons.pending_outlined,
+                                              color: isValidated ? const Color(0xFF16CB83) : Colors.white,
+                                              size: 14.0,
+                                            ),
+                                            const SizedBox(width: 5.0),
+                                            Text(
+                                              isValidated ? 'Clinique Validée' : 'En attente de validation',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 18.0),
+
+                  // ─── STATS CARDS MODERNES (Temps Réel) ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: FirebaseFirestore.instance.collection('appointments').snapshots(),
+                      builder: (context, aptSnap) {
+                        final docs = aptSnap.data?.docs.where((d) {
+                          final data = d.data();
+                          final cId = data['clinic_uid'] as String?;
+                          final dId = data['doctor_uid'] as String?;
+                          return (cId != null && cId == currentUserUid) ||
+                              (dId != null && dId == currentUserUid);
+                        }).toList() ?? [];
+                        final rdvCount = docs.length;
+                        final patientIds = docs.map((d) => (d.data()['patient_uid'] ?? d.data()['patient_id'] ?? d.id).toString()).toSet();
+                        final patientsCount = patientIds.length;
+
+                        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                          stream: FirebaseFirestore.instance.collection('lab_orders').snapshots(),
+                          builder: (context, labSnap) {
+                            final labDocs = labSnap.data?.docs.where((d) {
+                              final data = d.data();
+                              final cId = data['clinic_uid'] as String?;
+                              return cId != null && cId == currentUserUid;
+                            }).toList() ?? [];
+                            final analysesCount = labDocs.length;
+
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: _buildModernStatCard(
+                                    context,
+                                    label: 'RDV',
+                                    count: '$rdvCount',
+                                    icon: Icons.calendar_month_rounded,
+                                    iconColor: const Color(0xFFE58B00),
+                                    bgColor: const Color(0xFFFFF6E6),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _buildModernStatCard(
+                                    context,
+                                    label: 'Patients',
+                                    count: '$patientsCount',
+                                    icon: Icons.people_alt_rounded,
+                                    iconColor: const Color(0xFF1B72E8),
+                                    bgColor: const Color(0xFFE8F1FC),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _buildModernStatCard(
+                                    context,
+                                    label: 'Analyses',
+                                    count: '$analysesCount',
+                                    icon: Icons.biotech_rounded,
+                                    iconColor: const Color(0xFF16CB83),
+                                    bgColor: const Color(0xFFE8F8F0),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 16.0),
+
+                  // ─── CARTE ACTION : AJOUTER UN COLLABORATEUR ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: InkWell(
+                      onTap: () => _showAddStaffDialog(context),
+                      borderRadius: BorderRadius.circular(14.0),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14.0),
+                          border: Border.all(color: FlutterFlowTheme.of(context).warning.withOpacity(0.4)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.03),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                        child: Row(
                           children: [
                             Container(
-                              height: 160.0,
-                              child: Stack(
-                                alignment: AlignmentDirectional(0.0, -1.0),
+                              width: 44.0,
+                              height: 44.0,
+                              decoration: BoxDecoration(
+                                color: FlutterFlowTheme.of(context).warning.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: Icon(
+                                Icons.person_add_alt_1_rounded,
+                                color: FlutterFlowTheme.of(context).warning,
+                                size: 24.0,
+                              ),
+                            ),
+                            const SizedBox(width: 14.0),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  ClipRRect(
-                                    child: Container(
-                                      width: double.infinity,
-                                      height: 160.0,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            FlutterFlowTheme.of(context).primary,
-                                            FlutterFlowTheme.of(context).secondary
-                                          ],
-                                          stops: [0.0, 1.0],
-                                          begin: AlignmentDirectional(0.0, -1.0),
-                                          end: AlignmentDirectional(0, 1.0),
-                                        ),
-                                        shape: BoxShape.rectangle,
-                                      ),
-                                      child: Opacity(
-                                        opacity: 0.6,
-                                        child: CachedNetworkImage(
-                                          fadeInDuration: Duration(milliseconds: 0),
-                                          fadeOutDuration: Duration(milliseconds: 0),
-                                          imageUrl:
-                                              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6hVKdKfq0JnzVj27911KfCJhhT4_zzpj6g7ZbsTsrX75TbZhL_zm9wFU&s=10',
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                          alignment: Alignment(0.0, 0.0),
-                                        ),
-                                      ),
+                                  Text(
+                                    'Nouveau Collaborateur',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: FlutterFlowTheme.of(context).primaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2.0),
+                                  Text(
+                                    'Ajouter un médecin ou praticien à votre clinique',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 12.0,
+                                      color: FlutterFlowTheme.of(context).secondaryText,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            Align(
-                              alignment: AlignmentDirectional(-0.75, -0.03),
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 0.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      displayName,
-                                      style: FlutterFlowTheme.of(context).headlineSmall.override(
-                                            font: GoogleFonts.outfit(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            color: FlutterFlowTheme.of(context).primaryText,
-                                            letterSpacing: 0.0,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          isValidated ? Icons.verified_rounded : Icons.pending_outlined,
-                                          color: isValidated ? Color(0xFF16CB83) : FlutterFlowTheme.of(context).warning,
-                                          size: 16.0,
-                                        ),
-                                        Text(
-                                          isValidated ? 'Clinique Partenaire Validée' : 'En attente de validation par l\'administrateur',
-                                          style: FlutterFlowTheme.of(context).labelMedium.override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                                color: isValidated ? Color(0xFF16CB83) : FlutterFlowTheme.of(context).warning,
-                                                letterSpacing: 0.0,
-                                                lineHeight: 1.4,
-                                              ),
-                                        ),
-                                      ].divide(SizedBox(width: 4.0)),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: FlutterFlowTheme.of(context).warning,
+                              size: 16.0,
                             ),
                           ],
-                        );
-                      },
+                        ),
+                      ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  ),
+
+                  const SizedBox(height: 20.0),
+
+                  // ─── BARRE DE RECHERCHE ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.search_rounded, color: FlutterFlowTheme.of(context).secondaryText, size: 22.0),
+                          const SizedBox(width: 10.0),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _model.textController,
+                              focusNode: _model.textFieldFocusNode,
+                              onChanged: (_) => safeSetState(() {}),
+                              decoration: InputDecoration(
+                                isDense: true,
+                                hintText: 'Rechercher un praticien, spécialité...',
+                                hintStyle: GoogleFonts.outfit(
+                                  fontSize: 13.5,
+                                  color: FlutterFlowTheme.of(context).secondaryText,
+                                ),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              ),
+                              style: GoogleFonts.outfit(fontSize: 14.0),
+                            ),
+                          ),
+                          if (_model.textController?.text.isNotEmpty == true)
+                            InkWell(
+                              onTap: () {
+                                _model.textController?.clear();
+                                safeSetState(() {});
+                              },
+                              child: const Icon(Icons.close_rounded, size: 18.0, color: Colors.grey),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12.0),
+
+                  // ─── CHIPS FILTRES SPÉCIALITÉS ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: FlutterFlowChoiceChips(
+                      options: const [
+                        ChipData('Personnel'),
+                        ChipData('Cardiologie'),
+                        ChipData('Gynécologie'),
+                        ChipData('Urgence'),
+                        ChipData('Pédiatrie'),
+                        ChipData('Médecine générale'),
+                        ChipData('Ophtalmologie'),
+                        ChipData('Chirurgie'),
+                      ],
+                      onChanged: (val) => safeSetState(() => _model.choiceChipsValue = val?.firstOrNull),
+                      selectedChipStyle: ChipStyle(
+                        backgroundColor: const Color(0xFF0F766E),
+                        textStyle: GoogleFonts.outfit(
+                          color: Colors.white,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        iconColor: Colors.white,
+                        iconSize: 14.0,
+                        elevation: 0.0,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      unselectedChipStyle: ChipStyle(
+                        backgroundColor: Colors.white,
+                        textStyle: GoogleFonts.outfit(
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        iconColor: FlutterFlowTheme.of(context).secondaryText,
+                        iconSize: 14.0,
+                        elevation: 0.0,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      chipSpacing: 8.0,
+                      rowSpacing: 8.0,
+                      multiselect: false,
+                      alignment: WrapAlignment.start,
+                      controller: _model.choiceChipsValueController ??= FormFieldController<List<String>>([]),
+                      wrapped: true,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16.0),
+
+                  // ─── TITRE SECTION : ÉQUIPE MÉDICALE ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          height: 40.0,
-                          child: wrapWithModel(
-                            model: _model.stateitemModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'RDV ',
-                              count: '22',
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.0,
-                          decoration: BoxDecoration(),
-                          child: wrapWithModel(
-                            model: _model.stateitemModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'Patients ',
-                              count: '10',
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 40.0,
-                          decoration: BoxDecoration(),
-                          child: wrapWithModel(
-                            model: _model.stateitemModel3,
-                            updateCallback: () => safeSetState(() {}),
-                            child: StateitemWidget(
-                              label: 'Analyses ',
-                              count: '7',
-                            ),
+                        Text(
+                          'ÉQUIPE DU PERSONNEL',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            color: FlutterFlowTheme.of(context).secondaryText,
                           ),
                         ),
                       ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(12.0),
-                          border: Border.all(
-                            color: FlutterFlowTheme.of(context).alternate,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(14.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: FlutterFlowTheme.of(context)
-                                      .primaryBackground,
-                                  borderRadius: BorderRadius.circular(8.0),
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.all(14.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Icon(
-                                            Icons.person_add_alt,
-                                            color: FlutterFlowTheme.of(context)
-                                                .warning,
-                                            size: 22.0,
-                                          ),
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    10.0, 0.0, 0.0, 0.0),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.max,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'Nouveau Personnel',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodySmall
-                                                      .override(
-                                                        font:
-                                                            GoogleFonts.outfit(
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .bodySmall
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .warning,
-                                                        fontSize: 12.0,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodySmall
-                                                                .fontStyle,
-                                                      ),
-                                                ),
-                                                Text(
-                                                  'Ajouter un nouveau membre',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .labelSmall
-                                                      .override(
-                                                        font:
-                                                            GoogleFonts.outfit(
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelSmall
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondaryText,
-                                                        fontSize: 12.0,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelSmall
-                                                                .fontStyle,
-                                                        lineHeight: 1.4,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(width: 6.0)),
-                                      ),
-                                      Icon(
-                                        Icons.arrow_forward_ios,
-                                        color: FlutterFlowTheme.of(context)
-                                            .warning,
-                                        size: 22.0,
-                                      ),
-                                    ].divide(SizedBox(width: 20.0)),
-                                  ),
-                                ),
-                              ),
-                            ].divide(SizedBox(height: 10.0)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsetsDirectional.fromSTEB(14.0, 0.0, 14.0, 0.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          borderRadius: BorderRadius.circular(9999.0),
-                          shape: BoxShape.rectangle,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(
-                              20.0, 6.0, 6.0, 6.0),
-                          child: Container(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                  ),
+
+                  const SizedBox(height: 10.0),
+
+                  // ─── LISTE DYNAMIQUE DU PERSONNEL ───
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: currentUserUid.isNotEmpty
+                          ? FirebaseFirestore.instance
+                              .collection('clinics')
+                              .doc(currentUserUid)
+                              .collection('staff')
+                              .snapshots()
+                          : Stream.empty(),
+                      builder: (context, staffSnap) {
+                        if (staffSnap.connectionState == ConnectionState.waiting) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: CircularProgressIndicator(color: FlutterFlowTheme.of(context).warning),
+                            ),
+                          );
+                        }
+
+                        final docs = staffSnap.data?.docs ?? [];
+                        final searchQ = _model.textController?.text.trim().toLowerCase() ?? '';
+                        final selectedCategory = _model.choiceChipsValue;
+
+                        final filtered = docs.where((d) {
+                          final data = d.data();
+                          final name = (data['name'] as String? ?? '').toLowerCase();
+                          final spec = (data['specialty'] as String? ?? '').toLowerCase();
+                          if (searchQ.isNotEmpty && !name.contains(searchQ) && !spec.contains(searchQ)) {
+                            return false;
+                          }
+                          if (selectedCategory != null &&
+                              selectedCategory.isNotEmpty &&
+                              selectedCategory != 'Personnel') {
+                            if (!spec.contains(selectedCategory.toLowerCase())) {
+                              return false;
+                            }
+                          }
+                          return true;
+                        }).toList();
+
+                        if (filtered.isEmpty) {
+                          return Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.0),
+                              border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+                            ),
+                            padding: const EdgeInsets.all(28.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Expanded(
-                                  child: Container(
-                                    width: 200.0,
-                                    child: TextFormField(
-                                      controller: _model.textController,
-                                      focusNode: _model.textFieldFocusNode,
-                                      autofocus: false,
-                                      enabled: true,
-                                      obscureText: false,
-                                      decoration: InputDecoration(
-                                        isDense: true,
-                                        labelStyle: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              font: GoogleFonts.outfit(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelMedium
-                                                      .fontStyle,
-                                            ),
-                                        hintText:
-                                            'Recherchez un médicament ...',
-                                        hintStyle: FlutterFlowTheme.of(context)
-                                            .labelMedium
-                                            .override(
-                                              font: GoogleFonts.outfit(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelMedium
-                                                      .fontStyle,
-                                            ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Color(0x00000000),
-                                            width: 1.0,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: Color(0x00000000),
-                                            width: 1.0,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        errorBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: FlutterFlowTheme.of(context)
-                                                .error,
-                                            width: 1.0,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        focusedErrorBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: FlutterFlowTheme.of(context)
-                                                .error,
-                                            width: 1.0,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        filled: true,
-                                        fillColor: FlutterFlowTheme.of(context)
-                                            .secondaryBackground,
-                                      ),
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .override(
-                                            font: GoogleFonts.outfit(
-                                              fontWeight:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontWeight,
-                                              fontStyle:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .fontStyle,
-                                            ),
-                                            letterSpacing: 0.0,
-                                            fontWeight:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontWeight,
-                                            fontStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .fontStyle,
-                                          ),
-                                      cursorColor: FlutterFlowTheme.of(context)
-                                          .primaryText,
-                                      enableInteractiveSelection: true,
-                                      validator: _model.textControllerValidator
-                                          .asValidator(context),
-                                    ),
+                                Icon(Icons.group_outlined, size: 48, color: FlutterFlowTheme.of(context).secondaryText),
+                                const SizedBox(height: 12.0),
+                                Text(
+                                  docs.isEmpty
+                                      ? 'Aucun membre enregistré dans votre personnel'
+                                      : 'Aucun collaborateur ne correspond à votre recherche',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14.0,
+                                    color: FlutterFlowTheme.of(context).secondaryText,
                                   ),
                                 ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context).warning,
-                                    shape: BoxShape.circle,
+                                const SizedBox(height: 16.0),
+                                ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0F766E),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                                   ),
-                                  child: Padding(
-                                    padding: EdgeInsets.all(10.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(),
-                                      child: Icon(
-                                        Icons.search_rounded,
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondaryBackground,
-                                        size: 24.0,
-                                      ),
-                                    ),
+                                  onPressed: () => _showAddStaffDialog(context),
+                                  icon: const Icon(Icons.add, color: Colors.white, size: 18),
+                                  label: Text(
+                                    'Ajouter un collaborateur',
+                                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
                                   ),
                                 ),
-                              ].divide(SizedBox(width: 16.0)),
+                              ],
                             ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding:
-                          EdgeInsetsDirectional.fromSTEB(0.0, 10.0, 0.0, 0.0),
-                      child: FlutterFlowChoiceChips(
-                        options: [
-                          ChipData('Personel'),
-                          ChipData('Cardiologie'),
-                          ChipData('Gynécologie'),
-                          ChipData('Urgence'),
-                          ChipData('Pédiatrie'),
-                          ChipData('Médecine interne'),
-                          ChipData('Ophtalmologie'),
-                          ChipData('Chirurgie')
-                        ],
-                        onChanged: (val) => safeSetState(
-                            () => _model.choiceChipsValue = val?.firstOrNull),
-                        selectedChipStyle: ChipStyle(
-                          backgroundColor: FlutterFlowTheme.of(context).warning,
-                          textStyle:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
-                          iconColor:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          iconSize: 16.0,
-                          elevation: 0.0,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        unselectedChipStyle: ChipStyle(
-                          backgroundColor:
-                              FlutterFlowTheme.of(context).secondaryBackground,
-                          textStyle: FlutterFlowTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                font: GoogleFonts.outfit(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
-                                ),
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
-                              ),
-                          iconColor: FlutterFlowTheme.of(context).secondaryText,
-                          iconSize: 16.0,
-                          elevation: 0.0,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        chipSpacing: 8.0,
-                        rowSpacing: 8.0,
-                        multiselect: false,
-                        alignment: WrapAlignment.start,
-                        controller: _model.choiceChipsValueController ??=
-                            FormFieldController<List<String>>(
-                          [],
-                        ),
-                        wrapped: true,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        primary: false,
-                        shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        children: [
-                          wrapWithModel(
-                            model: _model.clinicMemberCardModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: ClinicMemberCardWidget(
-                              name: 'Paul Moko',
-                              bookMeet: () async {},
-                              contactClinic: () async {},
-                            ),
-                          ),
-                          wrapWithModel(
-                            model: _model.clinicMemberCardModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: ClinicMemberCardWidget(
-                              name: 'Marcel Boutsolo',
-                              bookMeet: () async {},
-                              contactClinic: () async {},
-                            ),
-                          ),
-                        ].divide(SizedBox(height: 10.0)),
-                      ),
-                    ),
-                    Container(
-                      width: double.infinity,
-                      height: 100.0,
-                      decoration: BoxDecoration(),
-                    ),
-                  ]
-                      .divide(SizedBox(height: 20.0))
-                      .addToEnd(SizedBox(height: 10.0)),
-                ),
-              ),
-              Align(
-                alignment: AlignmentDirectional(0.0, 1.0),
-                child: Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Container(
-                    decoration: BoxDecoration(),
-                    child: wrapWithModel(
-                      model: _model.navBarClinicModel,
-                      updateCallback: () => safeSetState(() {}),
-                      child: NavBarClinicWidget(),
+                          );
+                        }
+
+                        return ListView.separated(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10.0),
+                          itemBuilder: (context, index) {
+                            final staffDoc = filtered[index];
+                            final data = staffDoc.data();
+                            final staffId = staffDoc.id;
+                            final name = (data['name'] as String?) ?? 'Praticien';
+                            final specialty = (data['specialty'] as String?) ?? 'Médecine générale';
+                            final photo = (data['photo_url'] as String?);
+                            final phone = (data['phone'] as String?) ?? '';
+                            final isActive = (data['is_active'] as bool?) ?? true;
+
+                            return ClinicMemberCardWidget(
+                              name: name,
+                              specialty: specialty,
+                              photoProfile: photo,
+                              isActive: isActive,
+                              onDelete: () async {
+                                if (currentUserUid.isNotEmpty) {
+                                  await FirebaseFirestore.instance
+                                      .collection('clinics')
+                                      .doc(currentUserUid)
+                                      .collection('staff')
+                                      .doc(staffId)
+                                      .delete();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('$name a été retiré.')),
+                                    );
+                                  }
+                                }
+                              },
+                              onToggleActive: (newVal) async {
+                                if (currentUserUid.isNotEmpty) {
+                                  await FirebaseFirestore.instance
+                                      .collection('clinics')
+                                      .doc(currentUserUid)
+                                      .collection('staff')
+                                      .doc(staffId)
+                                      .update({'is_active': newVal});
+                                }
+                              },
+                              contactClinic: () async {
+                                if (phone.isNotEmpty) {
+                                  await launchURL('tel:$phone');
+                                }
+                              },
+                            );
+                          },
+                        );
+                      },
                     ),
                   ),
+
+                  const SizedBox(height: 110.0), // Marge pour la barre de navigation
+                ],
+              ),
+            ),
+
+            // ─── NAVBAR FLOTTANTE ───
+            Align(
+              alignment: AlignmentDirectional.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: wrapWithModel(
+                  model: _model.navBarClinicModel,
+                  updateCallback: () => safeSetState(() {}),
+                  child: const NavBarClinicWidget(),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildModernStatCard(
+    BuildContext context, {
+    required String label,
+    required String count,
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(color: FlutterFlowTheme.of(context).alternate),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 10.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 38.0,
+            height: 38.0,
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20.0),
+          ),
+          const SizedBox(height: 8.0),
+          Text(
+            count,
+            style: GoogleFonts.outfit(
+              fontSize: 18.0,
+              fontWeight: FontWeight.bold,
+              color: FlutterFlowTheme.of(context).primaryText,
+            ),
+          ),
+          const SizedBox(height: 2.0),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 12.0,
+              fontWeight: FontWeight.w500,
+              color: FlutterFlowTheme.of(context).secondaryText,
+            ),
+          ),
+        ],
       ),
     );
   }
