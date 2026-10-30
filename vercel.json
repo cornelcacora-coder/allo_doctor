@@ -1,8 +1,6 @@
 {
-  "buildCommand": "cd allo_doctor_web && npm install && npm run build",
-  "outputDirectory": "allo_doctor_web/dist",
-  "installCommand": "cd allo_doctor_web && npm install",
-  "framework": "vite",
+  "outputDirectory": "allo_doctor/build/web",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",

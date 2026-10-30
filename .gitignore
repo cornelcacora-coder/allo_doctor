@@ -9,7 +9,8 @@ coverage/
 # Production
 dist/
 build/
-allo_doctor/build/
+allo_doctor/build/app/
+!allo_doctor/build/web/
 
 # Misc
 .DS_Store
@@ -28,4 +29,3 @@ firebase-debug.log*
 .flutter-plugins
 .flutter-plugins-dependencies
 *.dill
-
