@@ -1,4 +1,7 @@
 {
   "name": "allo-doctor-mobile-web",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "echo Flutter Web build ready"
+  }
 }
