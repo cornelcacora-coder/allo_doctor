@@ -46,6 +46,22 @@ class _ClinicListWidgetState extends State<ClinicListWidget> {
     super.dispose();
   }
 
+  List<String> _extractServices(Map<String, dynamic> data) {
+    final raw = data['services'] ?? data['specialty'] ?? data['specialite'];
+    if (raw == null) return [];
+    if (raw is List) {
+      return raw.map((e) => e.toString().trim().toLowerCase()).where((s) => s.isNotEmpty).toList();
+    }
+    if (raw is String) {
+      return raw
+          .split(RegExp(r'[,;•|\n]'))
+          .map((s) => s.trim().toLowerCase())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return [raw.toString().trim().toLowerCase()];
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -448,7 +464,10 @@ class _ClinicListWidgetState extends State<ClinicListWidget> {
                                       wrapped: true,
                                     ),
                                     StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                                     stream: FirebaseFirestore.instance.collection('clinics').snapshots(),
+                                     stream: FirebaseFirestore.instance
+                                         .collection('users')
+                                         .where('role', isEqualTo: 'clinique')
+                                         .snapshots(),
                                      builder: (context, snapshot) {
                                        if (snapshot.hasError) {
                                          return Center(
@@ -487,24 +506,32 @@ class _ClinicListWidgetState extends State<ClinicListWidget> {
                                            ),
                                          );
                                        }
-                                       var docs = snapshot.data!.docs;
-                                       final selectedFilter = _model.choiceChipsValue;
+                                        var docs = snapshot.data!.docs;
+                                        final selectedFilter = _model.choiceChipsValue;
                                         final searchQuery = _model.textController?.text.trim().toLowerCase() ?? '';
                                         if (searchQuery.isNotEmpty) {
                                           docs = docs.where((d) {
-                                            final name = (d.data()['name'] as String? ?? '').toLowerCase();
-                                            final city = (d.data()['city'] as String? ?? '').toLowerCase();
-                                            final addr = (d.data()['address'] as String? ?? '').toLowerCase();
-                                            final services = (d.data()['services'] as List<dynamic>?)?.map((e) => e.toString().toLowerCase()).toList() ?? [];
-                                            return name.contains(searchQuery) || city.contains(searchQuery) || addr.contains(searchQuery) || services.any((s) => s.contains(searchQuery));
+                                            final data = d.data();
+                                            final name = ((data['display_name'] as String?) ??
+                                                (data['name'] as String?) ??
+                                                (data['displayName'] as String?) ??
+                                                '').toLowerCase();
+                                            final city = (data['city'] as String? ?? '').toLowerCase();
+                                            final addr = (data['address'] as String? ?? (data['location'] as String? ?? '')).toLowerCase();
+                                            final services = _extractServices(data);
+                                            return name.contains(searchQuery) ||
+                                                city.contains(searchQuery) ||
+                                                addr.contains(searchQuery) ||
+                                                services.any((s) => s.contains(searchQuery));
                                           }).toList();
                                         }
-                                       if (selectedFilter != null && selectedFilter != 'Tous') {
-                                         docs = docs.where((d) {
-                                           final services = (d.data()['services'] as List<dynamic>?)?.map((e) => e.toString().toLowerCase()).toList() ?? [];
-                                           return services.any((s) => s.contains(selectedFilter.toLowerCase()));
-                                         }).toList();
-                                       }
+                                        if (selectedFilter != null && selectedFilter != 'Tous') {
+                                          docs = docs.where((d) {
+                                            final services = _extractServices(d.data());
+                                            final filterLower = selectedFilter.toLowerCase();
+                                            return services.any((s) => s.contains(filterLower) || filterLower.contains(s));
+                                          }).toList();
+                                        }
                                        if (docs.isEmpty) {
                                          return Center(
                                            child: Padding(
@@ -535,10 +562,13 @@ class _ClinicListWidgetState extends State<ClinicListWidget> {
                                        return Column(
                                          children: docs.map((doc) {
                                            final data = doc.data();
-                                           final name = (data['name'] as String?)?.trim() ?? 'Clinique';
+                                           final name = ((data['display_name'] as String?) ??
+                                                (data['name'] as String?) ??
+                                                (data['displayName'] as String?) ??
+                                                'Clinique').trim();
                                            final location = (data['address'] as String?) ?? (data['city'] as String?) ?? (data['location'] as String?) ?? 'Brazzaville';
                                            final cover = (data['cover'] as String?) ?? (data['photo_url'] as String?);
-                                           final phone = (data['phone_number'] as String?) ?? (data['phone'] as String?) ?? '';
+                                           final phone = (data['phone_number'] as String?) ?? (data['phone'] as String?) ?? (data['phoneNumber'] as String?) ?? '';
 
                                            return ClinicCardWidget(
                                              name: name,

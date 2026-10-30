@@ -85,24 +85,53 @@ class _ClinicCardWidgetState extends State<ClinicCardWidget> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 45.0,
-                    height: 45.0,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: Image.network(
-                        valueOrDefault<String>(
-                          widget!.cover,
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-LQ2__WBYR4lmrQJSShFy0IdkTc_QyeR1cVP4GuOPcTjSJ5aI2sHD2HI&s=10',
+                  Builder(
+                    builder: (context) {
+                      final hasValidCover = widget.cover != null &&
+                          widget.cover!.trim().isNotEmpty &&
+                          !widget.cover!.contains('ANd9GcS-LQ2') &&
+                          (widget.cover!.startsWith('http://') ||
+                              widget.cover!.startsWith('https://'));
+                      return Container(
+                        width: 48.0,
+                        height: 48.0,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF4FF),
+                          borderRadius: BorderRadius.circular(10.0),
+                          border: Border.all(
+                            color: const Color(0xFFD6E4FF),
+                            width: 1.0,
+                          ),
                         ),
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(9.0),
+                          child: hasValidCover
+                              ? Image.network(
+                                  widget.cover!,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Center(
+                                    child: Image.asset(
+                                      'assets/images/5987354.png',
+                                      width: 28.0,
+                                      height: 28.0,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                )
+                              : Center(
+                                  child: Image.asset(
+                                    'assets/images/5987354.png',
+                                    width: 28.0,
+                                    height: 28.0,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
                   ),
                   Expanded(
                     flex: 1,

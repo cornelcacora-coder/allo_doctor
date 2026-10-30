@@ -4,14 +4,10 @@ import { useTheme } from '../context/ThemeContext';
 import { 
   Search, 
   ShieldCheck, 
-  Server,
   Sun,
   Moon
 } from 'lucide-react';
 
-// Identifiant de build (injecte par Vite au build, cf. vite.config.js).
-const BUILD_ID =
-  typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : 'dev';
 
 export const Navbar = () => {
   const { currentUser } = useAuth();
@@ -57,55 +53,6 @@ export const Navbar = () => {
       </div>
 
       <div className="topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* Version du build : permet de vérifier d'un coup d'œil que le
-            navigateur sert bien le dernier bundle (cache HTTP). */}
-        <div
-          title="Version déployée de la console (si elle ne change pas, rechargez en dur : Ctrl+Shift+R)"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'var(--bg-subtle, #F2F5F4)',
-            color: 'var(--text-secondary, #56605B)',
-            padding: '6px 10px',
-            borderRadius: '8px',
-            border: '1px solid var(--border, #DADDDD)',
-            fontSize: '10px',
-            fontWeight: 800,
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <span>build</span>
-          <code style={{ fontSize: '10px', color: 'var(--text-primary, #1A1C1B)' }}>
-            {BUILD_ID}
-          </code>
-        </div>
-
-        {/* Statut Système & Cloud Firestore */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px', 
-          background: '#eef7f2', 
-          padding: '7px 14px', 
-          borderRadius: '20px',
-          border: '1px solid #14583D25',
-          fontSize: '11px',
-          color: '#14583D',
-          fontWeight: 800,
-          whiteSpace: 'nowrap'
-        }}>
-          <span style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: '#22c55e',
-            boxShadow: '0 0 0 3px rgba(34, 197, 94, 0.25)',
-            display: 'inline-block'
-          }}></span>
-          <span>Cloud Santé Sync : 100% Opérationnel</span>
-        </div>
-
         {/* Basculeur Mode Clair / Mode Sombre (Icône seule) */}
         <button
           onClick={toggleTheme}

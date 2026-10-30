@@ -161,7 +161,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                         ),
                       ),
                       Text(
-                        'AllÃ´ Docteur',
+                        'Allô Docteur',
                         style: FlutterFlowTheme.of(context).titleLarge.override(
                               font: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
@@ -278,12 +278,12 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                             final userStatus = ((userData?['status'] as String?) ?? '').toLowerCase().trim();
                             final practStatus = ((practData?['status'] as String?) ?? '').toLowerCase().trim();
 
-                            final isValidated = userStatus == 'validÃ©' ||
+                            final isValidated = userStatus == 'validé' ||
                                 userStatus == 'valide' ||
                                 userStatus == 'active' ||
                                 userData?['isValidated'] == true ||
                                 userData?['is_validated'] == true ||
-                                practStatus == 'validÃ©' ||
+                                practStatus == 'validé' ||
                                 practStatus == 'valide' ||
                                 practStatus == 'active' ||
                                 practData?['isValidated'] == true ||
@@ -415,7 +415,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                           size: 16.0,
                                         ),
                                         Text(
-                                          isValidated ? 'Pharmacie Partenaire ValidÃ©e' : 'En attente de validation par l\'administrateur',
+                                          isValidated ? 'Pharmacie Partenaire Validée' : 'En attente de validation par l\'administrateur',
                                           style: FlutterFlowTheme.of(context).labelMedium.override(
                                                 font: GoogleFonts.outfit(
                                                   fontWeight: FontWeight.w600,
@@ -466,7 +466,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Container(
-                              height: 40.0,
+                              height: 56.0,
                               child: wrapWithModel(
                                 model: _model.stateitemModel1,
                                 updateCallback: () => safeSetState(() {}),
@@ -477,19 +477,19 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                               ),
                             ),
                             Container(
-                              height: 40.0,
+                              height: 56.0,
                               decoration: BoxDecoration(),
                               child: wrapWithModel(
                                 model: _model.stateitemModel2,
                                 updateCallback: () => safeSetState(() {}),
                                 child: StateitemWidget(
-                                  label: 'LivrÃ©es',
+                                  label: 'Livrées',
                                   count: '$deliveredCount',
                                 ),
                               ),
                             ),
                             Container(
-                              height: 40.0,
+                              height: 56.0,
                               decoration: BoxDecoration(),
                               child: wrapWithModel(
                                 model: _model.stateitemModel3,
@@ -554,7 +554,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'DisponibilitÃ© ',
+                                                'Disponibilité ',
                                                 style: FlutterFlowTheme.of(
                                                         context)
                                                     .bodySmall
@@ -712,7 +712,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                                       .fontStyle,
                                             ),
                                         hintText:
-                                            'Recherchez un mÃ©dicament ...',
+                                            'Recherchez un médicament ...',
                                         hintStyle: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
@@ -836,7 +836,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                         options: [
                           ChipData('Tous'),
                           ChipData('Urgence'),
-                          ChipData('BeautÃ©'),
+                          ChipData('Beauté'),
                           ChipData('Nutrition'),
                           ChipData('Hygiene intime'),
                           ChipData('Tendance')
@@ -1071,7 +1071,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                   Icon(Icons.inventory_2_outlined, size: 48.0, color: Color(0xFF4954F8)),
                                   SizedBox(height: 12.0),
                                   Text(
-                                    'Aucun mÃ©dicament dans le catalogue',
+                                    'Aucun médicament dans le catalogue',
                                     style: GoogleFonts.outfit(fontSize: 16.0, fontWeight: FontWeight.bold),
                                   ),
                                   SizedBox(height: 6.0),
@@ -1085,7 +1085,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                     onPressed: () async {
                                       context.pushNamed(AddProductToWidget.routeName);
                                     },
-                                    text: 'Ajouter mon premier mÃ©dicament',
+                                    text: 'Ajouter mon premier médicament',
                                     options: FFButtonOptions(
                                       width: 240.0,
                                       height: 40.0,
@@ -1119,7 +1119,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
                               final data = filtered[index];
-                              final name = (data['name'] as String?) ?? 'MÃ©dicament';
+                              final name = (data['name'] as String?) ?? 'Médicament';
                               final price = (data['price'] as String?) ?? '1000';
                               final category = (data['category'] as String?) ?? 'En Stock';
                               final cover = (data['cover'] as String?) ??

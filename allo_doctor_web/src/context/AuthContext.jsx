@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -11,6 +11,9 @@ import { auth, db } from '../firebase/config';
 const ADMIN_EMAIL = 'testnetdeveloper61@gmail.com';
 const ADMIN_PASSWORD = 'Ntemo123';
 const SESSION_KEY = 'allo_doctor_admin_session';
+
+// Durée de session : 30 minutes en millisecondes
+const SESSION_DURATION_MS = 30 * 60 * 1000;
 
 const defaultAuthState = {
   currentUser: null,
@@ -26,50 +29,98 @@ const defaultAuthState = {
 
 const AuthContext = createContext(defaultAuthState);
 
-/** Une session locale n'accorde aucun acces Firestore : les regles exigent
- *  request.auth. Elle ne sert donc qu'a afficher l'interface. */
-const readLocalSession = () => {
+/**
+ * Vérifie si la session locale est présente ET non expirée.
+ * Retourne true si valide, false si absente/expirée.
+ */
+const isLocalSessionValid = () => {
   try {
     const saved = localStorage.getItem(SESSION_KEY);
-    if (!saved) return null;
+    if (!saved) return false;
     const parsed = JSON.parse(saved);
-    if (parsed?.email === ADMIN_EMAIL || parsed?.role === 'admin') return parsed;
+    // Ancienne session sans expiresAt → expirée
+    if (!parsed?.expiresAt) {
+      localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+    // Session expirée
+    if (Date.now() > parsed.expiresAt) {
+      localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+    return true;
   } catch {
     localStorage.removeItem(SESSION_KEY);
+    return false;
   }
-  return null;
 };
 
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(() => readLocalSession());
+  const [currentUser, setCurrentUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // true une fois que Firebase Auth a repondu (session reelle etablie ou non)
   const [authReady, setAuthReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 
+  // Indique si une connexion est en cours (pour ne pas rejeter la session pendant login)
+  const isLoggingInRef = useRef(false);
+  // Timer pour déconnexion automatique après 30 min
+  const sessionTimerRef = useRef(null);
+
+  /**
+   * Sauvegarde la session avec une expiration à 30 min depuis maintenant.
+   */
   const persist = (user) => {
-    setCurrentUser(user);
+    const userWithExpiry = {
+      ...user,
+      expiresAt: Date.now() + SESSION_DURATION_MS,
+    };
+    setCurrentUser(userWithExpiry);
     setIsAuthenticated(true);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(userWithExpiry));
+
+    // Réinitialiser le timer de déconnexion automatique
+    if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
+    sessionTimerRef.current = setTimeout(() => {
+      console.info('Session expirée (30 min). Déconnexion automatique.');
+      clear();
+      firebaseSignOut(auth).catch(() => {});
+    }, SESSION_DURATION_MS);
   };
 
   const clear = () => {
     setCurrentUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem(SESSION_KEY);
+    if (sessionTimerRef.current) {
+      clearTimeout(sessionTimerRef.current);
+      sessionTimerRef.current = null;
+    }
   };
 
-  // 1. L'etat d'authentification reelle (Firebase Auth) fait foi.
-  //    Sans session Auth, toutes les requetes Firestore sont anonymes et
-  //    donc refusees par les regles de securite.
+  // Nettoyer le timer au démontage du composant
+  useEffect(() => {
+    return () => {
+      if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
+    };
+  }, []);
+
+  // 1. Écoute l'état Firebase Auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setAuthReady(true);
+
       if (!firebaseUser) {
-        // Plus de session Firebase : on ne peut rien lire/ecrire dans
-        // Firestore. On revient a l'ecran de connexion plutot que d'afficher
-        // une console vide qui plante sur chaque requete.
+        clear();
+        return;
+      }
+
+      // Si une connexion est en cours (login() vient d'être appelé),
+      // on laisse persist() être appelé ci-dessous normalement.
+      // Si c'est un RECHARGEMENT de page, on vérifie que la session locale est encore valide.
+      if (!isLoggingInRef.current && !isLocalSessionValid()) {
+        // Session locale expirée ou absente → déconnecter Firebase
+        await firebaseSignOut(auth);
         clear();
         return;
       }
@@ -103,6 +154,9 @@ export const AuthProvider = ({ children }) => {
         clear();
         setAuthError('Accès réservé exclusivement aux Administrateurs.');
       }
+
+      // Fin de la phase de connexion
+      isLoggingInRef.current = false;
     });
 
     return () => unsubscribe();
@@ -116,8 +170,9 @@ export const AuthProvider = ({ children }) => {
     const trimmedPassword = password.trim();
 
     try {
-      // Cas A : compte administrateur de reference. On cree le compte Auth
-      // a la volee s'il n'existe pas encore.
+      // Marquer qu'une connexion est en cours AVANT d'appeler Firebase
+      isLoggingInRef.current = true;
+
       if (trimmedEmail === ADMIN_EMAIL && trimmedPassword === ADMIN_PASSWORD) {
         try {
           await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
@@ -128,13 +183,16 @@ export const AuthProvider = ({ children }) => {
             } catch (createErr) {
               console.warn('Auto create in Auth:', createErr.message);
             }
+          } else {
+            isLoggingInRef.current = false;
+            throw authErr;
           }
         }
       } else {
-        // Cas B : authentification Firebase standard
         await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
       }
     } catch (authErr) {
+      isLoggingInRef.current = false;
       let message = 'Email ou mot de passe incorrect.';
       if (authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/wrong-password') {
         message = 'Mot de passe incorrect pour cet administrateur.';
@@ -150,21 +208,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 3. Connexion Démo : passe par une vraie session Firebase Auth.
+  // 3. Connexion Démo
   const loginAdminDemo = async () => {
     setLoading(true);
     setAuthError('');
     try {
+      isLoggingInRef.current = true;
       try {
         await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
       } catch (authErr) {
         if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
           await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
         } else {
+          isLoggingInRef.current = false;
           throw authErr;
         }
       }
     } catch (e) {
+      isLoggingInRef.current = false;
       const message = 'Connexion démo impossible : ' + (e?.message || e);
       setAuthError(message);
       throw new Error(message);
@@ -173,7 +234,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 4. Deconnexion
+  // 4. Déconnexion
   const logout = async () => {
     try {
       await firebaseSignOut(auth);

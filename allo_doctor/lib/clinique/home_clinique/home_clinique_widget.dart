@@ -45,6 +45,8 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       safeSetState(() {});
       await guardRole(context, 'clinique');
+      // Synchronise le doc clinics/{uid} pour la liste patient.
+      _syncClinicDocument();
     });
   }
 
@@ -53,6 +55,56 @@ class _HomeCliniqueWidgetState extends State<HomeCliniqueWidget> {
     _model.dispose();
     super.dispose();
   }
+
+  /// Crée ou met à jour le document clinics/{uid} dans Firestore
+  /// afin que la clinique apparaisse dans la liste patient.
+  Future<void> _syncClinicDocument() async {
+    final uid = currentUserUid;
+    if (uid.isEmpty) return;
+    try {
+      final userSnap = await FirebaseFirestore.instance
+          .collection('users').doc(uid).get();
+      final userData = userSnap.data() ?? {};
+      final practSnap = await FirebaseFirestore.instance
+          .collection('practitioners').doc(uid).get();
+      final practData = practSnap.data() ?? {};
+
+      final name = ((userData['display_name'] as String?) ??
+          (userData['displayName'] as String?) ??
+          (userData['name'] as String?) ??
+          (practData['name'] as String?) ??
+          currentUserDisplayName).trim();
+      final address = ((practData['address'] as String?) ??
+          (userData['address'] as String?) ?? '').trim();
+      final city = ((practData['city'] as String?) ??
+          (userData['city'] as String?) ?? 'Brazzaville').trim();
+      final phone = ((practData['phone_number'] as String?) ??
+          (userData['phone_number'] as String?) ?? '').trim();
+      final photoUrl = ((practData['photo_url'] as String?) ??
+          (userData['photo_url'] as String?) ?? '').trim();
+      final rawServices = practData['services'] ?? userData['services'] ?? practData['specialty'] ?? userData['specialty'];
+      final List<dynamic> services = rawServices is List
+          ? rawServices
+          : (rawServices is String && rawServices.trim().isNotEmpty
+              ? [rawServices.trim()]
+              : []);
+
+      await FirebaseFirestore.instance
+          .collection('clinics').doc(uid).set({
+        'name': name.isNotEmpty ? name : 'Clinique',
+        'address': address,
+        'city': city,
+        'phone_number': phone,
+        'photo_url': photoUrl,
+        'services': services,
+        'uid': uid,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('_syncClinicDocument error: $e');
+    }
+  }
+
 
   /// Boîte de dialogue pour ajouter un membre au personnel
   Future<void> _showAddStaffDialog(BuildContext context) async {

@@ -261,7 +261,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  height: 40.0,
+                                  height: 56.0,
                                   child: wrapWithModel(
                                     model: _model.stateitemModel1,
                                     updateCallback: () => safeSetState(() {}),
@@ -272,7 +272,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                   ),
                                 ),
                                 Container(
-                                  height: 40.0,
+                                  height: 56.0,
                                   decoration: BoxDecoration(),
                                   child: wrapWithModel(
                                     model: _model.stateitemModel2,
@@ -284,7 +284,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                   ),
                                 ),
                                 Container(
-                                  height: 40.0,
+                                  height: 56.0,
                                   decoration: BoxDecoration(),
                                   child: wrapWithModel(
                                     model: _model.stateitemModel3,

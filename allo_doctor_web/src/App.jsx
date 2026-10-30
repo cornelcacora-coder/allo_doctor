@@ -8,12 +8,41 @@ import { AdminView } from './pages/admin/AdminView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const MainAppContent = () => {
-  const { isAuthenticated } = useAuth();
-  
+  const { isAuthenticated, authReady } = useAuth();
+
   // Navigation active de la console administrateur
   const [activeTab, setActiveTab] = useState('admin_home');
 
-  // Si l'administrateur n'est pas encore connecté, afficher la page de connexion admin
+  // Attendre que Firebase ait vérifié la session avant d'afficher quoi que ce soit.
+  // Sans ce garde, on voit un "flash" : login page → dashboard lors d'un rechargement.
+  if (!authReady) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#F2F5F4',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <div style={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          border: '4px solid #E5E7EB',
+          borderTop: '4px solid #14583D',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <span style={{ fontSize: '13px', color: '#56605B', fontWeight: 600 }}>
+          Vérification de la session...
+        </span>
+      </div>
+    );
+  }
+
+  // Firebase a répondu → décision d'affichage
   if (!isAuthenticated) {
     return <LoginPage />;
   }
