@@ -1,0 +1,8 @@
+{
+  "name": "allo-doctor-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "cd allo_doctor_web && npm install && npm run build",
+    "dev": "cd allo_doctor_web && npm run dev"
+  }
+}
