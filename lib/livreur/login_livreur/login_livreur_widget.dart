@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/components/forgot_password_sheet.dart';
 import '/livreur/home_livreur/home_livreur_widget.dart';
 
 /// Page d'authentification complète pour les livreurs (Connexion & Inscription)
@@ -230,26 +231,6 @@ class _LoginLivreurWidgetState extends State<LoginLivreurWidget> {
       _showError('Session démo : $e');
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _forgotPassword() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty) {
-      _showError('Veuillez saisir votre email pour réinitialiser le mot de passe.');
-      return;
-    }
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Email de réinitialisation envoyé à $email'),
-          backgroundColor: const Color(0xFF00A86B),
-        ),
-      );
-    } catch (e) {
-      _showError('Erreur : $e');
     }
   }
 
@@ -701,11 +682,16 @@ class _LoginLivreurWidgetState extends State<LoginLivreurWidget> {
                             ),
                             const SizedBox(height: 10.0),
 
-                            // Mot de passe oublié
+                            // Mot de passe oublié (active la boîte de réinitialisation)
                             Align(
                               alignment: Alignment.centerRight,
                               child: GestureDetector(
-                                onTap: _forgotPassword,
+                                onTap: () => showForgotPasswordBottomSheet(
+                                  context,
+                                  initialEmail: _emailCtrl.text.trim(),
+                                  role: 'livreur',
+                                  roleLabel: 'Livreur',
+                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                                   child: Text(

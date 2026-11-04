@@ -1,6 +1,7 @@
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/auth/role_guard.dart';
+import '/components/forgot_password_sheet.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -496,16 +497,12 @@ class _LoginClinicWidgetState extends State<LoginClinicWidget> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: GestureDetector(
-                              onTap: () {
-                                final email = _model.emailTextController?.text.trim() ?? '';
-                                context.pushNamed(
-                                  OTPVerificationClinicWidget.routeName,
-                                  queryParameters: {
-                                    if (email.isNotEmpty) 'email': email,
-                                    'mode': 'forgot_password',
-                                  },
-                                );
-                              },
+                              onTap: () => showForgotPasswordBottomSheet(
+                                context,
+                                initialEmail: _model.emailTextController?.text.trim(),
+                                role: 'clinique',
+                                roleLabel: 'Établissement',
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                                 child: Text(

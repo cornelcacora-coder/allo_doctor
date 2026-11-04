@@ -9,11 +9,12 @@ coverage/
 # Production
 dist/
 /build/
-!/build/web/
-!/build/web/**
-/allo_doctor/build/app/
+/allo_doctor/build/*
 !/allo_doctor/build/web/
 !/allo_doctor/build/web/**
+/allo_doctor/android/
+/allo_doctor/ios/
+/allo_doctor/allo_doctor/
 
 # Misc
 .DS_Store
