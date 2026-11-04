@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -62,6 +63,30 @@ class SafeProductImage extends StatelessWidget {
       } catch (_) {
         imageContent = fallback ?? _defaultFallback();
       }
+    } else if (kIsWeb) {
+      imageContent = Image.network(
+        raw,
+        width: width,
+        height: height,
+        fit: fit,
+        alignment: alignment,
+        errorBuilder: (_, __, ___) => fallback ?? _defaultFallback(),
+        loadingBuilder: (ctx, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: width,
+            height: height,
+            color: const Color(0xFFE0E0E0),
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2.0),
+              ),
+            ),
+          );
+        },
+      );
     } else {
       imageContent = CachedNetworkImage(
         imageUrl: raw,

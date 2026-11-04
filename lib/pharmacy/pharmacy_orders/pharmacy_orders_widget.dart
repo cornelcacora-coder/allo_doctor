@@ -1,9 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/backend/order_expiration_service.dart';
 
 // ---------------------------------------------------------------------------
 //  PHARMACY ORDERS MANAGEMENT WIDGET
@@ -40,6 +41,7 @@ class _PharmacyOrdersWidgetState extends State<PharmacyOrdersWidget>
     final pharmaDoc = await FirebaseFirestore.instance.collection('pharmacies').doc(uid).get();
     if (pharmaDoc.exists) {
       setState(() { _pharmacyId = uid; _loadingPharmacy = false; });
+      OrderExpirationService.checkAndCancelExpiredOrders(pharmacyId: uid);
       return;
     }
     // Fallback: query by owner_uid
@@ -50,6 +52,7 @@ class _PharmacyOrdersWidgetState extends State<PharmacyOrdersWidget>
         .get();
     if (query.docs.isNotEmpty) {
       setState(() { _pharmacyId = query.docs.first.id; _loadingPharmacy = false; });
+      OrderExpirationService.checkAndCancelExpiredOrders(pharmacyId: query.docs.first.id);
     } else {
       setState(() { _loadingPharmacy = false; });
     }

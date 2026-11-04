@@ -1,10 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/components/safe_product_image.dart';
+import '/backend/order_expiration_service.dart';
+import '/index.dart';
 
 class PatientOrdersWidget extends StatefulWidget {
   const PatientOrdersWidget({super.key});
@@ -24,6 +26,7 @@ class _PatientOrdersWidgetState extends State<PatientOrdersWidget>
   @override
   void initState() {
     super.initState();
+    OrderExpirationService.checkAndCancelExpiredOrders(patientUid: currentUserUid);
     _tabController = TabController(length: _tabs.length, vsync: this);
   }
 
@@ -55,6 +58,13 @@ class _PatientOrdersWidgetState extends State<PatientOrdersWidget>
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delivery_dining_rounded, color: Colors.white),
+            tooltip: 'Suivre mes livraisons',
+            onPressed: () => context.pushNamed(PatientDeliveryTrackingWidget.routeName),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -359,6 +369,38 @@ class _PatientOrdersWidgetState extends State<PatientOrdersWidget>
                     ),
                   ),
               ],
+            ),
+          ],
+
+          if (deliveryMode == 'delivery') ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D47A1),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: const Icon(Icons.location_searching_rounded, size: 16),
+                label: Text(
+                  'Suivre la livraison',
+                  style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  final delId = (data['delivery_id'] as String?) ?? '';
+                  if (delId.isNotEmpty) {
+                    context.pushNamed(
+                      DeliveryTrackingWidget.routeName,
+                      queryParameters: {'deliveryId': delId},
+                    );
+                  } else {
+                    context.pushNamed(PatientDeliveryTrackingWidget.routeName);
+                  }
+                },
+              ),
             ),
           ],
         ],

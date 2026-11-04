@@ -832,6 +832,7 @@ class _PharmaViewWidgetState extends State<PharmaViewWidget> {
                               final pPrice = (data['price'] ?? data['prix'] ?? '0').toString();
                               final pCover = (data['image_url'] as String?) ?? (data['cover'] as String?) ?? '';
                               final pCategory = (data['category'] as String?) ?? (data['categorie'] as String?) ?? 'Pharmacie';
+                              final pDescription = (data['description'] as String?) ?? (data['notice'] as String?) ?? '';
                               final pId = filtered[i].id;
                               return InkWell(
                                 splashColor: Colors.transparent,

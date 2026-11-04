@@ -261,7 +261,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  height: 40.0,
+                                  height: 56.0,
                                   child: wrapWithModel(
                                     model: _model.stateitemModel1,
                                     updateCallback: () => safeSetState(() {}),
@@ -272,7 +272,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                   ),
                                 ),
                                 Container(
-                                  height: 40.0,
+                                  height: 56.0,
                                   decoration: BoxDecoration(),
                                   child: wrapWithModel(
                                     model: _model.stateitemModel2,
@@ -284,7 +284,7 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                   ),
                                 ),
                                 Container(
-                                  height: 40.0,
+                                  height: 56.0,
                                   decoration: BoxDecoration(),
                                   child: wrapWithModel(
                                     model: _model.stateitemModel3,
@@ -736,6 +736,60 @@ class _ProfileUserWidgetState extends State<ProfileUserWidget> {
                                                                 context)
                                                             .bodySmall
                                                             .fontStyle,
+                                                  ),
+                                            ),
+                                          ].divide(SizedBox(width: 10.0)),
+                                        ),
+                                        Icon(
+                                          Icons.keyboard_arrow_right_rounded,
+                                          color: FlutterFlowTheme.of(context)
+                                              .success,
+                                          size: 24.0,
+                                        ),
+                                      ].divide(SizedBox(width: 20.0)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () {
+                                  context.pushNamed(PatientDeliveryTrackingWidget.routeName);
+                                },
+                                borderRadius: BorderRadius.circular(8.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(14.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.max,
+                                          children: [
+                                            Icon(
+                                              Icons.delivery_dining_rounded,
+                                              color: Color(0xFF0D47A1),
+                                              size: 18.0,
+                                            ),
+                                            Text(
+                                              'MES LIVRAISONS',
+                                              style: FlutterFlowTheme.of(context)
+                                                  .bodySmall
+                                                  .override(
+                                                    font: GoogleFonts.outfit(
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                    color: Color(0xFF0D47A1),
+                                                    fontSize: 12.0,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.w500,
                                                   ),
                                             ),
                                           ].divide(SizedBox(width: 10.0)),

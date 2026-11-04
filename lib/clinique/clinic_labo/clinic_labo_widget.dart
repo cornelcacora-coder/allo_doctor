@@ -1,4 +1,4 @@
-import '/components/labo_card_widget.dart';
+﻿import '/components/labo_card_widget.dart';
 import '/components/nav_bar_clinic_widget.dart';
 import '/components/suivie_card_widget.dart';
 import '/components/track_card_widget.dart';
@@ -10,6 +10,8 @@ import '/flutter_flow/form_field_controller.dart';
 import 'dart:ui';
 import '/index.dart';
 import '/auth/role_guard.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -45,7 +47,6 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       safeSetState(() {});
-      // Garde-fou : cet espace est reserve aux comptes cliniques.
       await guardRole(context, 'clinique');
     });
   }
@@ -53,7 +54,6 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -68,7 +68,7 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
         key: scaffoldKey,
         backgroundColor: Color(0xFFF8F9FA),
         appBar: AppBar(
-          backgroundColor: FlutterFlowTheme.of(context).warning,
+          backgroundColor: const Color(0xFF0F766E),
           automaticallyImplyLeading: false,
           title: Column(
             mainAxisSize: MainAxisSize.max,
@@ -141,34 +141,33 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
           centerTitle: false,
           elevation: 4.0,
         ),
-        body: Container(
-          height: double.infinity,
+        body: SafeArea(
           child: Stack(
             alignment: AlignmentDirectional(0.0, -1.0),
             children: [
-              SingleChildScrollView(
-                primary: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(
-                          20.0, 14.0, 20.0, 12.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 4.0,
-                            height: 24.0,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF165C40),
-                              borderRadius: BorderRadius.circular(2.0),
-                              shape: BoxShape.rectangle,
-                            ),
+              Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  // Header "EXAMENS & ANALYSES"
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(
+                        20.0, 14.0, 20.0, 12.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 4.0,
+                          height: 24.0,
+                          decoration: BoxDecoration(
+                            color: Color(0xFF165C40),
+                            borderRadius: BorderRadius.circular(2.0),
+                            shape: BoxShape.rectangle,
                           ),
-                          Text(
+                        ),
+                        Expanded(
+                          child: Text(
                             'EXAMENS & ANALYSES',
                             style: FlutterFlowTheme.of(context)
                                 .titleLarge
@@ -179,8 +178,8 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
                                         .titleLarge
                                         .fontStyle,
                                   ),
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryText,
                                   letterSpacing: 0.0,
                                   fontWeight: FontWeight.bold,
                                   fontStyle: FlutterFlowTheme.of(context)
@@ -189,36 +188,27 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
                                   lineHeight: 1.4,
                                 ),
                           ),
-                        ].divide(SizedBox(width: 8.0)),
-                      ),
+                        ),
+                      ].divide(SizedBox(width: 8.0)),
                     ),
-                    Container(
-                      width: double.infinity,
-                      height: MediaQuery.sizeOf(context).height * 0.8,
-                      decoration: BoxDecoration(),
-                      child: Column(
-                        children: [
-                          Align(
-                            alignment: Alignment(-1.0, 0),
-                            child: TabBar(
-                              isScrollable: true,
-                              tabAlignment: TabAlignment.start,
-                              labelColor:
-                                  FlutterFlowTheme.of(context).primaryText,
-                              unselectedLabelColor:
-                                  FlutterFlowTheme.of(context).secondaryText,
-                              labelStyle: FlutterFlowTheme.of(context)
-                                  .titleMedium
-                                  .override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
-                                    ),
-                                    letterSpacing: 0.0,
+                  ),
+                  // TabBar + TabBarView
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Align(
+                          alignment: Alignment(-1.0, 0),
+                          child: TabBar(
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            labelColor:
+                                FlutterFlowTheme.of(context).primaryText,
+                            unselectedLabelColor:
+                                FlutterFlowTheme.of(context).secondaryText,
+                            labelStyle: FlutterFlowTheme.of(context)
+                                .titleMedium
+                                .override(
+                                  font: GoogleFonts.outfit(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .titleMedium
                                         .fontWeight,
@@ -226,567 +216,88 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
                                         .titleMedium
                                         .fontStyle,
                                   ),
-                              unselectedLabelStyle: FlutterFlowTheme.of(context)
-                                  .titleMedium
-                                  .override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
-                                    ),
-                                    letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
-                                  ),
-                              indicatorColor:
-                                  FlutterFlowTheme.of(context).warning,
-                              tabs: [
-                                Tab(
-                                  text: 'Imagerie',
+                                  letterSpacing: 0.0,
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .titleMedium
+                                      .fontStyle,
                                 ),
-                                Tab(
-                                  text: 'Biologie',
-                                ),
-                                Tab(
-                                  text: 'Suivie',
-                                ),
-                              ],
-                              controller: _model.tabBarController,
-                              onTap: (i) async {
-                                [() async {}, () async {}, () async {}][i]();
-                              },
-                            ),
+                            unselectedLabelStyle:
+                                FlutterFlowTheme.of(context).titleMedium,
+                            indicatorColor:
+                                const Color(0xFF0F766E),
+                            tabs: [
+                              Tab(text: 'Imagerie'),
+                              Tab(text: 'Biologie'),
+                              Tab(text: 'Suivie'),
+                            ],
+                            controller: _model.tabBarController,
+                            onTap: (i) async {
+                              [() async {}, () async {}, () async {}][i]();
+                            },
                           ),
-                          Expanded(
-                            child: TabBarView(
-                              controller: _model.tabBarController,
-                              children: [
-                                Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          16.0, 0.0, 16.0, 0.0),
-                                      child: FlutterFlowChoiceChips(
-                                        options: [
-                                          ChipData('Radio'),
-                                          ChipData('Echographie'),
-                                          ChipData('Endoscopie'),
-                                          ChipData('IRM'),
-                                          ChipData('Mammographie'),
-                                          ChipData('ECG'),
-                                          ChipData('Scanner')
-                                        ],
-                                        onChanged: (val) => safeSetState(() =>
-                                            _model.choiceChipsValue1 =
-                                                val?.firstOrNull),
-                                        selectedChipStyle: ChipStyle(
-                                          backgroundColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .warning,
-                                          textStyle: FlutterFlowTheme.of(
-                                                  context)
-                                              .bodyMedium
-                                              .override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontStyle,
-                                                ),
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .secondaryBackground,
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                          iconColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
-                                          iconSize: 16.0,
-                                          elevation: 0.0,
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        unselectedChipStyle: ChipStyle(
-                                          backgroundColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
-                                          textStyle: FlutterFlowTheme.of(
-                                                  context)
-                                              .bodyMedium
-                                              .override(
-                                                font: GoogleFonts.outfit(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .bodyMedium
-                                                          .fontStyle,
-                                                ),
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .secondaryText,
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                          iconColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryText,
-                                          iconSize: 16.0,
-                                          elevation: 0.0,
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                        chipSpacing: 8.0,
-                                        rowSpacing: 8.0,
-                                        multiselect: false,
-                                        alignment: WrapAlignment.start,
-                                        controller: _model
-                                                .choiceChipsValueController1 ??=
-                                            FormFieldController<List<String>>(
-                                          [],
-                                        ),
-                                        wrapped: true,
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: ListView(
-                                        padding: EdgeInsets.zero,
-                                        shrinkWrap: true,
-                                        scrollDirection: Axis.vertical,
-                                        children: [
-                                          wrapWithModel(
-                                            model: _model.laboCardModel1,
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: LaboCardWidget(
-                                              examenName: 'Radiographie',
-                                              date: getCurrentTimestamp,
-                                              sendOrder: () async {},
-                                            ),
-                                          ),
-                                          wrapWithModel(
-                                            model: _model.laboCardModel2,
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: LaboCardWidget(
-                                              examenName: 'Radiographie',
-                                              date: getCurrentTimestamp,
-                                              sendOrder: () async {},
-                                            ),
-                                          ),
-                                          wrapWithModel(
-                                            model: _model.laboCardModel3,
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: LaboCardWidget(
-                                              examenName: 'Radiographie',
-                                              date: getCurrentTimestamp,
-                                              sendOrder: () async {},
-                                            ),
-                                          ),
-                                          wrapWithModel(
-                                            model: _model.laboCardModel4,
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: LaboCardWidget(
-                                              examenName: 'Radiographie',
-                                              date: getCurrentTimestamp,
-                                              sendOrder: () async {},
-                                            ),
-                                          ),
-                                          wrapWithModel(
-                                            model: _model.laboCardModel5,
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: LaboCardWidget(
-                                              examenName: 'Echographie',
-                                              date: getCurrentTimestamp,
-                                              sendOrder: () async {},
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(height: 16.0)),
-                                      ),
-                                    ),
-                                  ].addToStart(SizedBox(height: 10.0)),
-                                ),
-                                SingleChildScrollView(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(
-                                            16.0, 0.0, 16.0, 0.0),
-                                        child: FlutterFlowChoiceChips(
-                                          options: [
-                                            ChipData('VIH'),
-                                            ChipData('Bilan rénal'),
-                                            ChipData('Glycémie '),
-                                            ChipData('NFS'),
-                                            ChipData('GERH'),
-                                            ChipData('Bilan hépatique'),
-                                            ChipData('Groupe sanguin')
-                                          ],
-                                          onChanged: (val) => safeSetState(() =>
-                                              _model.choiceChipsValue2 =
-                                                  val?.firstOrNull),
-                                          selectedChipStyle: ChipStyle(
-                                            backgroundColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .warning,
-                                            textStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .override(
-                                                      font: GoogleFonts.outfit(
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontStyle,
-                                                      ),
-                                                      color: FlutterFlowTheme
-                                                              .of(context)
-                                                          .secondaryBackground,
-                                                      letterSpacing: 0.0,
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontStyle,
-                                                    ),
-                                            iconColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .secondaryBackground,
-                                            iconSize: 16.0,
-                                            elevation: 0.0,
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          unselectedChipStyle: ChipStyle(
-                                            backgroundColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .secondaryBackground,
-                                            textStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .override(
-                                                      font: GoogleFonts.outfit(
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontStyle,
-                                                      ),
-                                                      color:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .secondaryText,
-                                                      letterSpacing: 0.0,
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontStyle,
-                                                    ),
-                                            iconColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .secondaryText,
-                                            iconSize: 16.0,
-                                            elevation: 0.0,
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          chipSpacing: 8.0,
-                                          rowSpacing: 8.0,
-                                          multiselect: false,
-                                          alignment: WrapAlignment.start,
-                                          controller: _model
-                                                  .choiceChipsValueController2 ??=
-                                              FormFieldController<List<String>>(
-                                            [],
-                                          ),
-                                          wrapped: true,
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: ListView(
-                                          padding: EdgeInsets.zero,
-                                          primary: false,
-                                          shrinkWrap: true,
-                                          scrollDirection: Axis.vertical,
-                                          children: [
-                                            wrapWithModel(
-                                              model: _model.laboCardModel6,
-                                              updateCallback: () =>
-                                                  safeSetState(() {}),
-                                              child: LaboCardWidget(
-                                                examenName: 'Goutte Epaisse',
-                                                date: getCurrentTimestamp,
-                                                sendOrder: () async {},
-                                              ),
-                                            ),
-                                            wrapWithModel(
-                                              model: _model.laboCardModel7,
-                                              updateCallback: () =>
-                                                  safeSetState(() {}),
-                                              child: LaboCardWidget(
-                                                examenName: 'Glycemie',
-                                                date: getCurrentTimestamp,
-                                                sendOrder: () async {},
-                                              ),
-                                            ),
-                                          ].divide(SizedBox(height: 16.0)),
-                                        ),
-                                      ),
-                                    ].addToStart(SizedBox(height: 10.0)),
-                                  ),
-                                ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: [
-                                    Align(
-                                      alignment:
-                                          AlignmentDirectional(-1.0, 0.0),
-                                      child: Padding(
-                                        padding: EdgeInsets.all(16.0),
-                                        child: FlutterFlowChoiceChips(
-                                          options: [
-                                            ChipData('En attnete'),
-                                            ChipData('En cours'),
-                                            ChipData('Terminer')
-                                          ],
-                                          onChanged: (val) => safeSetState(() =>
-                                              _model.choiceChipsValue3 =
-                                                  val?.firstOrNull),
-                                          selectedChipStyle: ChipStyle(
-                                            backgroundColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .warning,
-                                            textStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .override(
-                                                      font: GoogleFonts.outfit(
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontStyle,
-                                                      ),
-                                                      color: FlutterFlowTheme
-                                                              .of(context)
-                                                          .secondaryBackground,
-                                                      letterSpacing: 0.0,
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontStyle,
-                                                    ),
-                                            iconColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .secondaryBackground,
-                                            iconSize: 16.0,
-                                            elevation: 0.0,
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          unselectedChipStyle: ChipStyle(
-                                            backgroundColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .secondaryBackground,
-                                            textStyle:
-                                                FlutterFlowTheme.of(context)
-                                                    .bodyMedium
-                                                    .override(
-                                                      font: GoogleFonts.outfit(
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodyMedium
-                                                                .fontStyle,
-                                                      ),
-                                                      color:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .secondaryText,
-                                                      letterSpacing: 0.0,
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodyMedium
-                                                              .fontStyle,
-                                                    ),
-                                            iconColor:
-                                                FlutterFlowTheme.of(context)
-                                                    .secondaryText,
-                                            iconSize: 16.0,
-                                            elevation: 0.0,
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          chipSpacing: 8.0,
-                                          rowSpacing: 8.0,
-                                          multiselect: false,
-                                          alignment: WrapAlignment.start,
-                                          controller: _model
-                                                  .choiceChipsValueController3 ??=
-                                              FormFieldController<List<String>>(
-                                            [],
-                                          ),
-                                          wrapped: true,
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: ListView(
-                                        padding: EdgeInsets.zero,
-                                        primary: false,
-                                        shrinkWrap: true,
-                                        scrollDirection: Axis.vertical,
-                                        children: [
-                                          InkWell(
-                                            splashColor: Colors.transparent,
-                                            focusColor: Colors.transparent,
-                                            hoverColor: Colors.transparent,
-                                            highlightColor: Colors.transparent,
-                                            onTap: () async {
-                                              await showModalBottomSheet(
-                                                isScrollControlled: true,
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                enableDrag: false,
-                                                context: context,
-                                                builder: (context) {
-                                                  return GestureDetector(
-                                                    onTap: () {
-                                                      FocusScope.of(context)
-                                                          .unfocus();
-                                                      FocusManager
-                                                          .instance.primaryFocus
-                                                          ?.unfocus();
-                                                    },
-                                                    child: Padding(
-                                                      padding: MediaQuery
-                                                          .viewInsetsOf(
-                                                              context),
-                                                      child: TrackCardWidget(
-                                                        statu: 'En attente',
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ).then((value) =>
-                                                  safeSetState(() {}));
-                                            },
-                                            child: wrapWithModel(
-                                              model: _model.suivieCardModel1,
-                                              updateCallback: () =>
-                                                  safeSetState(() {}),
-                                              child: SuivieCardWidget(
-                                                statu: 'En attente',
-                                              ),
-                                            ),
-                                          ),
-                                          wrapWithModel(
-                                            model: _model.suivieCardModel2,
-                                            updateCallback: () =>
-                                                safeSetState(() {}),
-                                            child: SuivieCardWidget(
-                                              exameType: 'Glycemie',
-                                              statu: 'En cours',
-                                            ),
-                                          ),
-                                        ].divide(SizedBox(height: 16.0)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            controller: _model.tabBarController,
+                            children: [
+                              // ─── Tab 1 : IMAGERIE ───
+                              _buildLaboTab(
+                                chips: [
+                                  ChipData('Radio'),
+                                  ChipData('Echographie'),
+                                  ChipData('Endoscopie'),
+                                  ChipData('IRM'),
+                                  ChipData('Mammographie'),
+                                  ChipData('ECG'),
+                                  ChipData('Scanner'),
+                                ],
+                                chipController: _model
+                                        .choiceChipsValueController1 ??=
+                                    FormFieldController<List<String>>([]),
+                                onChipChanged: (val) => safeSetState(
+                                    () => _model.choiceChipsValue1 =
+                                        val?.firstOrNull),
+                                selectedValue: _model.choiceChipsValue1,
+                                orderType: 'imagerie',
+                              ),
+
+                              // ─── Tab 2 : BIOLOGIE ───
+                              _buildLaboTab(
+                                chips: [
+                                  ChipData('VIH'),
+                                  ChipData('Bilan rénal'),
+                                  ChipData('Glycémie'),
+                                  ChipData('NFS'),
+                                  ChipData('GERH'),
+                                  ChipData('Bilan hépatique'),
+                                  ChipData('Groupe sanguin'),
+                                ],
+                                chipController: _model
+                                        .choiceChipsValueController2 ??=
+                                    FormFieldController<List<String>>([]),
+                                onChipChanged: (val) => safeSetState(
+                                    () => _model.choiceChipsValue2 =
+                                        val?.firstOrNull),
+                                selectedValue: _model.choiceChipsValue2,
+                                orderType: 'biologie',
+                              ),
+
+                              // ─── Tab 3 : SUIVIE ───
+                              _buildSuivieTab(),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  // Bottom padding for NavBar
+                  SizedBox(height: 90.0),
+                ],
               ),
+              // NavBar overlay
               Align(
                 alignment: AlignmentDirectional(0.0, 1.0),
                 child: Padding(
@@ -805,6 +316,319 @@ class _ClinicLaboWidgetState extends State<ClinicLaboWidget>
           ),
         ),
       ),
+    );
+  }
+
+  /// Construit un onglet Imagerie ou Biologie connecté à Firestore.
+  Widget _buildLaboTab({
+    required List<ChipData> chips,
+    required FormFieldController<List<String>> chipController,
+    required void Function(List<String>?) onChipChanged,
+    required String? selectedValue,
+    required String orderType,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        SizedBox(height: 10.0),
+        Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+          child: FlutterFlowChoiceChips(
+            options: chips,
+            onChanged: onChipChanged,
+            selectedChipStyle: ChipStyle(
+              backgroundColor: const Color(0xFF0F766E),
+              textStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.outfit(),
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                    letterSpacing: 0.0,
+                  ),
+              iconColor: FlutterFlowTheme.of(context).secondaryBackground,
+              iconSize: 16.0,
+              elevation: 0.0,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            unselectedChipStyle: ChipStyle(
+              backgroundColor:
+                  FlutterFlowTheme.of(context).secondaryBackground,
+              textStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                    font: GoogleFonts.outfit(),
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    letterSpacing: 0.0,
+                  ),
+              iconColor: FlutterFlowTheme.of(context).secondaryText,
+              iconSize: 16.0,
+              elevation: 0.0,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            chipSpacing: 8.0,
+            rowSpacing: 8.0,
+            multiselect: false,
+            alignment: WrapAlignment.start,
+            controller: chipController,
+            wrapped: true,
+          ),
+        ),
+        SizedBox(height: 8.0),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('lab_orders')
+                .where('clinic_uid', isEqualTo: currentUserUid)
+                .where('order_type', isEqualTo: orderType)
+                .orderBy('created_at', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: const Color(0xFF0F766E),
+                  ),
+                );
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+
+              // Filtre chip si sélectionné
+              final filtered = selectedValue != null && selectedValue.isNotEmpty
+                  ? docs.where((d) {
+                      final examName = ((d.data()
+                                  as Map<String, dynamic>)['exam_name'] ??
+                              '')
+                          .toString()
+                          .toLowerCase();
+                      return examName.contains(selectedValue.toLowerCase());
+                    }).toList()
+                  : docs;
+
+              if (filtered.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.science_outlined,
+                          size: 48,
+                          color: FlutterFlowTheme.of(context).secondaryText),
+                      SizedBox(height: 12),
+                      Text(
+                        'Aucun examen en attente',
+                        style: GoogleFonts.outfit(
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: EdgeInsets.all(16.0),
+                itemCount: filtered.length,
+                separatorBuilder: (_, __) => SizedBox(height: 16.0),
+                itemBuilder: (context, i) {
+                  final data =
+                      filtered[i].data() as Map<String, dynamic>;
+                  final patientName =
+                      (data['patient_name'] as String?) ?? 'Patient';
+                  final examName =
+                      (data['exam_name'] as String?) ?? orderType;
+                  final price = data['price'] ?? data['prix'] ?? 0;
+                  final createdAt =
+                      (data['created_at'] as Timestamp?)?.toDate() ??
+                          DateTime.now();
+                  final orderId = filtered[i].id;
+
+                  return LaboCardWidget(
+                    patient: patientName,
+                    examenName: examName,
+                    price: price is int ? price : int.tryParse(price.toString()) ?? 0,
+                    date: createdAt,
+                    sendOrder: () async {
+                      await FirebaseFirestore.instance
+                          .collection('lab_orders')
+                          .doc(orderId)
+                          .update({'status': 'accepted'});
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Construit l'onglet Suivie connecté à Firestore.
+  Widget _buildSuivieTab() {
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Align(
+          alignment: AlignmentDirectional(-1.0, 0.0),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: FlutterFlowChoiceChips(
+              options: [
+                ChipData('En attente'),
+                ChipData('En cours'),
+                ChipData('Terminé'),
+              ],
+              onChanged: (val) => safeSetState(
+                  () => _model.choiceChipsValue3 = val?.firstOrNull),
+              selectedChipStyle: ChipStyle(
+                backgroundColor: const Color(0xFF0F766E),
+                textStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.outfit(),
+                      color:
+                          FlutterFlowTheme.of(context).secondaryBackground,
+                      letterSpacing: 0.0,
+                    ),
+                iconColor: FlutterFlowTheme.of(context).secondaryBackground,
+                iconSize: 16.0,
+                elevation: 0.0,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              unselectedChipStyle: ChipStyle(
+                backgroundColor:
+                    FlutterFlowTheme.of(context).secondaryBackground,
+                textStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                      font: GoogleFonts.outfit(),
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+                iconColor: FlutterFlowTheme.of(context).secondaryText,
+                iconSize: 16.0,
+                elevation: 0.0,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              chipSpacing: 8.0,
+              rowSpacing: 8.0,
+              multiselect: false,
+              alignment: WrapAlignment.start,
+              controller: _model.choiceChipsValueController3 ??=
+                  FormFieldController<List<String>>([]),
+              wrapped: true,
+            ),
+          ),
+        ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('lab_orders')
+                .where('clinic_uid', isEqualTo: currentUserUid)
+                .orderBy('created_at', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: const Color(0xFF0F766E),
+                  ),
+                );
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+
+              // Filtre par statut si chip sélectionné
+              final statusFilter = _model.choiceChipsValue3;
+              final filtered = statusFilter != null && statusFilter.isNotEmpty
+                  ? docs.where((d) {
+                      final status = ((d.data()
+                                  as Map<String, dynamic>)['status'] ??
+                              '')
+                          .toString()
+                          .toLowerCase();
+                      final filterLow = statusFilter.toLowerCase();
+                      if (filterLow.contains('attente'))
+                        return status == 'pending' || status == 'en attente';
+                      if (filterLow.contains('cours'))
+                        return status == 'accepted' || status == 'en cours';
+                      if (filterLow.contains('termin'))
+                        return status == 'done' || status == 'terminé';
+                      return true;
+                    }).toList()
+                  : docs;
+
+              if (filtered.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.assignment_outlined,
+                          size: 48,
+                          color: FlutterFlowTheme.of(context).secondaryText),
+                      SizedBox(height: 12),
+                      Text(
+                        'Aucun suivi disponible',
+                        style: GoogleFonts.outfit(
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+                itemCount: filtered.length,
+                separatorBuilder: (_, __) => SizedBox(height: 16.0),
+                itemBuilder: (context, i) {
+                  final data =
+                      filtered[i].data() as Map<String, dynamic>;
+                  final patientName =
+                      (data['patient_name'] as String?) ??
+                          (data['userName'] as String?) ??
+                          'Patient';
+                  final status =
+                      (data['status'] as String?) ?? 'En attente';
+                  final examType =
+                      (data['exam_name'] as String?) ?? 'Examen';
+                  final createdAt =
+                      (data['created_at'] as Timestamp?)?.toDate();
+
+                  return InkWell(
+                    splashColor: Colors.transparent,
+                    focusColor: Colors.transparent,
+                    hoverColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                    onTap: () async {
+                      await showModalBottomSheet(
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        enableDrag: false,
+                        context: context,
+                        builder: (ctx) {
+                          return GestureDetector(
+                            onTap: () {
+                              FocusScope.of(ctx).unfocus();
+                              FocusManager.instance.primaryFocus?.unfocus();
+                            },
+                            child: Padding(
+                              padding:
+                                  MediaQuery.viewInsetsOf(ctx),
+                              child: TrackCardWidget(statu: status),
+                            ),
+                          );
+                        },
+                      ).then((value) => safeSetState(() {}));
+                    },
+                    child: SuivieCardWidget(
+                      patient: patientName,
+                      exameType: examType,
+                      statu: status,
+                      time: createdAt,
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

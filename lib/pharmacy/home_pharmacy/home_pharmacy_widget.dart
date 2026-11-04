@@ -186,6 +186,19 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      FlutterFlowIconButton(
+                        borderRadius: 10.0,
+                        buttonSize: 40.0,
+                        fillColor: FlutterFlowTheme.of(context).surface15,
+                        icon: Icon(
+                          Icons.delivery_dining_rounded,
+                          color: FlutterFlowTheme.of(context).onPrimary,
+                          size: 24.0,
+                        ),
+                        onPressed: () async {
+                          context.pushNamed(AssignDeliveryWidget.routeName);
+                        },
+                      ),
                       NotificationBellWidget(iconColor: FlutterFlowTheme.of(context).onPrimary, size: 24.0),
                       FlutterFlowIconButton(
                         borderRadius: 10.0,
@@ -453,7 +466,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Container(
-                              height: 40.0,
+                              height: 56.0,
                               child: wrapWithModel(
                                 model: _model.stateitemModel1,
                                 updateCallback: () => safeSetState(() {}),
@@ -464,7 +477,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                               ),
                             ),
                             Container(
-                              height: 40.0,
+                              height: 56.0,
                               decoration: BoxDecoration(),
                               child: wrapWithModel(
                                 model: _model.stateitemModel2,
@@ -476,7 +489,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                               ),
                             ),
                             Container(
-                              height: 40.0,
+                              height: 56.0,
                               decoration: BoxDecoration(),
                               child: wrapWithModel(
                                 model: _model.stateitemModel3,
@@ -989,10 +1002,33 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                         ],
                       ),
                     ),
-                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                      stream: currentUserUid.isNotEmpty
-                       ? FirebaseFirestore.instance.collection('pharmacies').doc(currentUserUid).collection('products').snapshots()
-                       : Stream.empty(),
+                    StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: currentUserUid.isEmpty
+                          ? Stream.value([])
+                          : FirebaseFirestore.instance
+                              .collection('pharmacies')
+                              .doc(currentUserUid)
+                              .collection('products')
+                              .snapshots()
+                              .asyncMap((subSnap) async {
+                                final subList = subSnap.docs
+                                    .map((d) => {...d.data(), '_docId': d.id})
+                                    .toList();
+                                final medSnap = await FirebaseFirestore.instance
+                                    .collection('medicines')
+                                    .where('pharmacy_uid', isEqualTo: currentUserUid)
+                                    .get();
+                                final medList = medSnap.docs
+                                    .map((d) => {...d.data(), '_docId': d.id})
+                                    .toList();
+                                final seen = <String>{};
+                                final merged = <Map<String, dynamic>>[];
+                                for (final item in [...subList, ...medList]) {
+                                  final n = ((item['name'] as String?) ?? '').toLowerCase();
+                                  if (seen.add(n)) merged.add(item);
+                                }
+                                return merged;
+                              }),
                       builder: (context, medSnapshot) {
                         if (!medSnapshot.hasData) {
                           return Center(
@@ -1002,12 +1038,11 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                             ),
                           );
                         }
-                        final allDocs = medSnapshot.data!.docs;
+                        final allDocs = medSnapshot.data!;
                         final selectedCat = _model.choiceChipsValue;
                         final searchQ = _model.textController?.text.toLowerCase().trim() ?? '';
 
-                        final filtered = allDocs.where((d) {
-                          final data = d.data();
+                        final filtered = allDocs.where((data) {
                           if (selectedCat != null && selectedCat.isNotEmpty && selectedCat != 'Tous') {
                             final cat = (data['category'] as String?) ?? '';
                             if (cat.toLowerCase() != selectedCat.toLowerCase()) return false;
@@ -1083,13 +1118,14 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                             shrinkWrap: true,
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
-                              final data = filtered[index].data();
+                              final data = filtered[index];
                               final name = (data['name'] as String?) ?? 'Médicament';
                               final price = (data['price'] as String?) ?? '1000';
                               final category = (data['category'] as String?) ?? 'En Stock';
                               final cover = (data['cover'] as String?) ??
                                   (data['photo_url'] as String?) ??
                                   'https://placehold.co/500x500/e8f5e9/1a6b3c?text=M%C3%A9dicament';
+                              final description = (data['description'] as String?) ?? (data['notice'] as String?) ?? '';
 
                               return InkWell(
                                 onTap: () async {
@@ -1100,6 +1136,7 @@ class _HomePharmacyWidgetState extends State<HomePharmacyWidget> {
                                       'price': price,
                                       'cover': cover,
                                       'category': category,
+                                       'description': description,
                                     },
                                   );
                                 },

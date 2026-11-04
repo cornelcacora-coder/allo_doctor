@@ -118,77 +118,56 @@ class _SuivieCardWidgetState extends State<SuivieCardWidget> {
                   color: FlutterFlowTheme.of(context).alternate,
                 ),
               ),
-              Align(
-                alignment: AlignmentDirectional(-0.75, -0.03),
+              Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          valueOrDefault<String>(
-                            widget!.time?.toString(),
-                            'Roger Kokolo',
+                    Text(
+                      valueOrDefault<String>(
+                        widget.patient.trim().isNotEmpty ? widget.patient : null,
+                        'Patient',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FlutterFlowTheme.of(context)
+                          .labelMedium
+                          .override(
+                            font: GoogleFonts.outfit(
+                              fontWeight: FlutterFlowTheme.of(context)
+                                  .labelMedium
+                                  .fontWeight,
+                              fontStyle: FlutterFlowTheme.of(context)
+                                  .labelMedium
+                                  .fontStyle,
+                            ),
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            fontSize: 14.0,
+                            letterSpacing: 0.0,
+                            lineHeight: 1.4,
                           ),
-                          style: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .override(
+                    ),
+                    Text(
+                      valueOrDefault<String>(
+                        widget!.exameType,
+                        'Examen',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          FlutterFlowTheme.of(context).labelMedium.override(
                                 font: GoogleFonts.outfit(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontWeight,
+                                  fontWeight: FontWeight.normal,
                                   fontStyle: FlutterFlowTheme.of(context)
                                       .labelMedium
                                       .fontStyle,
                                 ),
-                                color: FlutterFlowTheme.of(context).primaryText,
-                                fontSize: 14.0,
+                                color: FlutterFlowTheme.of(context).warning,
+                                fontSize: 12.0,
                                 letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .fontStyle,
                                 lineHeight: 1.4,
                               ),
-                        ),
-                      ].divide(SizedBox(width: 4.0)),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          valueOrDefault<String>(
-                            widget!.exameType,
-                            'Goutte Epaisse',
-                          ),
-                          style:
-                              FlutterFlowTheme.of(context).labelMedium.override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.normal,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .labelMedium
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context).warning,
-                                    fontSize: 12.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.normal,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .labelMedium
-                                        .fontStyle,
-                                    lineHeight: 1.4,
-                                  ),
-                        ),
-                      ].divide(SizedBox(width: 4.0)),
                     ),
                   ],
                 ),

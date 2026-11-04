@@ -14,22 +14,27 @@ class ClinicMemberCardWidget extends StatefulWidget {
     String? name,
     String? location,
     String? distance,
+    this.specialty,
     this.photoProfile,
     this.bookMeet,
     this.contactClinic,
-  })  : this.name = name ?? 'City General Hospital',
-        this.location = location ?? 'Downtown Medical Plaza',
+    this.onDelete,
+    this.onToggleActive,
+    this.isActive = true,
+  })  : this.name = name ?? 'Praticien',
+        this.location = location ?? 'Clinique',
         this.distance = distance ?? '1.2 km';
 
   final String name;
   final String location;
   final String distance;
+  final String? specialty;
   final String? photoProfile;
-
-  /// book  an appointement
   final Future Function()? bookMeet;
-
   final Future Function()? contactClinic;
+  final Future Function()? onDelete;
+  final Future Function(bool)? onToggleActive;
+  final bool isActive;
 
   @override
   State<ClinicMemberCardWidget> createState() => _ClinicMemberCardWidgetState();
@@ -49,19 +54,28 @@ class _ClinicMemberCardWidgetState extends State<ClinicMemberCardWidget> {
     super.initState();
     _model = createModel(context, () => ClinicMemberCardModel());
 
-    _model.switchValue = true;
+    _model.switchValue = widget.isActive;
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
   @override
   void dispose() {
     _model.maybeDispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasValidPhoto = widget.photoProfile != null &&
+        widget.photoProfile!.trim().isNotEmpty &&
+        !widget.photoProfile!.contains('gstatic.com') &&
+        !widget.photoProfile!.contains('404') &&
+        !widget.photoProfile!.contains('placeholder');
+
+    final initial = widget.name.trim().isNotEmpty
+        ? widget.name.trim()[0].toUpperCase()
+        : 'M';
+
     return Container(
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
@@ -73,119 +87,141 @@ class _ClinicMemberCardWidgetState extends State<ClinicMemberCardWidget> {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(12.0),
-        child: Container(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 45.0,
-                    height: 45.0,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // ─── Photo / Avatar propre ───
+            Container(
+              width: 45.0,
+              height: 45.0,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: hasValidPhoto
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10.0),
                       child: Image.network(
-                        valueOrDefault<String>(
-                          widget!.photoProfile,
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-LQ2__WBYR4lmrQJSShFy0IdkTc_QyeR1cVP4GuOPcTjSJ5aI2sHD2HI&s=10',
-                        ),
-                        width: double.infinity,
-                        height: double.infinity,
+                        widget.photoProfile!,
+                        width: 45.0,
+                        height: 45.0,
                         fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          valueOrDefault<String>(
-                            widget!.name,
-                            'Paul Moko',
-                          ),
-                          maxLines: 1,
-                          style: FlutterFlowTheme.of(context)
-                              .titleMedium
-                              .override(
-                                font: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .fontStyle,
-                                ),
-                                color: FlutterFlowTheme.of(context).primaryText,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.bold,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .titleMedium
-                                    .fontStyle,
-                                lineHeight: 1.4,
-                              ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Color(0x34D2C239),
-                            borderRadius: BorderRadius.circular(8.0),
-                            shape: BoxShape.rectangle,
-                          ),
-                          child: Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                8.0, 4.0, 8.0, 4.0),
-                            child: Text(
-                              'Cardiologue',
-                              style: FlutterFlowTheme.of(context)
-                                  .labelSmall
-                                  .override(
-                                    font: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .labelSmall
-                                          .fontStyle,
-                                    ),
-                                    color: FlutterFlowTheme.of(context).warning,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .labelSmall
-                                        .fontStyle,
-                                    lineHeight: 1.3,
-                                  ),
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Text(
+                            initial,
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.0,
+                              color: Colors.white,
                             ),
                           ),
                         ),
-                      ].divide(SizedBox(height: 6.0)),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        initial,
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18.0,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 12.0),
+
+            // ─── Nom & Spécialité ───
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: FlutterFlowTheme.of(context).titleMedium.override(
+                          font: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          color: FlutterFlowTheme.of(context).primaryText,
+                          letterSpacing: 0.0,
+                          fontSize: 14.0,
+                        ),
+                  ),
+                  const SizedBox(height: 4.0),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F766E).withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(6.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                    child: Text(
+                      widget.specialty ?? 'Médecine générale',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F766E),
+                        fontSize: 11.0,
+                      ),
                     ),
                   ),
-                  Switch.adaptive(
-                    value: _model.switchValue!,
-                    onChanged: (newValue) async {
-                      safeSetState(() => _model.switchValue = newValue!);
-                    },
-                    activeColor:
-                        FlutterFlowTheme.of(context).secondaryBackground,
-                    activeTrackColor: Color(0x38D2B839),
-                    inactiveTrackColor: FlutterFlowTheme.of(context).alternate,
-                    inactiveThumbColor:
-                        FlutterFlowTheme.of(context).secondaryBackground,
-                  ),
-                ].divide(SizedBox(width: 16.0)),
+                ],
               ),
-            ].divide(SizedBox(height: 12.0)),
-          ),
+            ),
+
+            // ─── Bouton Supprimer 🗑️ ───
+            if (widget.onDelete != null)
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22.0),
+                tooltip: 'Supprimer ce membre',
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text('Supprimer ce membre', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                      content: Text('Voulez-vous vraiment retirer "${widget.name}" du personnel ?', style: GoogleFonts.outfit()),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text('Annuler', style: GoogleFonts.outfit(color: Colors.grey)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text('Supprimer', style: GoogleFonts.outfit(color: Colors.red, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await widget.onDelete?.call();
+                  }
+                },
+              ),
+
+            // ─── Switch Actif/Inactif ───
+            Switch.adaptive(
+              value: _model.switchValue!,
+              onChanged: (newValue) async {
+                safeSetState(() => _model.switchValue = newValue);
+                await widget.onToggleActive?.call(newValue);
+              },
+              activeColor: Colors.white,
+              activeTrackColor: const Color(0xFF0F766E),
+              inactiveTrackColor: FlutterFlowTheme.of(context).alternate,
+              inactiveThumbColor: FlutterFlowTheme.of(context).secondaryBackground,
+            ),
+          ],
         ),
       ),
     );

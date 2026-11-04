@@ -1,4 +1,4 @@
-import '/flutter_flow/flutter_flow_theme.dart';
+﻿import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
@@ -152,91 +152,65 @@ class _PatientCardWidgetState extends State<PatientCardWidget> {
                   ],
                 ),
               ),
-              Align(
-                alignment: AlignmentDirectional(-0.75, -0.03),
+              Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          (widget!.name != null && widget!.name!.trim().isNotEmpty)
-                              ? widget!.name!
-                              : 'Patient',
-                          style: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .override(
-                                font: GoogleFonts.outfit(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontStyle,
-                                ),
-                                color: FlutterFlowTheme.of(context).primaryText,
-                                fontSize: 14.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .fontStyle,
-                                lineHeight: 1.4,
-                              ),
-                        ),
-                      ].divide(SizedBox(width: 4.0)),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          valueOrDefault<String>(
-                            widget!.sympto,
-                            'Toux + Fièvre',
+                    Text(
+                      (widget!.name != null && widget!.name!.trim().isNotEmpty)
+                          ? widget!.name!
+                          : 'Patient',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FlutterFlowTheme.of(context)
+                          .labelMedium
+                          .override(
+                            font: GoogleFonts.outfit(
+                              fontWeight: FlutterFlowTheme.of(context)
+                                  .labelMedium
+                                  .fontWeight,
+                              fontStyle: FlutterFlowTheme.of(context)
+                                  .labelMedium
+                                  .fontStyle,
+                            ),
+                            color: FlutterFlowTheme.of(context).primaryText,
+                            fontSize: 14.0,
+                            letterSpacing: 0.0,
+                            lineHeight: 1.4,
                           ),
-                          style: FlutterFlowTheme.of(context)
-                              .labelMedium
-                              .override(
-                                font: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.normal,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontStyle,
-                                ),
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                fontSize: 14.0,
-                                letterSpacing: 0.0,
-                                fontWeight: FontWeight.normal,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .fontStyle,
-                                lineHeight: 1.4,
-                              ),
-                        ),
-                      ].divide(SizedBox(width: 4.0)),
+                    ),
+                    Text(
+                      valueOrDefault<String>(
+                        widget!.sympto,
+                        'Consultation',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: FlutterFlowTheme.of(context)
+                          .labelMedium
+                          .override(
+                            font: GoogleFonts.outfit(
+                              fontWeight: FontWeight.normal,
+                              fontStyle: FlutterFlowTheme.of(context)
+                                  .labelMedium
+                                  .fontStyle,
+                            ),
+                            color:
+                                FlutterFlowTheme.of(context).secondaryText,
+                            fontSize: 13.0,
+                            letterSpacing: 0.0,
+                            lineHeight: 1.4,
+                          ),
                     ),
                   ],
                 ),
               ),
-              Flexible(
-                child: Align(
-                  alignment: AlignmentDirectional(1.0, 0.0),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: FlutterFlowTheme.of(context).primaryText,
-                    size: 24.0,
-                  ),
-                ),
+              Icon(
+                Icons.chevron_right,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                size: 20.0,
               ),
             ].divide(SizedBox(width: 14.0)),
           ),

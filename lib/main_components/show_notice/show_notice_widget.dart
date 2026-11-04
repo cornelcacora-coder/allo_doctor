@@ -10,7 +10,9 @@ import 'show_notice_model.dart';
 export 'show_notice_model.dart';
 
 class ShowNoticeWidget extends StatefulWidget {
-  const ShowNoticeWidget({super.key});
+  const ShowNoticeWidget({super.key, this.productName});
+
+  final String? productName;
 
   @override
   State<ShowNoticeWidget> createState() => _ShowNoticeWidgetState();
@@ -123,7 +125,7 @@ class _ShowNoticeWidgetState extends State<ShowNoticeWidget> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Notice · Doliprane 1000',
+                                    'Notice · ${widget.productName ?? "Médicament"}',
                                     style: FlutterFlowTheme.of(context)
                                         .headlineSmall
                                         .override(
@@ -153,7 +155,7 @@ class _ShowNoticeWidgetState extends State<ShowNoticeWidget> {
                                         CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'onseils d\'usage (indicatifs, OMS)',
+                                        'Conseils d\'usage (indicatifs, OMS)',
                                         style: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(

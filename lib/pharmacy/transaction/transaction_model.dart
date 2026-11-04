@@ -1,5 +1,4 @@
 import '/components/nav_bar_pharma_widget.dart';
-import '/components/transaction_card_widget.dart';
 import '/flutter_flow/flutter_flow_choice_chips.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -20,24 +19,17 @@ class TransactionModel extends FlutterFlowModel<TransactionWidget> {
       choiceChipsValueController?.value?.firstOrNull;
   set choiceChipsValue(String? val) =>
       choiceChipsValueController?.value = val != null ? [val] : [];
-  // Model for TransactionCard component.
-  late TransactionCardModel transactionCardModel1;
-  // Model for TransactionCard component.
-  late TransactionCardModel transactionCardModel2;
+
   // Model for NavBarPharma component.
   late NavBarPharmaModel navBarPharmaModel;
 
   @override
   void initState(BuildContext context) {
-    transactionCardModel1 = createModel(context, () => TransactionCardModel());
-    transactionCardModel2 = createModel(context, () => TransactionCardModel());
     navBarPharmaModel = createModel(context, () => NavBarPharmaModel());
   }
 
   @override
   void dispose() {
-    transactionCardModel1.dispose();
-    transactionCardModel2.dispose();
     navBarPharmaModel.dispose();
   }
 }

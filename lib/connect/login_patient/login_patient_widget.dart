@@ -1,14 +1,9 @@
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
-import 'dart:ui';
 import '/index.dart';
 import '/auth/role_guard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'login_patient_model.dart';
 export 'login_patient_model.dart';
 
@@ -57,7 +52,7 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Veuillez renseigner votre email et mot de passe.'),
+          content: const Text('Veuillez renseigner votre email et mot de passe.'),
           backgroundColor: Colors.red.shade700,
         ),
       );
@@ -81,7 +76,7 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Ce compte n\'est pas un compte patient.'),
+            content: const Text('Ce compte n\'est pas un compte patient.'),
             backgroundColor: Colors.red.shade700,
           ),
         );
@@ -119,8 +114,6 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FlutterFlowTheme.of(context);
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -128,521 +121,619 @@ class _LoginPatientWidgetState extends State<LoginPatientWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: theme.primaryBackground,
-        body: Center(
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            constraints: BoxConstraints(maxWidth: 500.0),
-            decoration: BoxDecoration(
-              color: theme.primaryBackground,
+        backgroundColor: const Color(0xFFF2FAFA),
+        body: Stack(
+          children: [
+            // Fond avec vagues en haut et en bas
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _LoginPatientWavesPainter(),
+              ),
             ),
-            child: Column(
-              children: [
-                // ─── HERO HEADER AVEC RETOUR ───
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF09392D),
-                        Color(0xFF0C5241),
-                        Color(0xFF107058),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(32.0),
-                      bottomRight: Radius.circular(32.0),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFF09392D).withOpacity(0.20),
-                        blurRadius: 16.0,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Barre supérieure : Bouton retour & titre discret
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              InkWell(
-                                onTap: () => context.safePop(),
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Container(
-                                  padding: EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.20),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: Colors.white,
-                                    size: 20.0,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF10B981).withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(20.0),
-                                  border: Border.all(
-                                    color: Color(0xFF10B981).withOpacity(0.50),
-                                    width: 1.0,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.person_rounded, color: Colors.white, size: 14.0),
-                                    SizedBox(width: 4.0),
-                                    Text(
-                                      'Espace Patient',
-                                      style: GoogleFonts.outfit(
-                                        color: Colors.white,
-                                        fontSize: 12.0,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 16.0),
 
-                          // Logo miniature & titre
-                          Container(
-                            width: 62.0,
-                            height: 62.0,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(18.0),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.20),
-                                width: 1.2,
-                              ),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Image.asset(
-                                'assets/images/Logo_Mini-removebg-preview.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.medical_services_rounded,
-                                  color: Colors.white,
-                                  size: 30.0,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10.0),
-                          Text(
-                            'Bon retour parmi nous',
-                            style: GoogleFonts.outfit(
-                              fontSize: 22.0,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          SizedBox(height: 3.0),
-                          Text(
-                            'Connectez-vous pour gérer vos consultations et soins',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white.withOpacity(0.85),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ─── FORMULAIRE ET ONGLETS ───
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(horizontal: 22.0, vertical: 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+            SafeArea(
+              child: Column(
+                children: [
+                  // ══════════════════════════════════════════════════
+                  // 1. EN-TÊTE : BOUTON RETOUR + BADGE "Espace Patient"
+                  // ══════════════════════════════════════════════════
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Sélecteur d'onglets Connexion / Inscription
-                        Container(
-                          padding: EdgeInsets.all(4.0),
-                          decoration: BoxDecoration(
-                            color: theme.alternate.withOpacity(0.45),
-                            borderRadius: BorderRadius.circular(16.0),
-                          ),
-                          child: Row(
-                            children: [
-                              // Onglet Connexion (Actif)
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 10.0),
-                                  decoration: BoxDecoration(
-                                    color: theme.secondaryBackground,
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.06),
-                                        blurRadius: 8.0,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    'Connexion',
-                                    style: GoogleFonts.outfit(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14.5,
-                                      color: Color(0xFF0F766E),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Onglet Inscription (Lien rapide)
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    context.pushNamed(
-                                      SignUpWidget.routeName,
-                                      queryParameters: {'role': 'patient'},
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(12.0),
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 10.0),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      'Inscription',
-                                      style: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14.5,
-                                        color: theme.secondaryText,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 24.0),
-
-                        // ─── CHAMP EMAIL ───
-                        Text(
-                          'ADRESSE EMAIL',
-                          style: GoogleFonts.outfit(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                            color: theme.secondaryText,
-                          ),
-                        ),
-                        SizedBox(height: 6.0),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: theme.secondaryBackground,
-                            borderRadius: BorderRadius.circular(14.0),
-                            border: Border.all(
-                              color: theme.alternate.withOpacity(0.85),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 14.0),
-                                child: Icon(
-                                  Icons.mail_outline_rounded,
-                                  color: Color(0xFF10B981),
-                                  size: 20.0,
-                                ),
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _model.emailTextController,
-                                  focusNode: _model.emailFocusNode,
-                                  keyboardType: TextInputType.emailAddress,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 14.5,
-                                    color: theme.primaryText,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: 'exemple@domaine.com',
-                                    hintStyle: GoogleFonts.outfit(
-                                      fontSize: 14.0,
-                                      color: theme.secondaryText.withOpacity(0.7),
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 14.0),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 18.0),
-
-                        // ─── CHAMP MOT DE PASSE ───
-                        Text(
-                          'MOT DE PASSE',
-                          style: GoogleFonts.outfit(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
-                            color: theme.secondaryText,
-                          ),
-                        ),
-                        SizedBox(height: 6.0),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: theme.secondaryBackground,
-                            borderRadius: BorderRadius.circular(14.0),
-                            border: Border.all(
-                              color: theme.alternate.withOpacity(0.85),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 14.0),
-                                child: Icon(
-                                  Icons.lock_outline_rounded,
-                                  color: Color(0xFF10B981),
-                                  size: 20.0,
-                                ),
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _model.passwordTextController,
-                                  focusNode: _model.passwordFocusNode,
-                                  obscureText: !_model.passwordVisibility,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 14.5,
-                                    color: theme.primaryText,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: '••••••••',
-                                    hintStyle: GoogleFonts.outfit(
-                                      fontSize: 14.0,
-                                      color: theme.secondaryText.withOpacity(0.7),
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 14.0),
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  _model.passwordVisibility
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color: theme.secondaryText,
-                                  size: 20.0,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _model.passwordVisibility = !_model.passwordVisibility;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10.0),
-
-                        // Mot de passe oublié
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: InkWell(
-                            onTap: () {
-                              final email = _model.emailTextController?.text.trim() ?? '';
-                              if (email.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Veuillez saisir votre adresse email pour réinitialiser votre mot de passe.'),
-                                    backgroundColor: Colors.red.shade700,
-                                  ),
-                                );
-                                return;
-                              }
-                              context.pushNamed(
-                                OTPVerificationPatientWidget.routeName,
-                                queryParameters: {
-                                  'email': email,
-                                  'mode': 'forgot_password',
-                                },
-                              );
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 4.0),
-                              child: Text(
-                                'Mot de passe oublié ?',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 13.0,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF10B981),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 24.0),
-
-                        // ─── BOUTON DE CONNEXION ───
-                        InkWell(
-                          onTap: _isLoading ? null : _handleLogin,
-                          borderRadius: BorderRadius.circular(16.0),
+                        // Bouton circulaire blanc de retour
+                        GestureDetector(
+                          onTap: () => context.safePop(),
                           child: Container(
-                            height: 52.0,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF0F766E), Color(0xFF10B981)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16.0),
+                            width: 40.0,
+                            height: 40.0,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFF10B981).withOpacity(0.35),
-                                  blurRadius: 14.0,
-                                  offset: Offset(0, 5),
+                                  color: Color(0x18000000),
+                                  blurRadius: 8.0,
+                                  offset: Offset(0, 3),
                                 ),
                               ],
                             ),
-                            child: Center(
+                            child: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Color(0xFF1E3A2F),
+                              size: 20.0,
+                            ),
+                          ),
+                        ),
+
+                        // Pill "Espace Patient"
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 7.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(24.0),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.35),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.person_rounded, color: Colors.white, size: 16.0),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                'Espace Patient',
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ══════════════════════════════════════════════════
+                  // 2. MÉDAILLON CENTRAL + TEXTES DE BIENVENUE
+                  // ══════════════════════════════════════════════════
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                    child: Column(
+                      children: [
+                        // Médaillon circulaire blanc avec logo
+                        Container(
+                          width: 80.0,
+                          height: 80.0,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Color(0x1F000000),
+                                blurRadius: 14.0,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(12.0),
+                          child: Image.asset(
+                            'assets/images/Logo_Mini-removebg-preview.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.local_hospital_rounded,
+                              color: Color(0xFF00A86B),
+                              size: 38.0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12.0),
+
+                        // Titre
+                        Text(
+                          'Bon retour parmi nous',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        const SizedBox(height: 3.0),
+                        Text(
+                          'Connectez-vous pour gérer vos consultations et soins',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12.0),
+
+                  // ══════════════════════════════════════════════════
+                  // 3. FORMULAIRE : ONGLETS, CHAMPS ET ACTIONS
+                  // ══════════════════════════════════════════════════
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // ── SÉLECTEUR D'ONGLETS (Connexion / Inscription) ──
+                          Container(
+                            height: 52.0,
+                            padding: const EdgeInsets.all(4.0),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F3ED),
+                              borderRadius: BorderRadius.circular(28.0),
+                            ),
+                            child: Row(
+                              children: [
+                                // Onglet Connexion (Actif - Vert)
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF00C853), Color(0xFF00965E)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(24.0),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x2800965E),
+                                          blurRadius: 8.0,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.person_rounded, color: Colors.white, size: 18.0),
+                                        const SizedBox(width: 8.0),
+                                        Text(
+                                          'Connexion',
+                                          style: GoogleFonts.outfit(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                // Onglet Inscription (Lien)
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      context.pushNamed(
+                                        SignUpWidget.routeName,
+                                        queryParameters: {'role': 'patient'},
+                                      );
+                                    },
+                                    child: Container(
+                                      color: Colors.transparent,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.edit_note_rounded, color: Color(0xFF4A6B5F), size: 20.0),
+                                          const SizedBox(width: 6.0),
+                                          Text(
+                                            'Inscription',
+                                            style: GoogleFonts.outfit(
+                                              color: const Color(0xFF4A6B5F),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 24.0),
+
+                          // ── CHAMP 1 : ADRESSE EMAIL ──
+                          Row(
+                            children: [
+                              const Icon(Icons.mail_outline_rounded, color: Color(0xFF132A20), size: 18.0),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                'Adresse Email',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF132A20),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8.0),
+                          Container(
+                            height: 52.0,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20.0),
+                              border: Border.all(
+                                color: const Color(0xFFD6EAE0),
+                                width: 1.2,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x06000000),
+                                  blurRadius: 8.0,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.mail_outline_rounded, color: Color(0xFF00A86B), size: 20.0),
+                                const SizedBox(width: 10.0),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _model.emailTextController,
+                                    focusNode: _model.emailFocusNode,
+                                    keyboardType: TextInputType.emailAddress,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF1E293B),
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: 'exemple@domaine.com',
+                                      hintStyle: GoogleFonts.outfit(
+                                        fontSize: 13.5,
+                                        color: const Color(0xFF94A3B8),
+                                      ),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 18.0),
+
+                          // ── CHAMP 2 : MOT DE PASSE ──
+                          Row(
+                            children: [
+                              const Icon(Icons.lock_outline_rounded, color: Color(0xFF132A20), size: 18.0),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                'Mot de passe',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF132A20),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8.0),
+                          Container(
+                            height: 52.0,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20.0),
+                              border: Border.all(
+                                color: const Color(0xFFD6EAE0),
+                                width: 1.2,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x06000000),
+                                  blurRadius: 8.0,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.lock_outline_rounded, color: Color(0xFF00A86B), size: 20.0),
+                                const SizedBox(width: 10.0),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _model.passwordTextController,
+                                    focusNode: _model.passwordFocusNode,
+                                    obscureText: !_model.passwordVisibility,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF1E293B),
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: 'Entrez votre mot de passe',
+                                      hintStyle: GoogleFonts.outfit(
+                                        fontSize: 13.5,
+                                        color: const Color(0xFF94A3B8),
+                                      ),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    safeSetState(() {
+                                      _model.passwordVisibility = !_model.passwordVisibility;
+                                    });
+                                  },
+                                  child: Icon(
+                                    _model.passwordVisibility
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: const Color(0xFF00A86B),
+                                    size: 20.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 10.0),
+
+                          // ── LIEN : MOT DE PASSE OUBLIÉ ? ──
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: GestureDetector(
+                              onTap: () {
+                                final email = _model.emailTextController?.text.trim() ?? '';
+                                if (email.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text('Veuillez saisir votre adresse email pour réinitialiser votre mot de passe.'),
+                                      backgroundColor: Colors.red.shade700,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                context.pushNamed(
+                                  OTPVerificationPatientWidget.routeName,
+                                  queryParameters: {
+                                    'email': email,
+                                    'mode': 'forgot_password',
+                                  },
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                child: Text(
+                                  'Mot de passe oublié ? →',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF00965E),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 22.0),
+
+                          // ── BOUTON : SE CONNECTER ──
+                          GestureDetector(
+                            onTap: _isLoading ? null : _handleLogin,
+                            child: Container(
+                              height: 54.0,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF00C853), Color(0xFF00875A)],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(28.0),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x3500B96B),
+                                    blurRadius: 14.0,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
                               child: _isLoading
-                                  ? SizedBox(
-                                      width: 24.0,
-                                      height: 24.0,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ? const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
                                       ),
                                     )
                                   : Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'Se connecter à mon espace',
+                                          'Se connecter',
                                           style: GoogleFonts.outfit(
-                                            fontSize: 15.5,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w800,
                                             color: Colors.white,
+                                            fontSize: 16.0,
                                           ),
                                         ),
-                                        SizedBox(width: 8.0),
-                                        Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18.0),
+                                        const SizedBox(width: 8.0),
+                                        const Icon(
+                                          Icons.arrow_forward_rounded,
+                                          color: Colors.white,
+                                          size: 19.0,
+                                        ),
                                       ],
                                     ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: 26.0),
 
-                        // ─── BASCULE VERS ESPACE MEDECIN ───
-                        Container(
-                          padding: EdgeInsets.all(14.0),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF0284C7).withOpacity(0.06),
-                            borderRadius: BorderRadius.circular(16.0),
-                            border: Border.all(
-                              color: Color(0xFF0284C7).withOpacity(0.20),
-                              width: 1.0,
+                          const SizedBox(height: 18.0),
+
+                          // ── CARTE BANNIÈRE : VOUS N'AVEZ PAS DE COMPTE ? ──
+                          GestureDetector(
+                            onTap: () {
+                              context.pushNamed(
+                                SignUpWidget.routeName,
+                                queryParameters: {'role': 'patient'},
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE5F6EE),
+                                borderRadius: BorderRadius.circular(20.0),
+                                border: Border.all(
+                                  color: const Color(0xFFC7ECDA),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44.0,
+                                    height: 44.0,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF00B96B).withValues(alpha: 0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.person_add_rounded,
+                                      color: Color(0xFF00875A),
+                                      size: 22.0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12.0),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Vous n\'avez pas de compte ?',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF132A20),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2.0),
+                                        Text(
+                                          'Créer un compte maintenant →',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 13.0,
+                                            fontWeight: FontWeight.w800,
+                                            color: const Color(0xFF00965E),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 38.0,
-                                height: 38.0,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF0284C7).withOpacity(0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.medical_services_rounded, color: Color(0xFF0284C7), size: 20.0),
-                              ),
-                              SizedBox(width: 12.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Vous êtes professionnel de santé ?',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 13.0,
-                                        fontWeight: FontWeight.w600,
-                                        color: theme.primaryText,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2.0),
-                                    InkWell(
-                                      onTap: () => context.pushNamed(LoginDoctorWidget.routeName),
-                                      child: Text(
-                                        'Accéder au portail Médecin →',
-                                        style: GoogleFonts.outfit(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF0284C7),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 20.0),
 
-                        // Sécurité & conformité
-                        Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.verified_user_rounded, size: 15.0, color: Color(0xFF10B981)),
-                              SizedBox(width: 6.0),
-                              Text(
-                                'Connexion sécurisée · Données médicales chiffrées',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11.5,
-                                  color: theme.secondaryText,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 12.0),
-                      ],
+                          const SizedBox(height: 28.0),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PEINTURE DES VAGUES SUPÉRIEURES ET INFÉRIEURES (DESIGN FIDÈLE)
+// ════════════════════════════════════════════════════════════════════════════
+class _LoginPatientWavesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // ── VAGUES DU HAUT (Dégradé vert émeraude courbé) ──
+    final topRect = Rect.fromLTWH(0, 0, w, 280);
+    final topGradient = const LinearGradient(
+      colors: [Color(0xFF00583A), Color(0xFF00875A), Color(0xFF00A86B)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ).createShader(topRect);
+
+    final topPath = Path();
+    topPath.moveTo(0, 0);
+    topPath.lineTo(w, 0);
+    topPath.lineTo(w, 200);
+    topPath.cubicTo(w * 0.70, 260, w * 0.35, 205, 0, 245);
+    topPath.close();
+
+    final topPaint = Paint()
+      ..shader = topGradient
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(topPath, topPaint);
+
+    // Voile vert clair décoratif en haut
+    final topWave2 = Path();
+    topWave2.moveTo(0, 245);
+    topWave2.cubicTo(w * 0.35, 205, w * 0.70, 260, w, 200);
+    topWave2.cubicTo(w * 0.65, 275, w * 0.30, 225, 0, 270);
+    topWave2.close();
+
+    final topWavePaint2 = Paint()
+      ..color = const Color(0xFF00E676).withValues(alpha: 0.25)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(topWave2, topWavePaint2);
+
+    // ── VAGUES DU BAS (Vert émeraude doux avec logo croix filigrane) ──
+    final bottomPath = Path();
+    bottomPath.moveTo(0, h);
+    bottomPath.lineTo(w, h);
+    bottomPath.lineTo(w, h - 85);
+    bottomPath.cubicTo(w * 0.65, h - 55, w * 0.35, h - 110, 0, h - 70);
+    bottomPath.close();
+
+    final bottomPaint = Paint()
+      ..color = const Color(0xFF00C880).withValues(alpha: 0.35)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(bottomPath, bottomPaint);
+
+    final bottomPath2 = Path();
+    bottomPath2.moveTo(0, h);
+    bottomPath2.lineTo(w, h);
+    bottomPath2.lineTo(w, h - 45);
+    bottomPath2.cubicTo(w * 0.60, h - 25, w * 0.30, h - 60, 0, h - 35);
+    bottomPath2.close();
+
+    final bottomPaint2 = Paint()
+      ..color = const Color(0xFF00A86B).withValues(alpha: 0.70)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(bottomPath2, bottomPaint2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

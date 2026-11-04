@@ -1,4 +1,4 @@
-import '/flutter_flow/flutter_flow_theme.dart';
+﻿import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import 'dart:ui';
@@ -16,6 +16,7 @@ class AgendaCardWidget extends StatefulWidget {
     this.sympto,
     this.onClick,
     this.iconCard,
+    this.patientName,
     String? type,
   }) : this.type = type ?? '';
 
@@ -24,6 +25,7 @@ class AgendaCardWidget extends StatefulWidget {
   final String? sympto;
   final Future Function()? onClick;
   final Widget? iconCard;
+  final String? patientName;
   final String type;
 
   @override
@@ -133,100 +135,74 @@ class _AgendaCardWidgetState extends State<AgendaCardWidget> {
                     color: FlutterFlowTheme.of(context).alternate,
                   ),
                 ),
-                Align(
-                  alignment: AlignmentDirectional(-0.75, -0.03),
+                Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            valueOrDefault<String>(
-                              widget!.time?.toString(),
-                              'Roger Kokolo',
+                      Text(
+                        valueOrDefault<String>(
+                          widget.patientName,
+                          'Patient',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: FlutterFlowTheme.of(context)
+                            .labelMedium
+                            .override(
+                              font: GoogleFonts.outfit(
+                                fontWeight: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .fontWeight,
+                                fontStyle: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .fontStyle,
+                              ),
+                              color:
+                                  FlutterFlowTheme.of(context).primaryText,
+                              fontSize: 14.0,
+                              letterSpacing: 0.0,
+                              lineHeight: 1.4,
                             ),
-                            style: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  font: GoogleFonts.outfit(
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .labelMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .labelMedium
-                                        .fontStyle,
-                                  ),
-                                  color:
-                                      FlutterFlowTheme.of(context).primaryText,
-                                  fontSize: 14.0,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontStyle,
-                                  lineHeight: 1.4,
-                                ),
-                          ),
-                        ].divide(SizedBox(width: 4.0)),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            valueOrDefault<String>(
-                              widget!.sympto,
-                              'Toux + Fièvre',
+                      Text(
+                        valueOrDefault<String>(
+                          widget!.sympto,
+                          'Consultation',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: FlutterFlowTheme.of(context)
+                            .labelMedium
+                            .override(
+                              font: GoogleFonts.outfit(
+                                fontWeight: FontWeight.normal,
+                                fontStyle: FlutterFlowTheme.of(context)
+                                    .labelMedium
+                                    .fontStyle,
+                              ),
+                              color: FlutterFlowTheme.of(context)
+                                  .secondaryText,
+                              fontSize: 12.0,
+                              letterSpacing: 0.0,
+                              lineHeight: 1.4,
                             ),
-                            style: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  font: GoogleFonts.outfit(
-                                    fontWeight: FontWeight.normal,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .labelMedium
-                                        .fontStyle,
-                                  ),
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryText,
-                                  fontSize: 12.0,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FontWeight.normal,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .labelMedium
-                                      .fontStyle,
-                                  lineHeight: 1.4,
-                                ),
-                          ),
-                        ].divide(SizedBox(width: 4.0)),
                       ),
                     ],
                   ),
                 ),
-                Flexible(
-                  child: Align(
-                    alignment: AlignmentDirectional(1.0, -1.0),
-                    child: Switch.adaptive(
-                      value: _model.switchValue!,
-                      onChanged: (newValue) async {
-                        safeSetState(() => _model.switchValue = newValue!);
-                      },
-                      activeColor: FlutterFlowTheme.of(context).primary,
-                      activeTrackColor: FlutterFlowTheme.of(context).accent2,
-                      inactiveTrackColor:
-                          FlutterFlowTheme.of(context).alternate,
-                      inactiveThumbColor:
-                          FlutterFlowTheme.of(context).secondaryBackground,
-                    ),
-                  ),
+                Switch.adaptive(
+                  value: _model.switchValue!,
+                  onChanged: (newValue) async {
+                    safeSetState(() => _model.switchValue = newValue!);
+                  },
+                  activeColor: FlutterFlowTheme.of(context).primary,
+                  activeTrackColor: FlutterFlowTheme.of(context).accent2,
+                  inactiveTrackColor:
+                      FlutterFlowTheme.of(context).alternate,
+                  inactiveThumbColor:
+                      FlutterFlowTheme.of(context).secondaryBackground,
                 ),
               ].divide(SizedBox(width: 14.0)),
             ),

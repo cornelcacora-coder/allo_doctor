@@ -23,15 +23,21 @@ Future<void> showOrderPlacementSheet(
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => _OrderSheet(
-      productName: productName,
-      price: price,
-      cover: cover,
-      category: category,
-      medicineId: medicineId,
-      preselectedPharmacyId: pharmacyId,
-      preselectedPharmacyName: pharmacyName,
+    builder: (ctx) => Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: _OrderSheet(
+          productName: productName,
+          price: price,
+          cover: cover,
+          category: category,
+          medicineId: medicineId,
+          preselectedPharmacyId: pharmacyId,
+          preselectedPharmacyName: pharmacyName,
+        ),
+      ),
     ),
   );
 }
@@ -184,6 +190,7 @@ class _OrderSheetState extends State<_OrderSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (_, sc) => Container(
+        width: double.infinity,
         decoration: BoxDecoration(
           color: theme.primaryBackground,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -201,7 +208,7 @@ class _OrderSheetState extends State<_OrderSheet> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
                   Expanded(
@@ -222,7 +229,7 @@ class _OrderSheetState extends State<_OrderSheet> {
             Expanded(
               child: ListView(
                 controller: sc,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   // Price badge
                   Container(
@@ -234,7 +241,9 @@ class _OrderSheetState extends State<_OrderSheet> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Prix unitaire', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13)),
+                        Expanded(
+                          child: Text('Prix unitaire', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13)),
+                        ),
                         Text('${widget.price} FCFA',
                             style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       ],
@@ -370,8 +379,12 @@ class _OrderSheetState extends State<_OrderSheet> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Sous-total ($_qty article${_qty > 1 ? 's' : ''})',
-                                style: GoogleFonts.outfit(color: theme.secondaryText, fontSize: 13)),
+                            Expanded(
+                              child: Text('Sous-total ($_qty article${_qty > 1 ? 's' : ''})',
+                                  style: GoogleFonts.outfit(color: theme.secondaryText, fontSize: 13),
+                                  overflow: TextOverflow.ellipsis),
+                            ),
+                            const SizedBox(width: 8),
                             Text('$_totalPrice FCFA',
                                 style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: theme.primaryText)),
                           ],
@@ -394,12 +407,16 @@ class _OrderSheetState extends State<_OrderSheet> {
                               color: _paymentMode == 'momo' ? const Color(0xFFFFAB00) : theme.primary,
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              _paymentMode == 'momo' ? 'Paiement via Mobile Money' : 'Paiement sur place / chez le livreur',
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: _paymentMode == 'momo' ? const Color(0xFFFFAB00) : theme.primary,
-                                fontWeight: FontWeight.w600,
+                            Expanded(
+                              child: Text(
+                                _paymentMode == 'momo' ? 'Paiement via Mobile Money' : 'Paiement sur place / chez le livreur',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  color: _paymentMode == 'momo' ? const Color(0xFFFFAB00) : theme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -464,8 +481,14 @@ class _OrderSheetState extends State<_OrderSheet> {
         children: [
           Icon(Icons.check_circle_rounded, color: theme.primary, size: 20),
           const SizedBox(width: 8),
-          Expanded(child: Text(_selectedPharmacyName ?? '',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: theme.primaryText))),
+          Expanded(
+            child: Text(
+              _selectedPharmacyName ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: theme.primaryText),
+            ),
+          ),
           TextButton(
             onPressed: () => setState(() { _selectedPharmacyId = null; _selectedPharmacyName = null; }),
             child: Text('Changer', style: GoogleFonts.outfit(color: theme.primary, fontSize: 12)),
@@ -513,6 +536,8 @@ class _ModeCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(label,
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.outfit(
                     fontSize: 11, fontWeight: FontWeight.w600,
                     color: selected ? color : theme.secondaryText)),
@@ -610,6 +635,7 @@ class _PharmaOption extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        width: double.infinity,
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -629,18 +655,20 @@ class _PharmaOption extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: theme.primaryText, fontSize: 14)),
+                  Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: theme.primaryText, fontSize: 14)),
                   if (address.isNotEmpty)
-                    Text(address, style: GoogleFonts.outfit(color: theme.secondaryText, fontSize: 12)),
+                    Text(address, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(color: theme.secondaryText, fontSize: 12)),
                 ],
               ),
             ),
-            if (isGuard)
+            if (isGuard) ...[
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: Colors.green.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
                 child: Text('Garde', style: GoogleFonts.outfit(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w600)),
               ),
+            ],
             const SizedBox(width: 8),
             Icon(Icons.chevron_right, color: theme.secondaryText, size: 20),
           ],
@@ -662,6 +690,7 @@ class _QuantitySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: theme.secondaryBackground,
@@ -671,8 +700,11 @@ class _QuantitySelector extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Quantite', style: GoogleFonts.outfit(color: theme.primaryText)),
+          Expanded(
+            child: Text('Quantite', style: GoogleFonts.outfit(color: theme.primaryText)),
+          ),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 icon: Icon(Icons.remove_circle_outline_rounded,

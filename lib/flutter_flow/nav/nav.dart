@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +16,6 @@ import 'serialization_util.dart';
 
 import '/index.dart';
 import '/pharmacy/pharmacy_orders/pharmacy_orders_widget.dart';
-import '/patient/order/patient_orders_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -161,6 +160,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             category: params.getParam('category', ParamType.String),
             pharmacyId: params.getParam('pharmacyId', ParamType.String),
             pharmacyName: params.getParam('pharmacyName', ParamType.String),
+            description: params.getParam('description', ParamType.String),
           ),
         ),
         FFRoute(
@@ -389,7 +389,34 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: IntroCopyWidget.routeName,
           path: IntroCopyWidget.routePath,
           builder: (context, params) => IntroCopyWidget(),
-        )
+        ),
+        FFRoute(
+          name: HomeLivreurWidget.routeName,
+          path: HomeLivreurWidget.routePath,
+          builder: (context, params) => const HomeLivreurWidget(),
+        ),
+        FFRoute(
+          name: LoginLivreurWidget.routeName,
+          path: LoginLivreurWidget.routePath,
+          builder: (context, params) => const LoginLivreurWidget(),
+        ),
+        FFRoute(
+          name: DeliveryTrackingWidget.routeName,
+          path: DeliveryTrackingWidget.routePath,
+          builder: (context, params) => DeliveryTrackingWidget(
+            deliveryId: params.getParam('deliveryId', ParamType.String) ?? '',
+          ),
+        ),
+        FFRoute(
+          name: PatientDeliveryTrackingWidget.routeName,
+          path: PatientDeliveryTrackingWidget.routePath,
+          builder: (context, params) => const PatientDeliveryTrackingWidget(),
+        ),
+        FFRoute(
+          name: AssignDeliveryWidget.routeName,
+          path: AssignDeliveryWidget.routePath,
+          builder: (context, params) => const AssignDeliveryWidget(),
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 

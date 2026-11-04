@@ -1,14 +1,8 @@
-import '/flutter_flow/flutter_flow_icon_button.dart';
-import '/flutter_flow/flutter_flow_radio_button.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
-import 'dart:ui';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'sign_up_model.dart';
@@ -29,65 +23,43 @@ class SignUpWidget extends StatefulWidget {
 
 class _SignUpWidgetState extends State<SignUpWidget> {
   late SignUpModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isLoading = false;
 
   bool get _isDoctor => widget.role == 'medecin';
   bool get _isClinic => widget.role == 'clinique';
   bool get _isPharmacy => widget.role == 'pharmacie';
+  bool get _isLivreur => widget.role == 'livreur';
   bool get _isPatient => widget.role == 'patient';
-  bool get _isPractitioner => !_isPatient;
+  bool get _isPractitioner => !_isPatient && !_isLivreur;
 
-  String get _roleTitle {
+  String get _roleDisplay {
     switch (widget.role) {
       case 'medecin':
-        return 'Inscription Médecin Praticien';
+        return 'Médecin';
       case 'clinique':
-        return 'Inscription Établissement de Santé';
+        return 'Clinique';
       case 'pharmacie':
-        return 'Inscription Pharmacie / Officine';
+        return 'Pharmacie';
+      case 'livreur':
+        return 'Livreur';
       default:
-        return 'Créer un compte Patient';
+        return 'Patient';
     }
   }
 
   String get _roleSubtitle {
     switch (widget.role) {
       case 'medecin':
-        return 'Rejoignez le réseau Allô Docteur pour vos consultations et ordonnances';
+        return 'Votre pratique médicale • Consultations & téléconsultations';
       case 'clinique':
-        return 'Enregistrez votre clinique, hôpital, centre médical ou laboratoire';
+        return 'Votre établissement • Hôpital, clinique ou laboratoire';
       case 'pharmacie':
-        return 'Officine partenaire pour la validation et préparation d\'ordonnances';
+        return 'Votre officine • Validation d\'ordonnances & dispensation';
+      case 'livreur':
+        return 'Courses de santé • Livraison rapide et sécurisée';
       default:
-        return 'Votre santé, notre priorité · Carnet de santé et consultations';
-    }
-  }
-
-  Color get _roleColor {
-    switch (widget.role) {
-      case 'medecin':
-        return const Color(0xFF0284C7);
-      case 'clinique':
-        return const Color(0xFFD97706);
-      case 'pharmacie':
-        return const Color(0xFF4F46E5);
-      default:
-        return const Color(0xFF14563C);
-    }
-  }
-
-  IconData get _roleIcon {
-    switch (widget.role) {
-      case 'medecin':
-        return Icons.medical_services_rounded;
-      case 'clinique':
-        return Icons.local_hospital_rounded;
-      case 'pharmacie':
-        return Icons.medication_rounded;
-      default:
-        return Icons.person_rounded;
+        return 'Votre santé, notre priorité • Carnet de santé et consultations';
     }
   }
 
@@ -129,6 +101,8 @@ class _SignUpWidgetState extends State<SignUpWidget> {
     _model.bedsCountController ??= TextEditingController();
     _model.bedsCountFocusNode ??= FocusNode();
 
+    _model.radioButtonValueController ??= FormFieldController<String>('HOMME');
+
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
@@ -152,7 +126,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
     final bedsCount = _model.bedsCountController?.text.trim() ?? '';
     final gender = (_isClinic || _isPharmacy) ? '' : (_model.radioButtonValue ?? '');
 
-    // 1. Validation de base
+    // Validation
     if (name.isEmpty || email.isEmpty || password.isEmpty || phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: const Text('Veuillez remplir tous les champs obligatoires (*).',
@@ -162,33 +136,27 @@ class _SignUpWidgetState extends State<SignUpWidget> {
       return;
     }
 
-    // 2. Validation spécifique Médecin
     if (_isDoctor && (specialty.isEmpty || docNumber.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text(
-            'Veuillez renseigner votre spécialité médicale et votre n° d\'ordre (CNOM).',
+        content: const Text('Veuillez renseigner votre spécialité et votre n° d\'ordre.',
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.red.shade700,
       ));
       return;
     }
 
-    // 3. Validation spécifique Établissement de Santé
     if (_isClinic && (specialty.isEmpty || docNumber.isEmpty || director.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text(
-            'Veuillez préciser la catégorie d\'établissement, le n° d\'agrément et le médecin chef/directeur.',
+        content: const Text('Veuillez préciser la catégorie d\'établissement et le responsable.',
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.red.shade700,
       ));
       return;
     }
 
-    // 4. Validation spécifique Pharmacie
     if (_isPharmacy && docNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text(
-            'Veuillez renseigner le n° d\'ordre des pharmaciens (CNOP).',
+        content: const Text('Veuillez renseigner le n° d\'ordre des pharmaciens.',
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.red.shade700,
       ));
@@ -207,25 +175,20 @@ class _SignUpWidgetState extends State<SignUpWidget> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Créer le compte Firebase Auth
       final credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
-
       final user = credential.user!;
 
-      // 2. Mettre à jour le nom d'affichage
       try {
         await user.updateDisplayName(name);
       } catch (_) {}
 
-      // 3. Envoyer l'email de vérification (non bloquant)
       var emailSent = false;
       try {
         await user.sendEmailVerification();
         emailSent = true;
       } catch (_) {}
 
-      // 4. Sauvegarder dans 'users'
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'uid': user.uid,
         'name': name,
@@ -241,62 +204,48 @@ class _SignUpWidgetState extends State<SignUpWidget> {
         'status': _isPractitioner ? 'en_attente' : 'actif',
         'emailVerified': false,
         'createdAt': FieldValue.serverTimestamp(),
-        // Données enrichies selon le rôle
         'specialty': specialty,
         'docNumber': docNumber,
         'workplace': workplace,
         'director': director,
         'services': services,
         'bedsCount': bedsCount,
-      });
+      }, SetOptions(merge: true));
 
-      // 5. Sauvegarder le dossier praticien pour validation
-      if (_isPractitioner) {
+      if (_isDoctor) {
         try {
-          await FirebaseFirestore.instance
-              .collection('practitioners')
-              .doc(user.uid)
-              .set({
-            'id': user.uid,
+          await FirebaseFirestore.instance.collection('practitioners').doc(user.uid).set({
             'uid': user.uid,
+            'id': user.uid,
             'name': name,
-            'type': widget.role,
-            'specialty': specialty,
-            'city': city,
-            'docNumber': docNumber,
-            'phone': phone,
             'email': email,
+            'phone': phone,
+            'specialty': specialty,
+            'docNumber': docNumber,
             'workplace': workplace,
-            'director': director,
-            'services': services,
-            'bedsCount': bedsCount,
-            'address': city,
+            'city': city.isNotEmpty ? city : 'Brazzaville',
+            'type': 'medecin',
             'status': 'en_attente',
-            'date': DateTime.now().toIso8601String(),
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+            'is_available': true,
+            'is_online': true,
+            'rating': 5.0,
+            'created_at': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
         } catch (_) {}
       }
 
-      // 6. Établissement de Santé : enregistrer directement dans 'cliniques'
       if (_isClinic) {
         try {
-          await FirebaseFirestore.instance
-              .collection('cliniques')
-              .doc(user.uid)
-              .set({
+          await FirebaseFirestore.instance.collection('clinics').doc(user.uid).set({
             'id': user.uid,
             'uid': user.uid,
             'name': name,
-            'clinic_name': name,
-            'type': specialty.isNotEmpty ? specialty : 'Clinique Médicale',
+            'email': email,
+            'phone': phone,
+            'city': city.isNotEmpty ? city : 'Brazzaville',
+            'type': specialty,
             'director': director,
             'docNumber': docNumber,
-            'phone': phone,
-            'phone_number': phone,
-            'email': email,
-            'city': city.isNotEmpty ? city : 'Brazzaville',
-            'address': city.isNotEmpty ? city : 'Brazzaville',
             'services': services,
             'beds_count': bedsCount,
             'is_open': true,
@@ -308,13 +257,9 @@ class _SignUpWidgetState extends State<SignUpWidget> {
         } catch (_) {}
       }
 
-      // 7. Pharmacie : enregistrer directement dans 'pharmacies'
       if (_isPharmacy) {
         try {
-          await FirebaseFirestore.instance
-              .collection('pharmacies')
-              .doc(user.uid)
-              .set({
+          await FirebaseFirestore.instance.collection('pharmacies').doc(user.uid).set({
             'id': user.uid,
             'uid': user.uid,
             'name': name,
@@ -338,11 +283,27 @@ class _SignUpWidgetState extends State<SignUpWidget> {
         } catch (_) {}
       }
 
-      setState(() => _isLoading = false);
+      if (_isLivreur) {
+        try {
+          await FirebaseFirestore.instance.collection('livreurs').doc(user.uid).set({
+            'id': user.uid,
+            'uid': user.uid,
+            'name': name,
+            'email': email,
+            'phone': phone,
+            'city': city.isNotEmpty ? city : 'Brazzaville',
+            'vehicle': 'Moto',
+            'is_online': true,
+            'rating': 5.0,
+            'deliveries_count': 0,
+            'created_at': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (_) {}
+      }
 
+      setState(() => _isLoading = false);
       if (!mounted) return;
 
-      // 8. Redirection vers la vérification
       context.pushNamed(
         OTPVerificationPatientWidget.routeName,
         queryParameters: {
@@ -354,83 +315,78 @@ class _SignUpWidgetState extends State<SignUpWidget> {
     } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Erreur lors de la création du compte : $e',
-            style: const TextStyle(color: Colors.white)),
+        content: Text('Erreur : $e', style: const TextStyle(color: Colors.white)),
         backgroundColor: Colors.red.shade700,
       ));
     }
   }
 
+  // ─── WIDGET CHAMP DE FORMULAIRE DESIGN MAQUETTE ───
   Widget _buildField({
     required String label,
     required TextEditingController? controller,
     required FocusNode? focusNode,
     required String hint,
-    required IconData icon,
     bool obscure = false,
     Widget? suffixIcon,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: FlutterFlowTheme.of(context).labelSmall.override(
-                font: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FlutterFlowTheme.of(context).labelSmall.fontStyle,
-                ),
-                color: FlutterFlowTheme.of(context).secondaryText,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.bold,
-                lineHeight: 1.3,
-              ),
-        ),
-        TextFormField(
-          controller: controller,
-          focusNode: focusNode,
-          autofocus: false,
-          obscureText: obscure,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            isDense: false,
-            hintText: hint,
-            hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                  font: GoogleFonts.outfit(),
-                  color: FlutterFlowTheme.of(context).accent3,
-                ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: FlutterFlowTheme.of(context).lightGray,
-                width: 1.0,
-              ),
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: _roleColor,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-            filled: true,
-            fillColor: FlutterFlowTheme.of(context).primaryBackground,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-            prefixIcon: Icon(
-              icon,
-              color: FlutterFlowTheme.of(context).secondaryText,
-              size: 20.0,
-            ),
-            suffixIcon: suffixIcon,
+          style: GoogleFonts.outfit(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF132A20),
           ),
-          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                font: GoogleFonts.outfit(),
-                color: FlutterFlowTheme.of(context).primaryText,
-              ),
         ),
-      ].divide(const SizedBox(height: 6.0)),
+        const SizedBox(height: 7.0),
+        Container(
+          height: 52.0,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBFDFD),
+            borderRadius: BorderRadius.circular(22.0),
+            border: Border.all(
+              color: const Color(0xFFE2EFE8),
+              width: 1.2,
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  obscureText: obscure,
+                  keyboardType: keyboardType,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    hintStyle: GoogleFonts.outfit(
+                      fontSize: 13.5,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
+                  ),
+                ),
+              ),
+              if (suffixIcon != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 14.0),
+                  child: suffixIcon,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -443,450 +399,440 @@ class _SignUpWidgetState extends State<SignUpWidget> {
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: _roleColor,
-        appBar: AppBar(
-          backgroundColor: _roleColor,
-          automaticallyImplyLeading: false,
-          title: Row(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              FlutterFlowIconButton(
-                borderRadius: 12.0,
-                buttonSize: 40.0,
-                fillColor: Colors.white.withOpacity(0.2),
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: Colors.white,
-                  size: 24.0,
-                ),
-                onPressed: () async {
-                  context.safePop();
-                },
-              ),
-            ],
-          ),
-          actions: const [],
-          centerTitle: false,
-          elevation: 0.0,
-        ),
-        body: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        backgroundColor: const Color(0xFFF2FAFA),
+        body: Stack(
           children: [
-            // Header dynamique avec badge du rôle
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 72.0,
-                    height: 72.0,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(_roleIcon, size: 38.0, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-                  Text(
-                    _roleTitle,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    _roleSubtitle,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13.0,
-                      color: Colors.white.withOpacity(0.85),
-                    ),
-                  ),
-                ],
+            // Fond avec vagues en haut et en bas
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _SignUpWavesPainter(),
               ),
             ),
 
-            // Contenu du formulaire
-            Expanded(
-              flex: 1,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).primaryBackground,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32.0),
-                    topRight: Radius.circular(32.0),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(24.0, 24.0, 24.0, 32.0),
-                  child: SingleChildScrollView(
-                    primary: false,
+            SafeArea(
+              child: Column(
+                children: [
+                  // ══════════════════════════════════════════════════
+                  // 1. EN-TÊTE SUPÉRIEUR AVEC BOUTON RETOUR & LOGO
+                  // ══════════════════════════════════════════════════
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 12.0),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Onglets Connexion / Inscription
-                        Container(
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).divider,
-                            borderRadius: BorderRadius.circular(24.0),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 1,
-                                  child: InkWell(
-                                    onTap: () async {
-                                      context.safePop();
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Center(
-                                        child: Text(
-                                          'Connexion',
-                                          style: GoogleFonts.outfit(
-                                            fontWeight: FontWeight.bold,
-                                            color: FlutterFlowTheme.of(context).secondaryText,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context).secondaryBackground,
-                                      borderRadius: BorderRadius.circular(16.0),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Center(
-                                        child: Text(
-                                          'Inscription',
-                                          style: GoogleFonts.outfit(
-                                            fontWeight: FontWeight.bold,
-                                            color: _roleColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                        // Bouton circulaire blanc de retour
+                        GestureDetector(
+                          onTap: () => context.safePop(),
+                          child: Container(
+                            width: 40.0,
+                            height: 40.0,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x18000000),
+                                  blurRadius: 8.0,
+                                  offset: Offset(0, 3),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 16.0),
-
-                        // ─── 1. CHAMP NOM (PERSONNALISÉ) ───
-                        _buildField(
-                          label: _isDoctor
-                              ? 'NOM & PRÉNOM DU MÉDECIN *'
-                              : _isClinic
-                                  ? 'NOM DE L\'ÉTABLISSEMENT / CLINIQUE *'
-                                  : _isPharmacy
-                                      ? 'NOM DE L\'OFFICINE / PHARMACIE *'
-                                      : 'NOM COMPLET *',
-                          controller: _model.textController1,
-                          focusNode: _model.textFieldFocusNode1,
-                          hint: _isDoctor
-                              ? 'Ex: Dr. Martin Ntsiba'
-                              : _isClinic
-                                  ? 'Ex: Clinique Médico-Chirurgicale Océan'
-                                  : _isPharmacy
-                                      ? 'Ex: Pharmacie de la Paix'
-                                      : 'Ex: BITODI Cornelca Cora',
-                          icon: _roleIcon,
-                          keyboardType: TextInputType.name,
-                        ),
-
-                        // ─── 2. CHAMP EMAIL ───
-                        _buildField(
-                          label: _isClinic
-                              ? 'ADRESSE E-MAIL DE L\'ÉTABLISSEMENT *'
-                              : _isPharmacy
-                                  ? 'ADRESSE E-MAIL DE L\'OFFICINE *'
-                                  : _isDoctor
-                                      ? 'ADRESSE E-MAIL PROFESSIONNELLE *'
-                                      : 'ADRESSE E-MAIL *',
-                          controller: _model.emailController,
-                          focusNode: _model.emailFocusNode,
-                          hint: _isClinic
-                              ? 'contact@clinique.cg'
-                              : _isPharmacy
-                                  ? 'contact@pharmacie.cg'
-                                  : 'votre@email.com',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-
-                        // ─── 3. MOT DE PASSE ───
-                        _buildField(
-                          label: 'MOT DE PASSE *',
-                          controller: _model.passwordController,
-                          focusNode: _model.passwordFocusNode,
-                          hint: '•••••••• (6 caractères min.)',
-                          icon: Icons.lock_outline,
-                          obscure: !_model.passwordVisibility,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _model.passwordVisibility
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: FlutterFlowTheme.of(context).secondaryText,
+                            child: const Icon(
+                              Icons.arrow_back_rounded,
+                              color: Color(0xFF1E3A2F),
                               size: 20.0,
                             ),
-                            onPressed: () {
-                              safeSetState(() {
-                                _model.passwordVisibility = !_model.passwordVisibility;
-                              });
-                            },
                           ),
                         ),
+                        const SizedBox(height: 12.0),
 
-                        // ─── 4. TÉLÉPHONE ───
-                        _buildField(
-                          label: _isClinic
-                              ? 'TÉLÉPHONE STANDARD / URGENCES *'
-                              : _isPharmacy
-                                  ? 'TÉLÉPHONE DE L\'OFFICINE / WHATSAPP *'
-                                  : _isDoctor
-                                      ? 'TÉLÉPHONE PROFESSIONNEL DU CABINET *'
-                                      : 'TÉLÉPHONE *',
-                          controller: _model.textController2,
-                          focusNode: _model.textFieldFocusNode2,
-                          hint: '+242 06 xxx xxxx',
-                          icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                        ),
-
-                        // ─── 5. ADRESSE / VILLE ───
-                        _buildField(
-                          label: (_isClinic || _isPharmacy)
-                              ? 'ADRESSE & LOCALISATION EXACTE *'
-                              : 'VILLE *',
-                          controller: _model.textController3,
-                          focusNode: _model.textFieldFocusNode3,
-                          hint: (_isClinic || _isPharmacy)
-                              ? 'Ex: Avenue des 3 Martyrs, Moungali, Brazzaville'
-                              : 'Ex: Brazzaville, Pointe-Noire...',
-                          icon: Icons.location_on_outlined,
-                        ),
-
-                        // ─── 6. CHAMPS SPÉCIFIQUES MÉDECIN ───
-                        if (_isDoctor) ...[
-                          _buildField(
-                            label: 'SPÉCIALITÉ MÉDICALE *',
-                            controller: _model.specialtyController,
-                            focusNode: _model.specialtyFocusNode,
-                            hint: 'Ex: Médecine Générale, Pédiatrie, Cardiologie, Gynécologie...',
-                            icon: Icons.medical_services_outlined,
-                          ),
-                          _buildField(
-                            label: 'N° D\'ORDRE DES MÉDECINS (CNOM) *',
-                            controller: _model.docNumberController,
-                            focusNode: _model.docNumberFocusNode,
-                            hint: 'Ex: CNOM-CG-2024-045',
-                            icon: Icons.badge_outlined,
-                          ),
-                          _buildField(
-                            label: 'LIEU D\'EXERCICE / HÔPITAL DE RATTACHEMENT',
-                            controller: _model.workplaceController,
-                            focusNode: _model.workplaceFocusNode,
-                            hint: 'Ex: CHU de Brazzaville / Cabinet Privé',
-                            icon: Icons.business_outlined,
-                          ),
-                        ],
-
-                        // ─── 7. CHAMPS SPÉCIFIQUES ÉTABLISSEMENT / CLINIQUE ───
-                        if (_isClinic) ...[
-                          _buildField(
-                            label: 'CATÉGORIE D\'ÉTABLISSEMENT *',
-                            controller: _model.specialtyController,
-                            focusNode: _model.specialtyFocusNode,
-                            hint: 'Ex: Clinique Privée, Hôpital, Polyclinique, Centre de Santé...',
-                            icon: Icons.category_outlined,
-                          ),
-                          _buildField(
-                            label: 'N° D\'AGRÉMENT MINISTÈRE DE LA SANTÉ / RCCM *',
-                            controller: _model.docNumberController,
-                            focusNode: _model.docNumberFocusNode,
-                            hint: 'Ex: AGR-MS-2023-889',
-                            icon: Icons.verified_user_outlined,
-                          ),
-                          _buildField(
-                            label: 'MÉDECIN CHEF / DIRECTEUR MÉDICAL *',
-                            controller: _model.directorController,
-                            focusNode: _model.directorFocusNode,
-                            hint: 'Ex: Dr. Jean-Pierre Makosso',
-                            icon: Icons.person_pin_outlined,
-                          ),
-                          _buildField(
-                            label: 'SERVICES & PLATEAU TECHNIQUE',
-                            controller: _model.servicesController,
-                            focusNode: _model.servicesFocusNode,
-                            hint: 'Ex: Urgences 24h, Maternité, Bloc Opératoire, Banque de Sang',
-                            icon: Icons.medical_information_outlined,
-                          ),
-                          _buildField(
-                            label: 'CAPACITÉ D\'ACCUEIL (NOMBRE DE LITS)',
-                            controller: _model.bedsCountController,
-                            focusNode: _model.bedsCountFocusNode,
-                            hint: 'Ex: 35',
-                            icon: Icons.bed_outlined,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ],
-
-                        // ─── 8. CHAMPS SPÉCIFIQUES PHARMACIE ───
-                        if (_isPharmacy) ...[
-                          _buildField(
-                            label: 'PHARMACIEN TITULAIRE RESPONSABLE *',
-                            controller: _model.directorController,
-                            focusNode: _model.directorFocusNode,
-                            hint: 'Ex: Dr. Alice Moukoko',
-                            icon: Icons.person_pin_outlined,
-                          ),
-                          _buildField(
-                            label: 'N° D\'INSCRIPTION À L\'ORDRE (CNOP) *',
-                            controller: _model.docNumberController,
-                            focusNode: _model.docNumberFocusNode,
-                            hint: 'Ex: CNOP-CG-142',
-                            icon: Icons.badge_outlined,
-                          ),
-                          _buildField(
-                            label: 'SERVICE DE GARDE / HORAIRES',
-                            controller: _model.specialtyController,
-                            focusNode: _model.specialtyFocusNode,
-                            hint: 'Ex: De Garde 24h/24, ou 08h00 - 20h00',
-                            icon: Icons.access_time_rounded,
-                          ),
-                        ],
-
-                        // ─── 9. SEXE (UNIQUEMENT PATIENTS & MÉDECINS) ───
-                        if (_isPatient || _isDoctor) ...[
-                          const SizedBox(height: 6.0),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        // Titre Allô Docteur bicolore
+                        RichText(
+                          text: TextSpan(
                             children: [
-                              Text(
-                                'SEXE',
-                                style: FlutterFlowTheme.of(context).labelSmall.override(
-                                      font: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      color: FlutterFlowTheme.of(context).secondaryText,
-                                    ),
+                              TextSpan(
+                                text: 'Allô ',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 28.0,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.4,
+                                ),
                               ),
-                              const SizedBox(height: 4.0),
-                              FlutterFlowRadioButton(
-                                options: ['HOMME', 'FEMME'].toList(),
-                                onChanged: (val) => safeSetState(() {}),
-                                controller: _model.radioButtonValueController ??=
-                                    FormFieldController<String>(null),
-                                optionHeight: 32.0,
-                                optionSpacing: 40.0,
-                                textStyle: FlutterFlowTheme.of(context).labelMedium.override(
-                                      font: GoogleFonts.outfit(),
-                                    ),
-                                selectedTextStyle: FlutterFlowTheme.of(context).bodyMedium.override(
-                                      font: GoogleFonts.outfit(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      color: _roleColor,
-                                    ),
-                                buttonPosition: RadioButtonPosition.left,
-                                direction: Axis.horizontal,
-                                radioButtonColor: _roleColor,
-                                inactiveRadioButtonColor: FlutterFlowTheme.of(context).accent3,
-                                toggleable: false,
-                                horizontalAlignment: WrapAlignment.start,
-                                verticalAlignment: WrapCrossAlignment.start,
+                              TextSpan(
+                                text: 'Docteur',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 28.0,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF10E891),
+                                  letterSpacing: -0.4,
+                                ),
                               ),
                             ],
                           ),
-                        ],
+                        ),
+                        const SizedBox(height: 2.0),
+                        Text(
+                          'Votre santé, notre priorité',
+                          style: GoogleFonts.outfit(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-                        const SizedBox(height: 20.0),
-
-                        // Bouton d'action Créer un compte
-                        InkWell(
-                          onTap: _isLoading ? null : _createAccount,
-                          child: Container(
-                            width: double.infinity,
-                            height: 52.0,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  _roleColor,
-                                  _roleColor.withOpacity(0.85),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(24.0),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _roleColor.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+                  // ══════════════════════════════════════════════════
+                  // 2. CORPS : CARTE DE FORMULAIRE DESIGN MAQUETTE
+                  // ══════════════════════════════════════════════════
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(18.0, 6.0, 18.0, 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Titre de section : Créer un compte [Role]
+                          RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Créer un compte ',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 23.0,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF0F3B2E),
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: _roleDisplay,
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 23.0,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF00B96B),
+                                    letterSpacing: -0.3,
+                                  ),
                                 ),
                               ],
                             ),
-                            child: _isLoading
-                                ? const Center(
-                                    child: SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2.5,
-                                      ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Text(
+                            _roleSubtitle,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 5.0),
+                          // Petite ligne verte courbée décorative
+                          Container(
+                            width: 50.0,
+                            height: 3.0,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00B96B),
+                              borderRadius: BorderRadius.circular(2.0),
+                            ),
+                          ),
+
+                          const SizedBox(height: 18.0),
+
+                          // ─── CARTE FORMULAIRE BLANCHE ARRONDIE ───
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(22.0),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(28.0),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x0E000000),
+                                  blurRadius: 18.0,
+                                  offset: Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Nom
+                                _buildField(
+                                  label: _isDoctor
+                                      ? 'Nom & prénom du Médecin *'
+                                      : _isClinic
+                                          ? 'Nom de l\'établissement *'
+                                          : _isPharmacy
+                                              ? 'Nom de l\'officine *'
+                                              : 'Nom complet *',
+                                  controller: _model.textController1,
+                                  focusNode: _model.textFieldFocusNode1,
+                                  hint: _isDoctor
+                                      ? 'Ex: Dr. Martin Ntsiba'
+                                      : _isClinic
+                                          ? 'Ex: Clinique Médico-Chirurgicale Océan'
+                                          : _isPharmacy
+                                              ? 'Ex: Pharmacie de la Paix'
+                                              : 'Ex: BITODI Cornelca',
+                                  keyboardType: TextInputType.name,
+                                ),
+                                const SizedBox(height: 14.0),
+
+                                // Email
+                                _buildField(
+                                  label: 'Adresse E-mail *',
+                                  controller: _model.emailController,
+                                  focusNode: _model.emailFocusNode,
+                                  hint: 'votre@email.com',
+                                  keyboardType: TextInputType.emailAddress,
+                                ),
+                                const SizedBox(height: 14.0),
+
+                                // Mot de passe
+                                _buildField(
+                                  label: 'Mot de passe *',
+                                  controller: _model.passwordController,
+                                  focusNode: _model.passwordFocusNode,
+                                  hint: '(6 caractères min.)',
+                                  obscure: !_model.passwordVisibility,
+                                  suffixIcon: GestureDetector(
+                                    onTap: () {
+                                      safeSetState(() {
+                                        _model.passwordVisibility = !_model.passwordVisibility;
+                                      });
+                                    },
+                                    child: Icon(
+                                      _model.passwordVisibility
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                      color: const Color(0xFF00B96B),
+                                      size: 22.0,
                                     ),
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                  ),
+                                ),
+                                const SizedBox(height: 14.0),
+
+                                // Téléphone
+                                _buildField(
+                                  label: 'Téléphone *',
+                                  controller: _model.textController2,
+                                  focusNode: _model.textFieldFocusNode2,
+                                  hint: '+242 06 xxx xxxx',
+                                  keyboardType: TextInputType.phone,
+                                ),
+                                const SizedBox(height: 14.0),
+
+                                // Ville
+                                _buildField(
+                                  label: (_isClinic || _isPharmacy) ? 'Adresse exacte *' : 'Ville *',
+                                  controller: _model.textController3,
+                                  focusNode: _model.textFieldFocusNode3,
+                                  hint: 'Ex: Brazzaville, Pointe-Noire...',
+                                ),
+
+                                // Champs professionnels spécifiques
+                                if (_isDoctor) ...[
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'Spécialité médicale *',
+                                    controller: _model.specialtyController,
+                                    focusNode: _model.specialtyFocusNode,
+                                    hint: 'Ex: Médecine Générale, Pédiatrie...',
+                                  ),
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'N° d\'ordre CNOM *',
+                                    controller: _model.docNumberController,
+                                    focusNode: _model.docNumberFocusNode,
+                                    hint: 'Ex: CNOM-CG-2024-045',
+                                  ),
+                                ],
+
+                                if (_isClinic) ...[
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'Catégorie d\'établissement *',
+                                    controller: _model.specialtyController,
+                                    focusNode: _model.specialtyFocusNode,
+                                    hint: 'Ex: Clinique Privée, Hôpital...',
+                                  ),
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'N° d\'agrément Ministère / RCCM *',
+                                    controller: _model.docNumberController,
+                                    focusNode: _model.docNumberFocusNode,
+                                    hint: 'Ex: AGR-MS-2023-889',
+                                  ),
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'Directeur médical *',
+                                    controller: _model.directorController,
+                                    focusNode: _model.directorFocusNode,
+                                    hint: 'Ex: Dr. Jean-Pierre Makosso',
+                                  ),
+                                ],
+
+                                if (_isPharmacy) ...[
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'Pharmacien titulaire *',
+                                    controller: _model.directorController,
+                                    focusNode: _model.directorFocusNode,
+                                    hint: 'Ex: Dr. Alice Moukoko',
+                                  ),
+                                  const SizedBox(height: 14.0),
+                                  _buildField(
+                                    label: 'N° d\'ordre CNOP *',
+                                    controller: _model.docNumberController,
+                                    focusNode: _model.docNumberFocusNode,
+                                    hint: 'Ex: CNOP-CG-142',
+                                  ),
+                                ],
+
+                                // Sexe (Pills design HOMME / FEMME)
+                                if (_isPatient || _isDoctor) ...[
+                                  const SizedBox(height: 14.0),
+                                  Text(
+                                    'Sexe',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF132A20),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Row(
                                     children: [
-                                      const Icon(Icons.person_add_outlined,
-                                          color: Colors.white, size: 20.0),
-                                      const SizedBox(width: 8.0),
-                                      Text(
-                                        _isDoctor
-                                            ? 'Inscrire mon profil Médecin'
-                                            : _isClinic
-                                                ? 'Inscrire l\'établissement'
-                                                : _isPharmacy
-                                                    ? 'Inscrire l\'officine'
-                                                    : 'Créer mon compte',
-                                        style: GoogleFonts.outfit(
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                          fontSize: 15.0,
+                                      Expanded(
+                                        child: _buildGenderPill(
+                                          title: 'HOMME',
+                                          isSelected: _model.radioButtonValue == 'HOMME',
+                                          onTap: () {
+                                            safeSetState(() => _model.radioButtonValueController?.value = 'HOMME');
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12.0),
+                                      Expanded(
+                                        child: _buildGenderPill(
+                                          title: 'FEMME',
+                                          isSelected: _model.radioButtonValue == 'FEMME',
+                                          onTap: () {
+                                            safeSetState(() => _model.radioButtonValueController?.value = 'FEMME');
+                                          },
                                         ),
                                       ),
                                     ],
                                   ),
+                                ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ].divide(const SizedBox(height: 14.0)),
+
+                          const SizedBox(height: 22.0),
+
+                          // ─── GRAND BOUTON VERT ARRONDIE AVEC FLÈCHE ───
+                          GestureDetector(
+                            onTap: _isLoading ? null : _createAccount,
+                            child: Container(
+                              height: 56.0,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF00E676), Color(0xFF00A86B)],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(30.0),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x3500B96B),
+                                    blurRadius: 14.0,
+                                    offset: Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: _isLoading
+                                  ? const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      ),
+                                    )
+                                  : Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Spacer(),
+                                          Text(
+                                            'Créer mon compte',
+                                            style: GoogleFonts.outfit(
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                              fontSize: 16.5,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Container(
+                                            width: 32.0,
+                                            height: 32.0,
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.chevron_right_rounded,
+                                              color: Color(0xFF00A86B),
+                                              size: 24.0,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16.0),
+
+                          // Lien de redirection vers connexion si déjà un compte
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Vous avez déjà un compte ? ',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13.0,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => context.safePop(),
+                                child: Text(
+                                  'Se connecter',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF00A86B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20.0),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ],
@@ -894,4 +840,107 @@ class _SignUpWidgetState extends State<SignUpWidget> {
       ),
     );
   }
+
+  // ─── WIDGET PILL POUR LE SEXE (HOMME / FEMME) ───
+  Widget _buildGenderPill({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48.0,
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFEFFBF4) : Colors.white,
+          borderRadius: BorderRadius.circular(24.0),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF00B96B) : const Color(0xFFE2EFE8),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w800,
+            color: isSelected ? const Color(0xFF0D3328) : const Color(0xFF64748B),
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// PEINTURE DES VAGUES SUPÉRIEURES ET INFÉRIEURES IDENTIQUES À LA MAQUETTE
+// ════════════════════════════════════════════════════════════════════════════
+class _SignUpWavesPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // ── VAGUES DU HAUT (Dégradé vert profond) ──
+    final topRect = Rect.fromLTWH(0, 0, w, 220);
+    final topGradient = const LinearGradient(
+      colors: [Color(0xFF00583A), Color(0xFF00875A), Color(0xFF00C880)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ).createShader(topRect);
+
+    final topPath = Path();
+    topPath.moveTo(0, 0);
+    topPath.lineTo(w, 0);
+    topPath.lineTo(w, 150);
+    topPath.cubicTo(w * 0.75, 195, w * 0.40, 140, 0, 180);
+    topPath.close();
+
+    final topPaint = Paint()
+      ..shader = topGradient
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(topPath, topPaint);
+
+    // Voile vert clair décoratif en haut
+    final topWave2 = Path();
+    topWave2.moveTo(0, 180);
+    topWave2.cubicTo(w * 0.40, 140, w * 0.75, 195, w, 150);
+    topWave2.cubicTo(w * 0.70, 205, w * 0.35, 160, 0, 205);
+    topWave2.close();
+
+    final topWavePaint2 = Paint()
+      ..color = const Color(0xFF00E676).withValues(alpha: 0.25)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(topWave2, topWavePaint2);
+
+    // ── VAGUES DU BAS (Vert émeraude doux) ──
+    final bottomPath = Path();
+    bottomPath.moveTo(0, h);
+    bottomPath.lineTo(w, h);
+    bottomPath.lineTo(w, h - 80);
+    bottomPath.cubicTo(w * 0.65, h - 50, w * 0.35, h - 110, 0, h - 70);
+    bottomPath.close();
+
+    final bottomPaint = Paint()
+      ..color = const Color(0xFF00C880).withValues(alpha: 0.40)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(bottomPath, bottomPaint);
+
+    final bottomPath2 = Path();
+    bottomPath2.moveTo(0, h);
+    bottomPath2.lineTo(w, h);
+    bottomPath2.lineTo(w, h - 45);
+    bottomPath2.cubicTo(w * 0.60, h - 25, w * 0.30, h - 60, 0, h - 35);
+    bottomPath2.close();
+
+    final bottomPaint2 = Paint()
+      ..color = const Color(0xFF00A86B).withValues(alpha: 0.75)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(bottomPath2, bottomPaint2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

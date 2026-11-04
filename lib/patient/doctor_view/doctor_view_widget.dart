@@ -282,7 +282,7 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          height: 40.0,
+                          height: 56.0,
                           child: wrapWithModel(
                             model: _model.stateitemModel1,
                             updateCallback: () => safeSetState(() {}),
@@ -293,7 +293,7 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                           ),
                         ),
                         Container(
-                          height: 40.0,
+                          height: 56.0,
                           decoration: BoxDecoration(),
                           child: wrapWithModel(
                             model: _model.stateitemModel2,
@@ -305,7 +305,7 @@ class _DoctorViewWidgetState extends State<DoctorViewWidget> {
                           ),
                         ),
                         Container(
-                          height: 40.0,
+                          height: 56.0,
                           decoration: BoxDecoration(),
                           child: wrapWithModel(
                             model: _model.stateitemModel3,

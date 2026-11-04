@@ -22,6 +22,7 @@ class ProductViewWidget extends StatefulWidget {
     this.category,
     this.pharmacyId,
     this.pharmacyName,
+    this.description,
   });
 
   final String? name;
@@ -30,6 +31,7 @@ class ProductViewWidget extends StatefulWidget {
   final String? category;
   final String? pharmacyId;
   final String? pharmacyName;
+  final String? description;
 
   static String routeName = 'ProductView';
   static String routePath = '/productView';
@@ -40,6 +42,7 @@ class ProductViewWidget extends StatefulWidget {
 
 class _ProductViewWidgetState extends State<ProductViewWidget> {
   late ProductViewModel _model;
+  int _quantity = 1;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -150,7 +153,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                               padding: EdgeInsetsDirectional.fromSTEB(
                                   0.0, 5.0, 0.0, 0.0),
                               child: Text(
-                                widget.name ?? 'Doliprane 1000',
+                                widget.name?.isNotEmpty == true ? widget.name! : 'Médicament',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: FlutterFlowTheme.of(context)
@@ -222,7 +225,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                   ),
                                 ),
                                 Text(
-                                  widget.price ?? '2300',
+                                  widget.price?.isNotEmpty == true
+                                      ? widget.price!
+                                      : '1000',
                                   maxLines: 1,
                                   style: FlutterFlowTheme.of(context)
                                       .bodyMedium
@@ -295,7 +300,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                               padding: EdgeInsetsDirectional.fromSTEB(
                                   0.0, 5.0, 0.0, 0.0),
                               child: Text(
-                                'Doliprane 1000 est un antalgique de preier pallier qui soulage des maux de tete, les inflammation et la fièvre.',
+                                '${widget.description?.isNotEmpty == true ? widget.description : "${widget.name?.isNotEmpty == true ? widget.name : "Ce médicament"} est un médicament disponible dans notre catalogue."}',
                                 maxLines: 3,
                                 style: FlutterFlowTheme.of(context)
                                     .titleLarge
@@ -340,7 +345,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                       child: Padding(
                                         padding:
                                             MediaQuery.viewInsetsOf(context),
-                                        child: ShowNoticeWidget(),
+                                        child: ShowNoticeWidget(
+                                          productName: widget.name,
+                                        ),
                                       ),
                                     );
                                   },
@@ -476,7 +483,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                                   CrossAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  'En Stock',
+                                                  widget.category?.isNotEmpty == true
+                                                      ? widget.category!
+                                                      : 'En Stock',
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .labelSmall
@@ -564,7 +573,9 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                       ],
                                     ),
                                     Text(
-                                      'Doliprane 1000',
+                                      widget.name?.isNotEmpty == true
+                                          ? widget.name!
+                                          : 'Médicament',
                                       style: FlutterFlowTheme.of(context)
                                           .headlineSmall
                                           .override(
@@ -593,7 +604,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                           CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                          '2300F',
+                                          '${widget.price?.isNotEmpty == true ? widget.price : "1000"} F',
                                           style: FlutterFlowTheme.of(context)
                                               .titleLarge
                                               .override(
@@ -637,11 +648,13 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                                 size: 24.0,
                                               ),
                                               onPressed: () {
-                                                print('IconButton pressed ...');
+                                                if (_quantity > 1) {
+                                                  setState(() => _quantity--);
+                                                }
                                               },
                                             ),
                                             Text(
-                                              '1',
+                                              '$_quantity',
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .titleMedium
@@ -677,7 +690,7 @@ class _ProductViewWidgetState extends State<ProductViewWidget> {
                                                 size: 24.0,
                                               ),
                                               onPressed: () {
-                                                print('IconButton pressed ...');
+                                                setState(() => _quantity++);
                                               },
                                             ),
                                           ].divide(SizedBox(width: 8.0)),
