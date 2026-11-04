@@ -1,0 +1,11 @@
+{
+  "buildCommand": "echo 'Deploying Flutter Web'",
+  "outputDirectory": "allo_doctor/build/web",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
